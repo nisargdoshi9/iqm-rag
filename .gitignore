@@ -1,6 +1,6 @@
 # Ignore sensitive environment variables
 .env
 
-# Documentation
-/Users/nisarg/Projects/new/rag/SPECS.md
-
+# Private assignment materials
+SPECS.md
+AIE L1_ Assignment.pdf
