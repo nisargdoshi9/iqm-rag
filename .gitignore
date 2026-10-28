@@ -1,0 +1,5 @@
+# Ignore sensitive environment variables
+.env
+
+# Documentation
+/Users/nisarg/Projects/new/rag/SPECS.md
