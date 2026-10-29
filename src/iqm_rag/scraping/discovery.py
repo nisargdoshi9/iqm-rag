@@ -69,7 +69,8 @@ def parse_collection_page(html: bytes, page_url: str) -> CollectionPage:
             articles.setdefault(ref.article_id, ref)
 
     next_link = soup.find("link", rel="next") or soup.find("a", rel="next")
-    next_url = canonicalize(urljoin(page_url, next_link["href"])) if next_link and next_link.get("href") else None
+    # Keep the query string: pagination usually lives there, and canonicalize() would drop it.
+    next_url = urljoin(page_url, next_link["href"]) if next_link and next_link.get("href") else None
     return CollectionPage(name=name, articles=list(articles.values()), next_url=next_url)
 
 

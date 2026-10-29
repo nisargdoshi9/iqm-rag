@@ -5,6 +5,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Optional
 from unittest import mock
 from urllib.robotparser import RobotFileParser
 
@@ -273,6 +274,119 @@ class ProtocolEdgeCaseTests(unittest.TestCase):
             written = paths.report.read_text() + paths.articles_jsonl.read_text()
             self.assertNotIn("secret@example.com", written)
             self.assertIn("IQM-RAG-Assignment-Bot", paths.report.read_text())
+
+
+ROBOTS_URL = "https://help.iqm.com/robots.txt"
+SITEMAP_URL = "https://help.iqm.com/sitemap.xml"
+HOME_PAGE_URL = "https://help.iqm.com/en"
+COLLECTION_URL = "https://help.iqm.com/en/collections/111-test"
+PAGE_TWO_URL = COLLECTION_URL + "?page=2"
+ARTICLE_SLUG = "5651450-upload-an-image-creative"
+ARTICLE_SLUG_RENAMED = "5651450-upload-an-image-creative-renamed"
+OLD_ARTICLE_URL = f"https://help.iqm.com/en/articles/{ARTICLE_SLUG}"
+NEW_ARTICLE_URL = f"https://help.iqm.com/en/articles/{ARTICLE_SLUG_RENAMED}"
+ROBOTS_OPEN = b"User-agent: *\nCrawl-delay: 1\nSitemap: https://help.iqm.com/sitemap.xml\n"
+EMPTY_SITEMAP = b'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>'
+
+
+def _sitemap(slug: str, lastmod: str = "2026-03-17T19:25:46Z") -> bytes:
+    return (
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>'
+        f"<loc>https://help.iqm.com/en/articles/{slug}</loc><lastmod>{lastmod}</lastmod>"
+        "</url></urlset>"
+    ).encode()
+
+
+def _home(*collection_paths: str) -> bytes:
+    links = "".join(f'<a href="{path}">collection</a>' for path in collection_paths)
+    return f"<html><body>{links}</body></html>".encode()
+
+
+def _collection(name: str, *article_paths: str, next_href: Optional[str] = None) -> bytes:
+    links = "".join(f'<a href="{path}">article</a>' for path in article_paths)
+    next_link = f'<link rel="next" href="{next_href}">' if next_href else ""
+    return f"<html><head>{next_link}</head><body><h1>{name}</h1>{links}</body></html>".encode()
+
+
+def _scenario_session(pages: dict[str, tuple[int, bytes]], article_html: Optional[bytes]) -> mock.Mock:
+    """Serve exact URLs from `pages`; serve `article_html` for any article URL not listed (404 if None)."""
+
+    def get(url: str, **_: object) -> requests.Response:
+        if url in pages:
+            status, body = pages[url]
+        elif "/articles/" in url and article_html is not None:
+            status, body = 200, article_html
+        else:
+            status, body = 404, b""
+        response = requests.Response()
+        response.status_code = status
+        response._content = body
+        response.url = url
+        return response
+
+    session = mock.Mock(spec=requests.Session)
+    session.headers = {}
+    session.get.side_effect = get
+    return session
+
+
+class CrawlScenarioTests(unittest.TestCase):
+    """Whole-crawl scenarios: pagination, renames, robots blocks, and 404s."""
+
+    def _run(self, pages: dict, article_html: Optional[bytes], root: Path) -> tuple[dict, CrawlPaths]:
+        fetcher = PoliteFetcher("test-agent", delay_seconds=0.0, session=_scenario_session(pages, article_html),
+                                sleep=lambda _: None, clock=lambda: 0.0)
+        paths = RerunTests()._paths(root)
+        return run_crawl(fetcher, paths), paths
+
+    def _site(self, *, article_path: str = f"/en/articles/{ARTICLE_SLUG}", sitemap: bytes = b"",
+              robots: bytes = ROBOTS_OPEN) -> dict:
+        return {
+            ROBOTS_URL: (200, robots),
+            SITEMAP_URL: (200, sitemap or _sitemap(ARTICLE_SLUG)),
+            HOME_PAGE_URL: (200, _home("/en/collections/111-test")),
+            COLLECTION_URL: (200, _collection("Test", article_path)),
+        }
+
+    def test_pagination_follows_next_link(self):
+        pages = {
+            ROBOTS_URL: (200, ROBOTS_OPEN),
+            SITEMAP_URL: (200, EMPTY_SITEMAP),
+            HOME_PAGE_URL: (200, _home("/en/collections/111-test")),
+            COLLECTION_URL: (200, _collection("Test", f"/en/articles/{ARTICLE_SLUG}",
+                                              next_href="/en/collections/111-test?page=2")),
+            PAGE_TWO_URL: (200, _collection("Test", "/en/articles/5651452-second")),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            report, _ = self._run(pages, fixture("article_upload_image_creative.html"), Path(tmp))
+        self.assertEqual(report["collections"][0]["pages_fetched"], 2)
+        self.assertTrue(report["collections"][0]["next_page_found"])
+        self.assertEqual(report["discovered"], 2)
+
+    def test_renamed_article_updates_canonical_url_and_is_reported(self):
+        article = fixture("article_upload_image_creative.html")
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self._run(self._site(), article, root)
+            report, paths = self._run(self._site(sitemap=_sitemap(ARTICLE_SLUG_RENAMED)), article, root)
+            record = json.loads(paths.articles_jsonl.read_text().splitlines()[0])
+        self.assertEqual(report["unchanged_skipped"], 1)  # content unchanged, so no refetch
+        self.assertEqual(report["renamed"], [{"article_id": "5651450", "old": OLD_ARTICLE_URL, "new": NEW_ARTICLE_URL}])
+        self.assertEqual(record["canonical_url"], NEW_ARTICLE_URL)
+
+    def test_robots_disallowed_article_is_reported_as_failed(self):
+        blocked = b"User-agent: *\nDisallow: /en/articles/5651450\n"
+        with tempfile.TemporaryDirectory() as tmp:
+            report, _ = self._run(self._site(robots=blocked), fixture("article_upload_image_creative.html"), Path(tmp))
+        self.assertEqual(report["failed_count"], 1)
+        self.assertIn("disallowed by robots.txt", report["failed"][0]["error"])
+
+    def test_404_article_is_reported_as_failed_without_retry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            report, _ = self._run(self._site(), None, Path(tmp))
+        self.assertEqual(report["failed_count"], 1)
+        self.assertEqual(report["failed"][0]["error"], "HTTP 404 (" + OLD_ARTICLE_URL + ")")
+        self.assertEqual(report["requests_made"], 5)  # robots, sitemap, home, collection, article: no retries
 
 
 class DelayConfigTests(unittest.TestCase):
