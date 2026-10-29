@@ -8,8 +8,10 @@ version = "0.1.0"
 description = "RAG chatbot over the IQM Help Center"
 readme = "README.md"
 requires-python = ">=3.10"
-# Dependencies are added as each component is chosen and built.
-dependencies = []
+dependencies = [
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

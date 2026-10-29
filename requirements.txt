@@ -1,1 +1,3 @@
-# Dependencies are pinned here as each component is chosen and built.
+# Pinned versions for reproducible installs. Tested with these; update deliberately.
+requests==2.34.2
+beautifulsoup4==4.15.0
