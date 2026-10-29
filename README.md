@@ -56,6 +56,16 @@ Outputs, all under `data/raw/`:
 
 The scraper honours `robots.txt`, waits at least `SCRAPER_DELAY_SECONDS` between requests (default 2), and retries timeouts, 5xx and 429 responses up to 3 times.
 
+### Clean the dataset (FR-2)
+
+Needs no network access. Reads `data/raw/` and writes `data/processed/`:
+
+```bash
+python scripts/normalize.py
+```
+
+Outputs: `articles.jsonl` (structured sections plus derived Markdown), `media.jsonl` (images and videos with their section, association and exclusion reason), `table_audit.jsonl` (tables that could not be classified, with their original HTML), and `cleaning_report.json`.
+
 ### Tests
 
 ```bash

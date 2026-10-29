@@ -291,7 +291,7 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _write_atomic(path: Path, data: str | bytes) -> None:
+def write_atomic(path: Path, data: str | bytes) -> None:
     """Write to a temporary file, then rename, so a crash never leaves a half-written file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
@@ -312,13 +312,13 @@ def _load_records(path: Path) -> dict[str, dict]:
 
 def _save_records(path: Path, records: dict[str, dict]) -> None:
     ordered = sorted(records.values(), key=lambda record: int(record["article_id"]))
-    _write_atomic(path, "".join(json.dumps(record, ensure_ascii=False) + "\n" for record in ordered))
+    write_atomic(path, "".join(json.dumps(record, ensure_ascii=False) + "\n" for record in ordered))
 
 
 def _store_raw(paths: CrawlPaths, article_id: str, html: bytes) -> dict:
     """Save the raw HTML file and return the fields that point to it."""
     html_path = paths.html_dir / f"{article_id}.html"
-    _write_atomic(html_path, html)
+    write_atomic(html_path, html)
     return {
         "raw_html_path": html_path.relative_to(paths.root).as_posix(),
         "raw_html_sha256": _sha256(html),
@@ -582,7 +582,7 @@ def _finish_report(report: dict, fetcher: PoliteFetcher, records: dict, discover
     report["total_records"] = len(records)
     report["succeeded_count"] = len(report.pop("succeeded"))
     report["failed_count"] = len(report["failed"])
-    _write_atomic(paths.report, json.dumps(report, indent=JSON_INDENT, ensure_ascii=False) + "\n")
+    write_atomic(paths.report, json.dumps(report, indent=JSON_INDENT, ensure_ascii=False) + "\n")
     return report
 
 
