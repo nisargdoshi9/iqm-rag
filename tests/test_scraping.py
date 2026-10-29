@@ -1,6 +1,7 @@
 """Tests for FR-1 scraping. Uses saved fixtures and mocked HTTP; never calls the live site."""
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,6 +10,7 @@ from urllib.robotparser import RobotFileParser
 
 import requests
 
+from iqm_rag import config
 from iqm_rag.scraping.discovery import (
     article_id_from_url,
     canonicalize,
@@ -23,6 +25,7 @@ from iqm_rag.scraping.scraper import (
     PoliteFetcher,
     Robots,
     extract_article,
+    fetch_sitemap,
     run_crawl,
 )
 
@@ -228,6 +231,65 @@ class RobotsTests(unittest.TestCase):
         robots = Robots(parser)
         self.assertFalse(robots.allowed("https://help.iqm.com/not-found"))
         self.assertTrue(robots.allowed(ARTICLE_URL))
+
+
+class ProtocolEdgeCaseTests(unittest.TestCase):
+    """Edge cases from the code review: malformed input and redirect loops must not crash the run."""
+
+    def _fetcher(self, session: mock.Mock) -> PoliteFetcher:
+        return PoliteFetcher("test-agent", delay_seconds=0.0, session=session,
+                             sleep=lambda _: None, clock=lambda: 0.0)
+
+    def test_malformed_sitemap_is_reported_not_raised(self):
+        response = requests.Response()
+        response.status_code = 200
+        response._content = b"<urlset><url>"  # truncated XML
+        response.url = "https://help.iqm.com/sitemap.xml"
+        session = mock.Mock(spec=requests.Session)
+        session.headers = {}
+        session.get.return_value = response
+        entries, report = fetch_sitemap(self._fetcher(session), Robots(RobotFileParser()))
+        self.assertEqual(entries, {})
+        self.assertFalse(report["fetched"])
+        self.assertIsNotNone(report["error"])
+
+    def test_redirect_loop_becomes_fetch_error_without_retry(self):
+        session = mock.Mock(spec=requests.Session)
+        session.headers = {}
+        session.get.side_effect = requests.TooManyRedirects("redirect loop")
+        with self.assertRaises(FetchError):
+            self._fetcher(session).get(ARTICLE_URL)
+        self.assertEqual(session.get.call_count, 1)
+
+    def test_contact_address_is_never_written_to_outputs(self):
+        article = fixture("article_upload_image_creative.html")
+        contact_agent = "IQM-RAG-Assignment-Bot/0.1 (contact: secret@example.com)"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            paths = RerunTests()._paths(root)
+            fetcher = PoliteFetcher(contact_agent, delay_seconds=0.0, session=RerunTests()._routes(article),
+                                    sleep=lambda _: None, clock=lambda: 0.0)
+            run_crawl(fetcher, paths)
+            written = paths.report.read_text() + paths.articles_jsonl.read_text()
+            self.assertNotIn("secret@example.com", written)
+            self.assertIn("IQM-RAG-Assignment-Bot", paths.report.read_text())
+
+
+class DelayConfigTests(unittest.TestCase):
+    def test_default_delay_is_two_seconds(self):
+        with mock.patch.dict(os.environ, {}):
+            os.environ.pop("SCRAPER_DELAY_SECONDS", None)
+            self.assertEqual(config.scraper_delay_seconds(), 2.0)
+
+    def test_non_numeric_delay_gives_clear_error(self):
+        with mock.patch.dict(os.environ, {"SCRAPER_DELAY_SECONDS": "two"}):
+            with self.assertRaisesRegex(RuntimeError, "must be a number"):
+                config.scraper_delay_seconds()
+
+    def test_negative_delay_is_rejected(self):
+        with mock.patch.dict(os.environ, {"SCRAPER_DELAY_SECONDS": "-1"}):
+            with self.assertRaisesRegex(RuntimeError, "must be 0 or more"):
+                config.scraper_delay_seconds()
 
 
 if __name__ == "__main__":

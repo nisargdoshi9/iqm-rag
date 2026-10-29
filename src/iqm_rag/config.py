@@ -35,4 +35,11 @@ def scraper_user_agent() -> str:
 
 def scraper_delay_seconds() -> float:
     """Minimum delay between requests. The crawl uses the larger of this and robots.txt Crawl-delay."""
-    return float(os.environ.get("SCRAPER_DELAY_SECONDS", DEFAULT_DELAY_SECONDS))
+    raw = os.environ.get("SCRAPER_DELAY_SECONDS", str(DEFAULT_DELAY_SECONDS))
+    try:
+        value = float(raw)
+    except ValueError as exc:
+        raise RuntimeError(f"SCRAPER_DELAY_SECONDS must be a number, got {raw!r}.") from exc
+    if value < 0:
+        raise RuntimeError(f"SCRAPER_DELAY_SECONDS must be 0 or more, got {value}.")
+    return value
