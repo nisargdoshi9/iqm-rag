@@ -1,7 +1,7 @@
 # FR-7: Chat interface
 
-Status: decided and implemented (2026-10-31). Start it with `streamlit run app.py`. Saved past chats are not built yet
-(see Open items).
+Status: decided and implemented (2026-10-31). Start it with `streamlit run app.py`. Saved past chats were considered and
+deferred on 2026-10-31 (see Open items).
 
 ## What it does
 
@@ -136,5 +136,7 @@ Bugs found while verifying in a real browser:
 
 ## Open items
 
-- Saved past chats that can be continued (proposed: local JSON files, git-ignored, a sidebar list; no accounts).
+- Saved past chats that can be continued: deferred by decision (2026-10-31). Proposed design for later: local JSON files in
+  `data/chats/` (git-ignored), a sidebar list by first question and date, reopen to continue, delete; no accounts. Caveat: if the
+  app were ever hosted publicly, every visitor would see every chat, so it would need per-visitor separation first.
 - Feedback controls (with tracing), media from matched sections, streaming, dark mode.
