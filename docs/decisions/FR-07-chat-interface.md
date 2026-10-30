@@ -62,6 +62,25 @@ demonstrations. It adds no new retrieval or answering logic; it shows what the c
 - **Friendlier avatars**: a smiling chat bubble for the assistant and a simple person on a warm background for the user,
   drawn as SVG (replacing Streamlit's robot and face icons).
 
+## Revisions after a second review (2026-10-31)
+
+- **Empty chat screen**: the input sits in the middle of the page under the greeting (a chat input placed inside a
+  container is inline), with the keyboard hint, three example question cards and the trust points below. After the first
+  question it moves to the bottom.
+- **Widths**: input 640 px (it matches the answer cards), content column 800 px, sidebar 340 px.
+- **Auto-scroll**: when a question is sent the loading card is brought into view. When the answer arrives the page waits
+  for its layout and Streamlit's own scroll-to-bottom to settle, then keeps the question and its answer together on screen,
+  or, for a long answer, puts the question at the top so the answer starts right below it. Checked three times in a
+  browser (an earlier version lost a race against Streamlit's own scroll).
+- **Cursor in the box**: focused on landing, after every answer, after New chat and after Copy. It is not taken from the
+  user if they are typing in another field, have text selected, or are using the sidebar controls. The placeholder says
+  what to type (first question, follow-up, or "Writing your answer…" while locked).
+- **Small extras**: a Copy button under each answer (it must be a span, because the markdown sanitizer removes button
+  elements; newlines in the copied text are encoded because a blank line ended the HTML block, which silently dropped the
+  button for every multi-paragraph answer), `/` jumps to the input from anywhere, a keyboard hint under the empty-state
+  input, a 2,000-character limit on the input that matches the retriever's limit, smooth scrolling.
+- **User avatar** recoloured from coral to a soft indigo with an indigo person icon, to sit within the theme.
+
 ## Limits
 
 - Light theme only; no dark mode design.

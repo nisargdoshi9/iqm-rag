@@ -9,7 +9,7 @@ from streamlit.testing.v1 import AppTest
 from openai import OpenAIError
 
 from iqm_rag.generation.chain import GenerationError
-from iqm_rag.ui.chat_app import SETUP_HELP
+from iqm_rag.ui.chat_app import PLACEHOLDER_FIRST, PLACEHOLDER_FOLLOW_UP, SETUP_HELP
 from test_generation import ChainTestCase, FakeLLM, draft
 
 
@@ -75,6 +75,27 @@ class PageTests(ChainTestCase):
         at.chat_input[0].set_value("first").run()
         at.chat_input[0].set_value("and then").run()
         self.assertEqual(len(at.chat_message), 4)
+
+    def test_the_box_invites_a_first_question_then_a_follow_up_and_goes_back_on_new_chat(self):
+        at = self.page()
+        self.assertEqual(at.chat_input[0].placeholder, PLACEHOLDER_FIRST)
+        at.chat_input[0].set_value("schedule a report").run()
+        self.assertEqual(at.chat_input[0].placeholder, PLACEHOLDER_FOLLOW_UP)
+        at.button(key="new_chat").click().run()
+        self.assertEqual(at.chat_input[0].placeholder, PLACEHOLDER_FIRST)
+
+    def test_an_answer_has_a_copy_button_but_an_error_does_not(self):
+        at = self.page()
+        at.chat_input[0].set_value("schedule a report").run()
+        self.assertIn('data-copy="Use the Reports tab."', self.texts(at))
+        broken = self.page(chain=BrokenChain())
+        broken.chat_input[0].set_value("schedule a report").run()
+        self.assertNotIn("data-copy", self.texts(broken))
+
+    def test_a_question_longer_than_the_limit_cannot_be_typed(self):
+        from iqm_rag.retrieval.retriever import MAX_QUERY_CHARS
+
+        self.assertEqual(self.page().chat_input[0].max_chars, MAX_QUERY_CHARS)
 
     def test_the_page_is_unlocked_again_once_an_answer_is_shown(self):
         at = self.page()

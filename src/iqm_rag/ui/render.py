@@ -88,11 +88,33 @@ def loading_html(message: str) -> str:
 
 
 def hero_html() -> str:
-    trust = "".join(f'<span class="trust-chip">{escape(text)}</span>' for text in
-                    ("Grounded in help.iqm.com", "Sources on every answer", "Says so when it isn't sure"))
     return ('<div class="hero"><div class="eyebrow">Help Center Assistant</div><h1>What can I help you find?</h1>'
             "<p>Ask about campaigns, creatives, reports, audiences and more. I answer only from the IQM Help Center "
-            f'and show where every answer comes from.</p><div class="trust">{trust}</div></div>')
+            "and show where every answer comes from.</p></div>")
+
+
+def trust_html() -> str:
+    chips = "".join(f'<span class="trust-chip">{escape(text)}</span>' for text in
+                    ("Grounded in help.iqm.com", "Sources on every answer", "Says so when it isn't sure"))
+    return f'<div class="trust">{chips}</div>'
+
+
+def input_hint_html() -> str:
+    return '<div class="input-hint"><kbd>Enter</kbd> to send · <kbd>Shift</kbd> + <kbd>Enter</kbd> for a new line · <kbd>/</kbd> to jump to the box</div>'
+
+
+def _attribute_text(text: str) -> str:
+    """Escape text for an HTML attribute. Newlines become entities: a blank line would end the markdown HTML block."""
+    return escape(text, quote=True).replace("\r\n", "\n").replace("\n", "&#10;")
+
+
+def actions_html(text: str) -> str:
+    """A small action row under an answer: copy its text. The text travels in an escaped data attribute. It is a span with
+    role="button" because Streamlit's markdown sanitizer removes <button> elements."""
+    return ('<div class="msg-actions"><span role="button" tabindex="0" class="copy-btn" data-copy="' + _attribute_text(text) + '">'
+            '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" '
+            'stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/>'
+            '<path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg><span class="copy-label">Copy</span></span></div>')
 
 
 def brand_html() -> str:

@@ -28,7 +28,10 @@ header[data-testid="stHeader"] { background: transparent; }
 [data-testid="stExpandSidebarButton"] { visibility: visible; width: 40px; height: 40px; border-radius: 12px; background: var(--card);
   border: 1px solid var(--line); box-shadow: var(--shadow); color: var(--accent); transition: all .15s ease; }
 [data-testid="stExpandSidebarButton"]:hover { background: var(--accent-soft); border-color: var(--accent); transform: translateX(2px); }
-.block-container { max-width: 860px; padding-top: 2.2rem; padding-bottom: 7rem; }
+.block-container { max-width: 800px; padding-top: 2.2rem; padding-bottom: 8rem; }
+section[data-testid="stSidebar"] { width: 340px !important; min-width: 340px; }
+[data-testid="stMain"], section.main { scroll-behavior: smooth; }
+[data-testid="stChatMessage"] { scroll-margin-top: 28px; scroll-margin-bottom: 150px; }
 
 /* sidebar */
 section[data-testid="stSidebar"] { background: var(--card); border-right: 1px solid var(--line); }
@@ -49,20 +52,20 @@ section[data-testid="stSidebar"] .stButton > button { width: 100%; border-radius
 section[data-testid="stSidebar"] .stButton > button:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 /* hero */
-.hero { text-align: center; padding: 2.4rem 0 1.4rem; }
+.hero { text-align: center; padding: 8vh 0 1.4rem; }
 .eyebrow { display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
   color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); padding: .3rem .8rem; border-radius: 999px; }
 .hero h1 { font-size: 2.7rem; line-height: 1.1; font-weight: 800; letter-spacing: -.025em; margin: 1rem 0 .7rem; padding: 0;
   background: linear-gradient(120deg, #1E2140 20%, var(--accent) 70%, var(--accent-2)); -webkit-background-clip: text;
   background-clip: text; color: transparent; }
 .hero p { color: var(--muted); font-size: 1.02rem; line-height: 1.6; max-width: 560px; margin: 0 auto; }
-.trust { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; margin-top: 1.2rem; }
+.trust { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; margin-top: 1.6rem; }
 .trust-chip { font-size: .78rem; font-weight: 600; color: #3A3F66; background: var(--card); border: 1px solid var(--line);
   padding: .35rem .8rem; border-radius: 999px; }
 .trust-chip::before { content: "✓"; color: var(--ok); margin-right: .4rem; font-weight: 800; }
 .try-label { text-align: center; font-size: .72rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
-  color: var(--muted); margin: 1.6rem 0 .8rem; }
-[class*="st-key-example_"] button { height: 100%; min-height: 96px; text-align: left; justify-content: flex-start; align-items: flex-start;
+  color: var(--muted); margin: 1.1rem 0 .7rem; }
+[class*="st-key-example_"] button { height: 100%; min-height: 84px; text-align: left; justify-content: flex-start; align-items: flex-start;
   padding: 1rem 1.1rem; border-radius: 16px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow);
   color: var(--ink); font-weight: 600; line-height: 1.4; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
 [class*="st-key-example_"] button:hover { transform: translateY(-3px); border-color: var(--accent); color: var(--accent);
@@ -158,6 +161,15 @@ dl.dev dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospa
   box-shadow: 0 12px 34px -14px rgba(30,33,64,.28); }
 [data-testid="stChatInput"]:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(79,70,229,.12), 0 12px 34px -14px rgba(30,33,64,.28); }
 [data-testid="stBottom"] > div { background: transparent; }
+[data-testid="stChatInput"] { max-width: 640px; margin-left: auto; margin-right: auto; }
+.input-hint { text-align: center; font-size: .74rem; color: var(--muted); margin: .55rem 0 .2rem; }
+.input-hint kbd { font-family: inherit; font-size: .68rem; font-weight: 600; background: var(--card); border: 1px solid var(--line);
+  border-bottom-width: 2px; border-radius: 6px; padding: .05rem .4rem; color: #3A3F66; }
+.msg-actions { margin-top: .7rem; }
+.copy-btn { display: inline-flex; align-items: center; gap: .4rem; font: inherit; font-size: .74rem; font-weight: 600; color: var(--muted);
+  background: transparent; border: 1px solid transparent; border-radius: 9px; padding: .25rem .55rem; cursor: pointer; transition: all .15s ease; }
+.copy-btn:hover { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-line); }
+.copy-btn.copied { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
 """
 
 
@@ -172,7 +184,7 @@ ASSISTANT_ICON = _data_uri(
     "L5.5 19.5l1-3.2C5 15.2 4 13.5 4 11.5z'/><path d='M9.2 11.2v.01M14.8 11.2v.01' stroke-width='2.5'/>"
     "<path d='M9.4 13.9c.7.6 1.6.9 2.6.9s1.9-.3 2.6-.9'/></svg>")
 USER_ICON = _data_uri(
-    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'><circle cx='12' cy='8.6' r='3.7'/>"
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='#4F46E5'><circle cx='12' cy='8.6' r='3.7'/>"
     "<path d='M4.8 19.6c.6-3.6 3.5-5.6 7.2-5.6s6.6 2 7.2 5.6c.1.6-.4 1.1-1 1.1H5.8c-.6 0-1.1-.5-1-1.1z'/></svg>")
 
 AVATAR_CSS = f"""
@@ -184,8 +196,8 @@ AVATAR_CSS = f"""
   background-image: url("{ASSISTANT_ICON}"), linear-gradient(135deg, #38BDF8, #4F46E5 70%, #7C3AED);
   background-size: 62%, 100%; }}
 [data-testid="stChatMessageAvatarUser"] {{
-  background-image: url("{USER_ICON}"), linear-gradient(135deg, #FDBA74, #FB7185);
-  background-size: 62%, 100%; }}
+  background-image: url("{USER_ICON}"), linear-gradient(135deg, #E8EAFF, #D3D7FF);
+  background-size: 62%, 100%; box-shadow: 0 0 0 2px #fff, 0 6px 14px -8px rgba(79,70,229,.55); }}
 """
 
 CSS = BASE_CSS + AVATAR_CSS
