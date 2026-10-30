@@ -84,18 +84,19 @@ class PageTests(ChainTestCase):
         at.button(key="new_chat").click().run()
         self.assertEqual(at.chat_input[0].placeholder, PLACEHOLDER_FIRST)
 
-    def test_an_answer_has_a_copy_button_but_an_error_does_not(self):
+    def test_there_is_no_copy_button_hint_or_character_counter(self):
         at = self.page()
         at.chat_input[0].set_value("schedule a report").run()
-        self.assertIn('data-copy="Use the Reports tab."', self.texts(at))
-        broken = self.page(chain=BrokenChain())
-        broken.chat_input[0].set_value("schedule a report").run()
-        self.assertNotIn("data-copy", self.texts(broken))
+        text = self.texts(at)
+        self.assertNotIn("data-copy", text)
+        self.assertNotIn("input-hint", text)
+        self.assertFalse(at.chat_input[0].max_chars)  # no limit, so no counter is shown
 
-    def test_a_question_longer_than_the_limit_cannot_be_typed(self):
-        from iqm_rag.retrieval.retriever import MAX_QUERY_CHARS
-
-        self.assertEqual(self.page().chat_input[0].max_chars, MAX_QUERY_CHARS)
+    def test_a_question_over_the_search_limit_gets_a_friendly_explanation_not_a_crash(self):
+        at = self.page()
+        at.chat_input[0].set_value("x" * 2500).run()
+        self.assertFalse(at.exception)
+        self.assertIn("couldn't use that question", self.texts(at))
 
     def test_the_page_is_unlocked_again_once_an_answer_is_shown(self):
         at = self.page()

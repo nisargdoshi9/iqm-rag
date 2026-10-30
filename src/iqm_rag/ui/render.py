@@ -99,24 +99,6 @@ def trust_html() -> str:
     return f'<div class="trust">{chips}</div>'
 
 
-def input_hint_html() -> str:
-    return '<div class="input-hint"><kbd>Enter</kbd> to send · <kbd>Shift</kbd> + <kbd>Enter</kbd> for a new line · <kbd>/</kbd> to jump to the box</div>'
-
-
-def _attribute_text(text: str) -> str:
-    """Escape text for an HTML attribute. Newlines become entities: a blank line would end the markdown HTML block."""
-    return escape(text, quote=True).replace("\r\n", "\n").replace("\n", "&#10;")
-
-
-def actions_html(text: str) -> str:
-    """A small action row under an answer: copy its text. The text travels in an escaped data attribute. It is a span with
-    role="button" because Streamlit's markdown sanitizer removes <button> elements."""
-    return ('<div class="msg-actions"><span role="button" tabindex="0" class="copy-btn" data-copy="' + _attribute_text(text) + '">'
-            '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" '
-            'stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/>'
-            '<path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg><span class="copy-label">Copy</span></span></div>')
-
-
 def brand_html() -> str:
     return ('<div class="brand"><div class="logo"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" '
             'stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 '

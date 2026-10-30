@@ -25,14 +25,14 @@ LOADING_MESSAGES = (
     "Reading your question…",
     "Flipping through the Help Center…",
     "Finding the right article…",
-    "Skimming the campaign guides…",
-    "Checking creatives and ad specs…",
-    "Looking through reports and dashboards…",
-    "Matching your words to IQM terms…",
+    "Looking up the relevant sections…",
+    "Matching your words to the docs…",
     "Comparing similar sections…",
     "Picking out the most relevant steps…",
+    "Checking the details…",
     "Double-checking the sources…",
     "Making sure nothing is made up…",
+    "Putting the answer together…",
     "Tidying up the answer…",
 )
 EXAMPLE_QUESTIONS = (

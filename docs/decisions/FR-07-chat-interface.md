@@ -75,11 +75,20 @@ demonstrations. It adds no new retrieval or answering logic; it shows what the c
 - **Cursor in the box**: focused on landing, after every answer, after New chat and after Copy. It is not taken from the
   user if they are typing in another field, have text selected, or are using the sidebar controls. The placeholder says
   what to type (first question, follow-up, or "Writing your answer…" while locked).
-- **Small extras**: a Copy button under each answer (it must be a span, because the markdown sanitizer removes button
-  elements; newlines in the copied text are encoded because a blank line ended the HTML block, which silently dropped the
-  button for every multi-paragraph answer), `/` jumps to the input from anywhere, a keyboard hint under the empty-state
-  input, a 2,000-character limit on the input that matches the retriever's limit, smooth scrolling.
+- **Small extras**: `/` jumps to the input from anywhere, and scrolling is smooth. A Copy button, a keyboard hint under the
+  empty-state input and a 2,000-character limit on the input were tried and removed on review (the hint was confusing,
+  the limit showed a character counter, and the Copy button was not wanted). A question over the search limit still gets a
+  friendly explanation instead of an error.
 - **User avatar** recoloured from coral to a soft indigo with an indigo person icon, to sit within the theme.
+
+## Revisions after a third review (2026-10-31)
+
+- **Loading messages** are all general; none names a product area (campaigns, creatives, reports and so on), because the
+  user may not have asked about them. A test enforces this.
+- **Message cards**: each speaker has a distinct card shape (user bubbles right-aligned with a pointed corner and a
+  maximum width of 78 percent, assistant cards left with a pointed corner), a consistent spacing rhythm inside cards, and
+  sources set off by a divider like a card footer. Found and fixed a clipped bottom edge: Streamlit pulls markdown blocks up
+  by 1 rem to cancel its own paragraph margin, which cut the last line of long messages once our own margins were used.
 
 ## Limits
 

@@ -77,6 +77,11 @@ class LoadingAndExampleTests(unittest.TestCase):
         self.assertEqual(len(LOADING_MESSAGES), len(set(LOADING_MESSAGES)))
         self.assertTrue(10 <= len(LOADING_MESSAGES) <= 12)
 
+    def test_loading_messages_are_general_and_never_name_a_product_area(self):
+        specific = ("campaign", "creative", "report", "dashboard", "audience", "bid", "iqm", "budget", "pixel")
+        for message in LOADING_MESSAGES:
+            self.assertFalse(any(word in message.lower() for word in specific), message)
+
     def test_loading_messages_go_round_robin_from_any_start(self):
         n = len(LOADING_MESSAGES)
         self.assertEqual([loading_message(5, t) for t in range(3)], [LOADING_MESSAGES[5], LOADING_MESSAGES[6], LOADING_MESSAGES[7]])

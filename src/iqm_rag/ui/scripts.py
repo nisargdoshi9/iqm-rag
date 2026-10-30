@@ -1,4 +1,4 @@
-"""Small JavaScript snippets for behaviour Streamlit cannot do on its own (FR-7): scrolling, focus, copy and a shortcut.
+"""Small JavaScript snippets for behaviour Streamlit cannot do on its own (FR-7): scrolling, focus and a shortcut.
 
 They are injected with `st.html(..., unsafe_allow_javascript=True)`, which runs in the page itself. The code is fixed
 text; the only value interpolated is a boolean or a fixed keyword, never user input.
@@ -12,26 +12,6 @@ _INSTALL_ONCE = """
 if (!window.__iqmUx) {
   window.__iqmUx = true;
   const editable = (el) => el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
-  const copy = function (button) {
-    if (!navigator.clipboard) return;
-    navigator.clipboard.writeText(button.getAttribute('data-copy')).then(function () {
-      const label = button.querySelector('.copy-label');
-      const original = label.textContent;
-      button.classList.add('copied');
-      label.textContent = 'Copied';
-      setTimeout(function () { button.classList.remove('copied'); label.textContent = original; }, 1600);
-      const box = document.querySelector('__INPUT__');
-      if (box && !box.disabled) box.focus({ preventScroll: true });
-    });
-  };
-  document.addEventListener('click', function (event) {
-    const button = event.target.closest('[data-copy]');
-    if (button) copy(button);
-  });
-  document.addEventListener('keydown', function (event) {
-    const button = event.target.closest && event.target.closest('[data-copy]');
-    if (button && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); copy(button); }
-  });
   document.addEventListener('keydown', function (event) {
     if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey || editable(document.activeElement)) return;
     const box = document.querySelector('__INPUT__');

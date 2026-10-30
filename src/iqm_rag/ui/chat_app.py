@@ -14,9 +14,8 @@ import streamlit as st
 
 from iqm_rag.generation.chain import AnswerChain
 from iqm_rag.generation.conversation import Conversation
-from iqm_rag.retrieval.retriever import MAX_QUERY_CHARS
-from iqm_rag.ui.render import (actions_html, badge_html, brand_html, details_html, evidence_section_html, hero_html,
-                               how_it_works_html, input_hint_html, loading_html, sources_html, trust_html)
+from iqm_rag.ui.render import (badge_html, brand_html, details_html, evidence_section_html, hero_html, how_it_works_html,
+                               loading_html, sources_html, trust_html)
 from iqm_rag.ui.scripts import page_script
 from iqm_rag.ui.styles import CSS
 from iqm_rag.ui.view import (LOADING_INTERVAL_SECONDS, LOADING_MESSAGES, AnswerView, build_answer_view,
@@ -82,8 +81,7 @@ def _sidebar(locked: bool) -> bool:
 def _welcome() -> Optional[str]:
     """The empty-chat screen: greeting, the input in the middle of the page, example questions underneath."""
     st.markdown(hero_html(), unsafe_allow_html=True)
-    typed = st.chat_input(PLACEHOLDER_FIRST, key="chat_box", max_chars=MAX_QUERY_CHARS)  # inline: it sits inside a container
-    st.markdown(input_hint_html(), unsafe_allow_html=True)
+    typed = st.chat_input(PLACEHOLDER_FIRST, key="chat_box")  # inline: it sits inside a container
     st.markdown('<div class="try-label">Try asking</div>', unsafe_allow_html=True)
     for column, (index, question) in zip(st.columns(len(st.session_state.examples)), enumerate(st.session_state.examples)):
         if column.button(question, key=f"example_{index}", width="stretch"):
@@ -96,8 +94,6 @@ def _render_assistant(view: AnswerView, developer: bool) -> None:
     st.markdown(badge_html(view.status), unsafe_allow_html=True)
     st.markdown(view.text)
     st.markdown(sources_html(view.sources), unsafe_allow_html=True)
-    if view.status != "error":
-        st.markdown(actions_html(view.text), unsafe_allow_html=True)
     if developer:
         with st.expander("Developer details"):
             st.markdown(details_html(view), unsafe_allow_html=True)
@@ -162,7 +158,7 @@ def run(chain_factory: Callable[[], AnswerChain]) -> None:
     typed = None
     if state.messages:
         placeholder = PLACEHOLDER_LOCKED if locked else PLACEHOLDER_FOLLOW_UP
-        typed = st.chat_input(placeholder, key="chat_box", disabled=locked, max_chars=MAX_QUERY_CHARS)
+        typed = st.chat_input(placeholder, key="chat_box", disabled=locked)
     else:
         with welcome_slot.container():
             typed = _welcome()

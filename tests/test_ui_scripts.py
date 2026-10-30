@@ -43,17 +43,11 @@ class PageScriptTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "scroll"):
             page_script(1, False, scroll="middle")
 
-    def test_the_copy_and_slash_shortcuts_are_installed_only_once(self):
+    def test_the_slash_shortcut_is_installed_only_once(self):
         script = page_script(1, False)
         self.assertIn("if (!window.__iqmUx)", script)
-        self.assertIn("navigator.clipboard", script)
         self.assertIn("event.key !== '/'", script)
-
-    def test_copying_returns_the_cursor_to_the_box_and_works_from_the_keyboard(self):
-        script = page_script(1, False)
-        self.assertIn("event.key === 'Enter' || event.key === ' '", script)
-        copy_part = script.split("const copy")[1].split("document.addEventListener('click'")[0]
-        self.assertIn("box.focus", copy_part)
+        self.assertNotIn("clipboard", script)
 
     def test_the_nonce_cannot_inject_code(self):
         with self.assertRaises(ValueError):

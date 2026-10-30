@@ -73,21 +73,25 @@ section[data-testid="stSidebar"] .stButton > button:hover { background: var(--ac
 [class*="st-key-example_"] button p { text-align: left; white-space: normal; overflow: visible; text-overflow: clip; }
 [class*="st-key-example_"] button div, [class*="st-key-example_"] button span { white-space: normal; overflow: visible; text-overflow: clip; }
 
-/* chat messages */
-[data-testid="stChatMessage"] { background: var(--card); border: 1px solid var(--line); border-radius: 20px;
-  padding: 1.05rem 1.3rem; box-shadow: var(--shadow); margin-bottom: 1rem; gap: 1rem; animation: rise .35s ease both; }
+/* chat messages: a clear speaker on each side, a consistent rhythm inside every card */
+[data-testid="stChatMessage"] { background: var(--card); border: 1px solid var(--line); border-radius: 20px 20px 20px 8px;
+  padding: 1.1rem 1.35rem 1.2rem; box-shadow: var(--shadow); margin-bottom: 1.1rem; gap: 1rem; align-items: flex-start;
+  animation: rise .35s ease both; }
 [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) { flex-direction: row-reverse; margin-left: auto;
-  width: fit-content; max-width: 82%; background: var(--accent-soft); border-color: var(--accent-line); box-shadow: none; }
-[data-testid="stChatMessageAvatarUser"] { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; }
-[data-testid="stChatMessageAvatarAssistant"] { background: linear-gradient(135deg, #0EA5E9, var(--accent)); color: #fff; }
-[data-testid="stChatMessage"] p, [data-testid="stChatMessage"] li { line-height: 1.65; }
-[data-testid="stChatMessage"] ol, [data-testid="stChatMessage"] ul { padding-left: 1.3rem; }
-[data-testid="stChatMessage"] li { margin-bottom: .25rem; }
+  width: fit-content; max-width: 78%; align-items: center; padding: .7rem 1rem .7rem 1.2rem; border-radius: 20px 20px 8px 20px;
+  background: var(--accent-soft); border-color: var(--accent-line); box-shadow: none; }
+[data-testid="stChatMessage"] [data-testid="stVerticalBlock"] { gap: .4rem; }
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] p { margin: 0 0 .6rem; line-height: 1.65; }
+/* Streamlit pulls each markdown block up by 1rem to cancel its own paragraph margin; we set our own margins, so cancel that */
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] { margin-bottom: 0; }
+[data-testid="stChatMessage"] [data-testid="stMarkdownContainer"] > :last-child { margin-bottom: 0; }
+[data-testid="stChatMessage"] ol, [data-testid="stChatMessage"] ul { padding-left: 1.3rem; margin: 0 0 .6rem; }
+[data-testid="stChatMessage"] li { line-height: 1.65; margin-bottom: .3rem; }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
 /* status badge */
 .badge { display: inline-flex; align-items: center; gap: .45rem; font-size: .72rem; font-weight: 700; letter-spacing: .02em;
-  padding: .28rem .7rem; border-radius: 999px; margin-bottom: .6rem; }
+  padding: .28rem .7rem; border-radius: 999px; margin-bottom: .25rem; }
 .badge i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .badge-answered { color: var(--ok); background: var(--ok-soft); }
 .badge-not_covered { color: var(--warn); background: var(--warn-soft); }
@@ -95,7 +99,8 @@ section[data-testid="stSidebar"] .stButton > button:hover { background: var(--ac
 .badge-error { color: var(--err); background: var(--err-soft); }
 
 /* sources: compact pills, details in a tooltip */
-.sources-label { font-size: .7rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 1rem 0 .45rem; }
+.sources-label { font-size: .7rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
+  margin: .9rem 0 .5rem; padding-top: .9rem; border-top: 1px solid var(--line); }
 .sources-label span { font-weight: 500; letter-spacing: 0; text-transform: none; opacity: .85; }
 .chips { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; }
 .src { position: relative; display: inline-flex; align-items: center; gap: .4rem; max-width: 300px; padding: .36rem .8rem; border-radius: 999px;
@@ -162,14 +167,6 @@ dl.dev dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospa
 [data-testid="stChatInput"]:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(79,70,229,.12), 0 12px 34px -14px rgba(30,33,64,.28); }
 [data-testid="stBottom"] > div { background: transparent; }
 [data-testid="stChatInput"] { max-width: 640px; margin-left: auto; margin-right: auto; }
-.input-hint { text-align: center; font-size: .74rem; color: var(--muted); margin: .55rem 0 .2rem; }
-.input-hint kbd { font-family: inherit; font-size: .68rem; font-weight: 600; background: var(--card); border: 1px solid var(--line);
-  border-bottom-width: 2px; border-radius: 6px; padding: .05rem .4rem; color: #3A3F66; }
-.msg-actions { margin-top: .7rem; }
-.copy-btn { display: inline-flex; align-items: center; gap: .4rem; font: inherit; font-size: .74rem; font-weight: 600; color: var(--muted);
-  background: transparent; border: 1px solid transparent; border-radius: 9px; padding: .25rem .55rem; cursor: pointer; transition: all .15s ease; }
-.copy-btn:hover { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-line); }
-.copy-btn.copied { color: var(--ok); background: var(--ok-soft); border-color: transparent; }
 """
 
 
@@ -189,7 +186,7 @@ USER_ICON = _data_uri(
 
 AVATAR_CSS = f"""
 [data-testid="stChatMessageAvatarAssistant"], [data-testid="stChatMessageAvatarUser"] {{
-  border-radius: 50%; width: 2.4rem; height: 2.4rem; flex: none; background-repeat: no-repeat; background-position: center;
+  border-radius: 50%; width: 2.2rem; height: 2.2rem; flex: none; background-repeat: no-repeat; background-position: center;
   box-shadow: 0 6px 14px -6px rgba(30,33,64,.45); }}
 [data-testid="stChatMessageAvatarAssistant"] > *, [data-testid="stChatMessageAvatarUser"] > * {{ display: none; }}
 [data-testid="stChatMessageAvatarAssistant"] {{
