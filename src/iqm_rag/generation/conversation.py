@@ -30,9 +30,13 @@ class Conversation:
         messages = [m for turn in self._turns for m in (Message("user", turn.question), Message("assistant", turn.answer.text))]
         return trim_history(messages, self._max_exchanges)
 
+    def record(self, answer: Answer) -> None:
+        """Add a finished turn. Used by `ask`, and by callers that run the chain elsewhere (for example in a worker thread)."""
+        self._turns.append(Turn(answer.question, answer))
+
     def ask(self, chain: AnswerChain, question: str) -> Answer:
         answer = chain.answer(question, self.history())
-        self._turns.append(Turn(answer.question, answer))
+        self.record(answer)
         return answer
 
     def reset(self) -> None:

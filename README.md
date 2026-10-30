@@ -14,9 +14,10 @@ src/iqm_rag/
 ├── retrieval/       # retriever, query rewriting
 ├── history.py       # chat messages and the history window
 ├── generation/      # context, prompts, citations, RAG chain
+├── ui/              # chat page, display logic, styles
 ├── observability/   # tracing
 └── evaluation/      # dataset, metrics, runner
-app.py               # chat interface entry point
+app.py               # chat interface entry point: streamlit run app.py
 scripts/             # scrape.py, index.py, retrieve.py, ask.py, chat.py, evaluate.py
 tests/
 data/                # raw/, processed/, chunks/, evaluation/

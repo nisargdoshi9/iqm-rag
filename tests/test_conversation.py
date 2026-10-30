@@ -70,6 +70,12 @@ class ConversationTests(unittest.TestCase):
         turn = convo.turns[0]
         self.assertEqual((turn.question, turn.answer.text), ("q1", "answer to q1"))
 
+    def test_a_finished_turn_can_be_recorded_separately(self):
+        chain, convo = StubChain(), Conversation()
+        convo.record(chain.answer("q1", []))
+        convo.ask(chain, "q2")
+        self.assertEqual([m.content for m in chain.calls[1][1]], ["q1", "answer to q1"])
+
     def test_the_window_can_be_changed(self):
         chain, convo = StubChain(), Conversation(max_exchanges=1)
         for n in range(1, 4):

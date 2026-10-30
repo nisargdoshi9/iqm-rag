@@ -6,3 +6,4 @@ chromadb==1.5.9
 python-dotenv==1.2.4
 langchain-core==1.7.3
 langchain-openai==1.7.3
+streamlit==1.66.1
