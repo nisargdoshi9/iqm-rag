@@ -4,7 +4,7 @@ Status: implemented on branch `feat/fr-2-cleaning`; awaiting local test. Decisio
 
 ## Context
 
-Requirement (SPECS.md FR-2, from the PDF): strip navigation, footers and boilerplate, while keeping headings, lists and tables meaningful.
+Requirement (assignment, FR-2): strip navigation, footers and boilerplate, while keeping headings, lists and tables meaningful.
 
 The current extractor (`extract_article` in `src/iqm_rag/scraping/scraper.py`) takes all text inside `.article_body`. That body includes page furniture, which then reaches `raw_text` and would reach chunks if not removed.
 
@@ -26,7 +26,7 @@ Not furniture (content, keep): "Key terms and concepts" (43 articles) appears to
 - **B. Remove by page structure.** Target the table-of-contents block and the back-to-top element by their HTML structure, not their wording. More robust, but depends on the current page markup.
 - **C. Remove by repetition.** Drop lines that appear in many articles. Catches furniture we haven't listed, but can also remove real content that repeats (for example "Click" or "Select" would be caught if the rule were too loose).
 
-Recommendation (mine, for your decision): B for the known blocks, plus a report of repeated lines (as above) to catch anything new, so we see furniture before it reaches chunks.
+Decision: B for the known blocks, plus a report of repeated lines (as above) to catch anything new, so we see furniture before it reaches chunks.
 
 ### D-FR2-2. Keep the table of contents or not
 - Remove it from the text. Headings are kept in the article body, so section structure isn't lost.
@@ -51,7 +51,7 @@ Principle: text is the evidence. Media is display-only and never used to answer.
 - 82 single-row table images are 206–1,600 px wide (median 595), none under 150 px, so a size filter does not find decorative images. 36 are app-name labels in "Primary app(s)" sections of collection overview pages; 46 are report/chart images in other articles and are real content.
 - 668 tables: 342 single-row callouts, about 326 data tables, plus layout tables that hold only images or app labels.
 
-### Decisions (approved)
+### Decisions
 1. **Section-level association is the guarantee.** Association types are ranking hints, not proof that an image illustrates a specific step.
 2. **Exclude the app-label images by template** (52 in practice, see the implementation notes): collection overview article plus the "Primary app(s)" section. The rule is explicit and auditable. Exclude them from generic instructional media, but consider keeping their app name as a structured association (useful for "which app supports X?").
 3. **Classify tables before attaching media**: callout, data, media/layout, unknown. Use cell structure, row patterns and surrounding content, not row count alone.

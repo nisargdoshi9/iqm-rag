@@ -2,9 +2,9 @@
 
 Status: chunking strategy, embedding model and vector store decided (2026-10-30). The chunker is written and run
 (see "Implementation"); the embedder and Chroma indexer are written and
-run (see "Embedding and indexing"). SPECS.md numbers (500-700 token target, 50-100 overlap) were treated as hypotheses only, not constraints.
+run (see "Embedding and indexing"). The 500-700 token target and 50-100 overlap in the initial project plan were treated as hypotheses only, not constraints.
 
-## Embedding model and vector store (decided by the project owner)
+## Embedding model and vector store
 
 | Decision | Value |
 |---|---|
@@ -20,7 +20,7 @@ and 64.6 for large, a modest gap of about 2.3 points, so no big gain is claimed.
 sections (Creatives app vs Campaigns app) and product jargon, where a larger vector may separate close cases better,
 but that is unmeasured. Not yet tested on our data; the evidence-hit-rate check can compare small vs large cheaply.
 
-Why a hosted model: the owner has OpenAI credits and the answer model is OpenAI too, so one key covers both. The
+Why a hosted model: OpenAI credits are available and the answer model is OpenAI too, so one key covers both. The
 alternative considered was a local bge-small-en-v1.5 (no key, but a 512-token input limit would force a cap of about
 450 tokens: 110 sections split instead of 36). all-MiniLM-L6-v2 (256-token limit) would have split 526 sections and was
 ruled out. Chroma was chosen over FAISS (no persistence or metadata filtering, so we would build them) and Qdrant
@@ -31,7 +31,7 @@ private user questions); mention in the write-up.
 Setup (done 2026-10-30): key in the git-ignored `.env`, clean `.venv`, pinned `openai`, `chromadb`, `python-dotenv`.
 `scripts/check_openai.py` embedded 3 test strings: 3 vectors of 3,072 dimensions, 22 tokens.
 
-## Decisions (made by the project owner)
+## Decisions
 
 | # | Decision | Value |
 |---|---|---|
@@ -58,7 +58,7 @@ All sizes are estimated as characters / 4. A real tokenizer comes with the embed
   The heading path is the only difference, which is the main reason for the context header.
 
 Conclusion: the data is already structured and its natural answerable unit (about 140 tokens) is far below the
-500-700 token hypothesis in SPECS.md.
+500-700 token hypothesis in the initial project plan.
 
 ## Options considered
 
@@ -87,7 +87,7 @@ Conclusion: the data is already structured and its natural answerable unit (abou
 4. Split only sections over the maximum, at unit boundaries, into evenly sized pieces. A table piece repeats the
    header row and lead-in sentence. A list piece repeats the intro sentence. An FAQ splits only between Q/A pairs.
 5. Prepend the context header (decision 4).
-6. Metadata: the SPECS schema fields plus section ID(s), part number, `content_hash`, `last_updated` and the media
+6. Metadata: the planned schema fields plus section ID(s), part number, `content_hash`, `last_updated` and the media
    IDs from FR-2 for the display plan. Chunk IDs are deterministic (`{article}:{section}:{part}`) so unchanged
    content can skip re-embedding.
 7. Video-only sections are not indexed; the video attaches to the neighbouring chunk.
@@ -160,7 +160,7 @@ Result on the real corpus (200 articles, sizes estimated as characters / 4):
 |---|---|---|---|---|---|---|
 | 2,310 | 194 | 406 | 691 | 376 | 37 | 142 |
 
-Chunk fields: the SPECS schema (`chunk_id`, `article_id`, `article_title`, `article_url`, `collection`,
+Chunk fields: the planned schema (`chunk_id`, `article_id`, `article_title`, `article_url`, `collection`,
 `section_path`, `chunk_index`, `text`, `content_hash`) plus `section_ids`, `media_section_ids`, `part`/`parts`,
 `context_header`, `token_estimate`, `last_updated`. The embedded string is `context_header + "\n\n" + text`
 (`embedding_text()`), and `content_hash` is the hash of that string. Chunk ID format `{first_section_id}:p{part}`.
@@ -177,7 +177,7 @@ Behaviour worth knowing:
 - Splits repeat the section heading; a list piece that starts mid-list repeats the intro sentence and keeps the
   original item numbers; table pieces repeat the header row; FAQ pairs are never separated.
 
-Decisions on the findings (owner, 2026-10-30):
+Decisions on the findings (2026-10-30):
 1. **Top-level merging: stopped (applied).** 138 of 514 merged chunks had joined top-level sections, which only share
    the article as their "parent" (for example "Assign a Contextual audience to a campaign" with "Locate additional
    Contextual audience resources": a how-to blended with a link list, labelled with the title only). Top-level
@@ -234,7 +234,7 @@ and report it in the write-up. Do not describe these values as optimised.
 Not guaranteed to help. The leaf section is already the answerable unit (median about 140 tokens) and the next level
 up, the article, is far too large. The only realistic gain is for the about 36 split sections. It also risks pulling
 in a near-identical sibling (Creatives vs Campaigns app), which hurts similar-but-wrong questions, and adds context
-tokens and vaguer citations. SPECS.md has no guidance on it (its bonus lists only hybrid search, re-ranking and
+tokens and vaguer citations. The project plan has no guidance on it (its optional retrieval work lists only hybrid search, re-ranking and
 query rewriting). Hook kept: every chunk stores `section_id` and `part`, so "expand to the whole section" is a
 retrieval-time lookup that needs no re-index. Build it only if evaluation failures show answers cut at split
 boundaries.
@@ -243,5 +243,5 @@ boundaries.
 
 - **Come back to: evidence hit rate.** Once the index exists, measure for each evaluation question whether its
   evidence section appears in the top-k results. It needs no LLM calls. If the 120 and 150 variants differ, use it in
-  the write-up. Owner asked to revisit this later.
+  the write-up. To revisit later.
 - Tiny intro chunks (142 under 60 tokens): see decision 2 above. Revisit after the evidence hit rate.

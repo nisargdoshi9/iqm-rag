@@ -177,7 +177,7 @@ Classification must use cell structure, row patterns and surrounding content, no
 - 65 embeds in 32 articles, all `youtube.com` iframes; 34 unique YouTube IDs.
 - Every iframe has the same title, "Embedded youtube video", so the page gives no usable title. The video ID is the only identifier.
 - The Video tutorials collection has only 4 articles (all with media).
-- Planned (approved): look up the real title through YouTube's public oEmbed endpoint (34 calls), show a thumbnail and a link, and load the player on click. No transcripts and no downloads. Not yet implemented.
+- Planned: look up the real title through YouTube's public oEmbed endpoint (34 calls), show a thumbnail and a link, and load the player on click. No transcripts and no downloads. Not yet implemented.
 
 ## 7. Page furniture (cross-reference)
 Logged in `docs/decisions/FR-02-cleaning.md`: "On this page:" table of contents (195 articles), "Return to the top of this article" (144), a related-articles list before it (unverified), and zero-width spaces (44 articles). "Key terms and concepts" (43 articles) looks like content.

@@ -1,9 +1,9 @@
 # FR-9: Evaluation set — decisions
 
-Status: 25 questions drafted and checked against the cleaned corpus. **Not yet reviewed by the user; not frozen.** Metrics, the runner and results come later.
+Status: 25 questions drafted and checked against the cleaned corpus. **Not yet reviewed by a human; not frozen.** Metrics, the runner and results come later.
 
 ## Decisions
-1. **Size:** 25 questions (the PDF minimum is 15).
+1. **Size:** 25 questions (the assignment minimum is 15).
 2. **Categories (count):** direct factual (3), procedural (3), list or multi-condition (3), multi-section or multi-source (3), follow-up with history (3), unanswerable (4), similar-but-wrong article (3), table lookup (3). Media is a field (`expected_media`) on two questions, not a category.
 3. **Expected evidence:** the article URL (needed for the citation check) plus the section heading and the section's content hash, so a later re-scrape cannot silently change what "correct" means.
 4. **How questions were written:** plain, user-style wording drawn from the article text, not creative paraphrases. Each question carries the exact supporting quote.
@@ -25,6 +25,6 @@ One JSON object per line: `id`, `category`, `split`, `question`, `history`, `exp
 After review, set `status` to `verified` and do not edit the file to improve scores. Changes after seeing results need a new version. The `test` split is used once, for the final report.
 
 ## Known limits
-- Written by an assistant from the article text and checked by script; a human review of every question is still pending.
+- Drafted from the article text with AI assistance and checked by script; a human review of every question is still pending.
 - The Help Center was scraped on 2026-10-29. Articles may change later; the section hashes show when that happens.
 - Two table questions (Bid Modifier eligibility and the ad-spec rows) test whether table content survives chunking.
