@@ -20,6 +20,7 @@ STATUS_LABELS = {
     "error": "Something went wrong",
 }
 SNIPPET_CHARS = 240
+PREVIEW_CHARS = 130
 LOADING_INTERVAL_SECONDS = 1.8
 LOADING_MESSAGES = (
     "Reading your question…",
@@ -51,6 +52,7 @@ class SourceLink:
     title: str
     sections: tuple[str, ...]
     url: str
+    previews: tuple[str, ...] = ()  # a short extract of each cited section, in the same order as `sections`
 
 
 @dataclass(frozen=True)
@@ -77,11 +79,17 @@ class AnswerView:
         return STATUS_LABELS[self.status]
 
 
-def _snippet(text: str) -> str:
+def _snippet(text: str, limit: int = SNIPPET_CHARS) -> str:
     """A short plain-text preview: the leading heading line is dropped because the header already names the section."""
     body = re.sub(r"\A(?:\s*#+[^\n]*\n)+", "", text)
     flat = re.sub(r"\s+", " ", re.sub(r"[#*`>]", "", body)).strip()
-    return flat if len(flat) <= SNIPPET_CHARS else flat[:SNIPPET_CHARS].rsplit(" ", 1)[0] + "…"
+    return flat if len(flat) <= limit else flat[:limit].rsplit(" ", 1)[0] + "…"
+
+
+def _previews(answer: Answer, citation) -> tuple[str, ...]:
+    """An extract of the text each cited section contributed, so a source can show what it was used for."""
+    by_section = {doc.section: doc.text for doc in answer.docs if doc.article_url == citation.url}
+    return tuple(_snippet(by_section.get(section, ""), PREVIEW_CHARS) for section in citation.sections)
 
 
 def _cited_chunk_ids(answer: Answer) -> set[str]:
@@ -127,7 +135,7 @@ def _developer_details(answer: Answer) -> tuple[tuple[str, str], ...]:
 
 
 def build_answer_view(answer: Answer) -> AnswerView:
-    sources = tuple(SourceLink(c.article_title, c.sections, c.url) for c in answer.citations)
+    sources = tuple(SourceLink(c.article_title, c.sections, c.url, _previews(answer, c)) for c in answer.citations)
     return AnswerView(answer.status, answer.text, sources, _evidence(answer), _developer_details(answer), answer.warnings)
 
 

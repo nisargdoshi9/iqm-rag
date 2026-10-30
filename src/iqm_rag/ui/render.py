@@ -6,6 +6,7 @@ into HTML without `html.escape`, and links are only emitted for http(s) URLs.
 
 from html import escape
 from typing import Sequence
+from urllib.parse import urlparse
 
 from iqm_rag.ui.view import STATUS_LABELS, AnswerView, EvidenceItem, SourceLink, evidence_counts
 
@@ -23,12 +24,30 @@ def badge_html(status: str) -> str:
 MAX_VISIBLE_SOURCES = 3  # the rest sit behind a "+N more" toggle so a long list never takes over the answer
 
 
+TITLE_VISIBLE_CHARS = 34  # a longer title is cut short on the pill, so the tooltip shows it in full
+
+
+def _domain(url: str) -> str:
+    return urlparse(url).netloc or "help.iqm.com"
+
+
+def _tooltip(link: SourceLink) -> str:
+    """What the pill does not say: the full title if it was cut, the cited section(s) with a short extract, and where it goes."""
+    parts = []
+    if len(link.title) > TITLE_VISIBLE_CHARS:
+        parts.append(f'<span class="tip-title">{escape(link.title)}</span>')
+    for index, section in enumerate(link.sections):
+        preview = link.previews[index] if index < len(link.previews) else ""
+        parts.append(f'<span class="tip-sec">{escape(section)}</span>')
+        if preview:
+            parts.append(f'<span class="tip-prev">“{escape(preview)}”</span>')
+    parts.append(f'<span class="tip-hint">Opens {escape(_domain(link.url))} in a new tab ↗</span>')
+    return f'<span class="tip">{"".join(parts)}</span>'
+
+
 def _source_pill(link: SourceLink) -> str:
     url = _safe_url(link.url)
-    sections = "".join(f'<span class="tip-sec">{escape(section)}</span>' for section in link.sections)
-    tip = (f'<span class="tip"><span class="tip-title">{escape(link.title)}</span>{sections}'
-           f'<span class="tip-hint">Click to open this article in the Help Center ↗</span></span>')
-    body = f'<span class="src-icon">↗</span><span class="src-text">{escape(link.title)}</span>{tip}'
+    body = f'<span class="src-icon">↗</span><span class="src-text">{escape(link.title)}</span>{_tooltip(link)}'
     if not url:
         return f'<span class="src">{body}</span>'
     return f'<a class="src" href="{url}" target="_blank" rel="noopener noreferrer">{body}</a>'
@@ -43,7 +62,8 @@ def sources_html(sources: Sequence[SourceLink]) -> str:
     more = ""
     if hidden:
         rest = "".join(_source_pill(link) for link in hidden)
-        more = f'<details class="more"><summary class="src more-btn">+{len(hidden)} more</summary><div class="more-list">{rest}</div></details>'
+        more = (f'<details class="more"><summary class="src more-btn"><span class="when-closed">+{len(hidden)} more</span>'
+                f'<span class="when-open">Show less</span></summary><div class="more-list">{rest}</div></details>')
     return ('<div class="sources-label">Sources <span>· hover for details, click to open</span></div>'
             f'<div class="chips">{pills}{more}</div>')
 

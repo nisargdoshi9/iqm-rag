@@ -23,12 +23,26 @@ class SourcesTests(unittest.TestCase):
         self.assertIn('rel="noopener noreferrer"', html)
         self.assertIn('<span class="src-text">Reports</span>', html)
 
-    def test_the_sections_and_an_open_hint_are_in_the_hover_tooltip_not_on_the_pill(self):
+    def test_the_tooltip_adds_the_section_an_extract_and_the_destination(self):
+        link = SourceLink("Reports", ("Send a report", "Edit"), "https://help.iqm.com/en/articles/1-x", ("Follow these steps to send.", "Pick the pencil icon."))
+        tip = sources_html([link]).split('<span class="tip">')[1]
+        self.assertIn('<span class="tip-sec">Send a report</span><span class="tip-prev">“Follow these steps to send.”</span>', tip)
+        self.assertIn('<span class="tip-sec">Edit</span><span class="tip-prev">“Pick the pencil icon.”</span>', tip)
+        self.assertIn("Opens help.iqm.com in a new tab", tip)
+
+    def test_the_tooltip_does_not_repeat_a_title_that_the_pill_already_shows(self):
+        html = sources_html([self.link(title="Short title")])
+        self.assertEqual(html.count("Short title"), 1)
+
+    def test_a_long_title_that_the_pill_cuts_off_is_shown_in_full_in_the_tooltip(self):
+        title = "A very long article title that will be cut short on the pill"
+        html = sources_html([self.link(title=title)])
+        self.assertIn(f'<span class="tip-title">{title}</span>', html)
+
+    def test_a_section_without_a_preview_still_gets_a_tooltip(self):
         html = sources_html([self.link()])
-        tip = html.split('<span class="tip">')[1]
-        self.assertIn('<span class="tip-sec">Send a report</span><span class="tip-sec">Edit</span>', tip)
-        self.assertIn("Click to open this article", tip)
-        self.assertEqual(html.count("Send a report"), 1)
+        self.assertIn('<span class="tip-sec">Send a report</span>', html)
+        self.assertNotIn("tip-prev", html)
 
     def test_the_label_tells_the_user_that_sources_can_be_opened(self):
         self.assertIn("hover for details, click to open", sources_html([self.link()]))
@@ -41,6 +55,7 @@ class SourcesTests(unittest.TestCase):
     def test_extra_sources_sit_behind_a_plus_n_more_toggle(self):
         html = sources_html([self.link(n, title=f"Article {n}") for n in range(1, 6)])
         self.assertIn("+2 more", html)
+        self.assertIn('<span class="when-open">Show less</span>', html)
         visible, hidden = html.split('<details class="more">')
         self.assertEqual(visible.count('class="src"'), 3)
         self.assertEqual(hidden.count('class="src"'), 2)

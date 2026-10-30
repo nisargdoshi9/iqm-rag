@@ -20,6 +20,10 @@ class AnswerViewTests(ChainTestCase):
         self.assertEqual([(s.title, s.sections) for s in view.sources], [("Title", ("A › B1",))])
         self.assertEqual(source_label(view.sources[0]), "Title: A › B1")
 
+    def test_each_source_carries_an_extract_of_the_section_it_was_used_for(self):
+        view = self.view(FakeLLM(draft([1])))
+        self.assertEqual(view.sources[0].previews, ("schedule schedule a report",))
+
     def test_the_three_outcomes_have_distinct_labels(self):
         labels = {status: STATUS_LABELS[status] for status in ("answered", "not_covered", "clarification")}
         self.assertEqual(len(set(labels.values())), 3)

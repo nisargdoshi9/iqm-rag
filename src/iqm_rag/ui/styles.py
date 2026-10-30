@@ -119,14 +119,18 @@ div[data-testid="stMarkdownContainer"] .ev-meta a { text-decoration: none; }
 .tip::after { content: ""; position: absolute; left: 22px; top: 100%; border: 6px solid transparent; border-top-color: #1E2140; }
 .src:hover .tip, .src:focus-visible .tip { display: flex; }
 .tip-title { font-weight: 700; font-size: .8rem; }
-.tip-sec { font-size: .74rem; color: #C9CCF2; }
-.tip-hint { font-size: .72rem; color: #A5ABFF; margin-top: 4px; }
+.tip-sec { font-size: .74rem; color: #C9CCF2; font-weight: 600; margin-top: 2px; }
+.tip-prev { font-size: .74rem; color: #fff; opacity: .92; line-height: 1.45; font-weight: 400; font-style: italic; }
+.tip-hint { font-size: .71rem; color: #A5ABFF; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,.14); }
 details.more { display: contents; }
 details.more > summary { list-style: none; }
 details.more > summary::-webkit-details-marker { display: none; }
-.more-btn { color: var(--accent); }
+.more-btn { color: var(--accent); order: 99; }
+.more-btn .when-open { display: none; }
+details.more[open] .when-closed { display: none; }
+details.more[open] .when-open { display: inline; }
 details.more[open] > summary { background: var(--accent-soft); border-color: var(--accent); }
-.more-list { display: flex; flex-wrap: wrap; gap: .45rem; flex-basis: 100%; margin-top: .1rem; }
+.more-list { display: contents; }  /* the extra pills flow in with the others; the toggle sits last */
 
 /* expanders (evidence, developer details) */
 [data-testid="stExpander"] { border: 1px solid var(--line); border-radius: 14px; background: #FAFAFE; margin-top: .9rem; overflow: hidden; }

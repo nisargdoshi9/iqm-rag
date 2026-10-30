@@ -90,6 +90,14 @@ demonstrations. It adds no new retrieval or answering logic; it shows what the c
   sources set off by a divider like a card footer. Found and fixed a clipped bottom edge: Streamlit pulls markdown blocks up
   by 1 rem to cancel its own paragraph margin, which cut the last line of long messages once our own margins were used.
 
+## Revisions after a fourth review (2026-10-31)
+
+- **Source tooltip** no longer repeats the article title the pill already shows. It shows the cited section(s), a short
+  extract of the text each one contributed (so a source says what it was used for), and where the click goes ("Opens
+  help.iqm.com in a new tab"). The full title appears only when the pill had to cut it short.
+- **"+N more"** now expands the extra pills inline, after the visible ones, and the toggle changes to "Show less". Before, the
+  extra pills appeared on a new row and the button kept its label, so it looked as if nothing had happened.
+
 ## Limits
 
 - Light theme only; no dark mode design.
