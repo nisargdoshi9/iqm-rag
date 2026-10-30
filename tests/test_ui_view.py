@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from iqm_rag.generation.chain import GenerationError
 from iqm_rag.ingestion.embeddings import EmbeddingError
-from iqm_rag.ui.view import (format_clock, EXAMPLE_QUESTIONS, LOADING_MESSAGES, STATUS_LABELS, build_answer_view, build_error_view,
+from iqm_rag.ui.view import (tracing_status_text, format_clock, EXAMPLE_QUESTIONS, LOADING_MESSAGES, STATUS_LABELS, build_answer_view, build_error_view,
                              evidence_counts, loading_message, pick_examples, source_label)
 from test_generation import ChainTestCase, FakeLLM, draft
 
@@ -52,8 +52,9 @@ class AnswerViewTests(ChainTestCase):
 
     def test_the_developer_details_cover_the_rewrite_model_tokens_and_timing(self):
         details = dict(self.view(FakeLLM(draft([1]))).details)
-        for label in ("Question as typed", "Search query", "Rewrite", "Answer model", "Embedding model", "Tokens", "Time"):
+        for label in ("Question as typed", "Search query", "Rewrite", "Answer model", "Embedding model", "Tokens", "Time", "Trace"):
             self.assertIn(label, details)
+        self.assertIn("tracing off", details["Trace"])
         self.assertIn("in 100 · out 20", details["Tokens"])
         self.assertIn("prompt v4", details["Answer model"])
 
@@ -75,6 +76,12 @@ class ErrorViewTests(unittest.TestCase):
 
     def test_an_unexpected_failure_is_generic(self):
         self.assertIn("unexpected", build_error_view(KeyError("x")).text)
+
+
+class TracingStatusTests(unittest.TestCase):
+    def test_the_sidebar_says_whether_tracing_is_on_and_where_it_goes(self):
+        self.assertEqual(tracing_status_text(True, "demo"), "Tracing on · LangSmith project demo")
+        self.assertIn("Tracing off", tracing_status_text(False, "demo"))
 
 
 class ClockTests(unittest.TestCase):

@@ -7,3 +7,4 @@ python-dotenv==1.2.4
 langchain-core==1.7.3
 langchain-openai==1.7.3
 streamlit==1.66.1
+langsmith==0.14.16

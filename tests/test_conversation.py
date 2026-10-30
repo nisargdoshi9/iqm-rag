@@ -14,7 +14,7 @@ class StubChain:
         self.calls: list[tuple[str, list[Message]]] = []
         self.fail_next = False
 
-    def answer(self, question: str, history: list[Message]):
+    def answer(self, question: str, history: list[Message], **kwargs):
         self.calls.append((question, list(history)))
         if self.fail_next:
             self.fail_next = False

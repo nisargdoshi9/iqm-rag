@@ -13,6 +13,7 @@ from typing import Optional
 from iqm_rag.generation.chain import Answer, GenerationError, default_chain
 from iqm_rag.ingestion.embeddings import EmbeddingError
 from iqm_rag.ingestion.indexing import IndexMismatchError, IndexNotBuiltError
+from iqm_rag.observability.tracing import flush_traces
 from iqm_rag.retrieval.retriever import RetrievalError
 
 
@@ -22,7 +23,7 @@ def format_answer(answer: Answer, evidence: bool) -> str:
     lines = [f"Question: {answer.question}",
              f"Status: {answer.status}  ({answer.model}, prompt {answer.prompt_version}, "
              f"{tokens}, model {answer.llm_ms:.0f} ms, retrieval {answer.retrieval.embed_ms + answer.retrieval.search_ms:.0f} ms)",
-             "", answer.text, ""]
+             f"Trace: {answer.trace_id}" + ("" if answer.traced else " (tracing off)"), "", answer.text, ""]
     if answer.citations:
         lines.append("Sources:")
         lines += [f"  - {c.article_title}: {'; '.join(c.sections)}\n    {c.url}" for c in answer.citations]
@@ -47,6 +48,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         print(f"Answering stopped: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(answer.to_dict(), indent=2, ensure_ascii=False) if args.json else format_answer(answer, args.evidence))
+    flush_traces()
     return 0
 
 

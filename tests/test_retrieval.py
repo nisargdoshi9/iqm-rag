@@ -5,6 +5,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import hermetic  # noqa: F401  (keeps tracing off in tests)
+
 from iqm_rag import config
 from iqm_rag.ingestion.embeddings import EmbeddingError, EmbeddingResult
 from iqm_rag.ingestion.indexing import IndexMismatchError, IndexNotBuiltError, run_indexing

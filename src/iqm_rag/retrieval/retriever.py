@@ -12,10 +12,13 @@ from typing import Optional
 
 import chromadb
 from chromadb.errors import ChromaError
+from langsmith import traceable
+from langsmith.run_helpers import get_current_run_tree
 
 from iqm_rag import config
 from iqm_rag.ingestion.embeddings import Embedder, default_embedder
 from iqm_rag.ingestion.indexing import IndexMismatchError, open_index, record_to_chunk, stored_dimension
+from iqm_rag.observability.tracing import retrieval_documents
 
 MAX_QUERY_CHARS = 2000  # far below the embedding model's input limit; a longer query is rejected, never truncated
 MS_PER_SECOND = 1000.0
@@ -49,6 +52,12 @@ class RetrievalResult:
     search_ms: float
     hits: list[RetrievedChunk]
 
+    def dict(self) -> dict:
+        """The hook LangSmith uses (pydantic-v1 style) to log this object compactly; the `vector_search` step holds the chunk text."""
+        return {"query": self.query, "top_k": self.top_k, "embedding_model": self.embedding_model, "embedding_tokens": self.embedding_tokens,
+                "embed_ms": round(self.embed_ms, 1), "search_ms": round(self.search_ms, 1),
+                "chunk_ids": [hit.chunk["chunk_id"] for hit in self.hits], "similarities": [round(hit.similarity, 3) for hit in self.hits]}
+
     def to_dict(self) -> dict:
         return {
             "query": self.query, "top_k": self.top_k, "embedding_model": self.embedding_model,
@@ -79,6 +88,12 @@ class Retriever:
         self._collection = open_index(path, embedder.model)
         self._dimension = stored_dimension(self._collection)
 
+    @property
+    def embedding_model(self) -> str:
+        return self._embedder.model
+
+    @traceable(run_type="retriever", name="vector_search", process_inputs=lambda inputs: {"query": inputs.get("query"), "top_k": inputs.get("top_k")},
+               process_outputs=retrieval_documents)
     def retrieve(self, query: str, top_k: Optional[int] = None) -> RetrievalResult:
         """The `top_k` chunks closest to the query, closest first."""
         text = _check_query(query)
@@ -87,7 +102,15 @@ class Retriever:
         hits, search_ms = self._search(text, vector, k)
         return RetrievalResult(text, k, self._embedder.model, tokens, embed_ms, search_ms, hits)
 
+    @traceable(run_type="embedding", name="embed_query", process_inputs=lambda inputs: {"text": inputs.get("text")},
+               process_outputs=lambda out: {"dimension": len(out[0]), "tokens": out[1], "ms": round(out[2], 1)})
     def _embed(self, text: str) -> tuple[list[float], int, float]:
+        run = get_current_run_tree()
+        if run is not None:
+            run.add_metadata({"embedding_model": self._embedder.model})
+        return self._embed_text(text)
+
+    def _embed_text(self, text: str) -> tuple[list[float], int, float]:
         started = time.perf_counter()
         result = self._embedder.embed([text])
         elapsed = (time.perf_counter() - started) * MS_PER_SECOND

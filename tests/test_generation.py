@@ -6,6 +6,8 @@ import unittest
 from pathlib import Path
 from typing import Optional
 
+import hermetic  # noqa: F401  (keeps tracing off in tests)
+
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableLambda
 from openai import LengthFinishReasonError, OpenAIError

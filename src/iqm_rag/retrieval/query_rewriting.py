@@ -94,6 +94,10 @@ class QueryRewriter:
         self._model = model
         self._chain = build_prompt() | llm
 
+    @property
+    def model(self) -> str:
+        return self._model
+
     def rewrite(self, question: str, history: Sequence[Message]) -> RewriteResult:
         if not history:
             return RewriteResult(question, question, False, None, None, None, 0.0)

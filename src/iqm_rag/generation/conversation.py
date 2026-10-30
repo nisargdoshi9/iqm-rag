@@ -4,6 +4,7 @@ Each session owns its own `Conversation`, so sessions cannot mix. The chain stay
 recorded, so an error never pollutes the history. Abstentions are recorded: the user can follow up on them.
 """
 
+import uuid
 from dataclasses import dataclass
 
 from iqm_rag.generation.chain import Answer, AnswerChain
@@ -20,6 +21,7 @@ class Conversation:
     def __init__(self, max_exchanges: int = MAX_HISTORY_EXCHANGES) -> None:
         self._max_exchanges = max_exchanges
         self._turns: list[Turn] = []
+        self.session_id = uuid.uuid4().hex  # groups this chat's traces into one thread
 
     @property
     def turns(self) -> tuple[Turn, ...]:
@@ -35,9 +37,10 @@ class Conversation:
         self._turns.append(Turn(answer.question, answer))
 
     def ask(self, chain: AnswerChain, question: str) -> Answer:
-        answer = chain.answer(question, self.history())
+        answer = chain.answer(question, self.history(), session_id=self.session_id)
         self.record(answer)
         return answer
 
     def reset(self) -> None:
         self._turns.clear()
+        self.session_id = uuid.uuid4().hex

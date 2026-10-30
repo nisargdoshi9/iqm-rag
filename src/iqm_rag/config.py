@@ -31,6 +31,9 @@ USER_AGENT_PRODUCT = "IQM-RAG-Assignment-Bot"
 DEFAULT_DELAY_SECONDS = 2.0
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large"
 DEFAULT_CHAT_MODEL = "gpt-4.1-mini"
+DEFAULT_LANGSMITH_PROJECT = "iqm-help-center-rag"
+PLACEHOLDER_LANGSMITH_KEYS = ("", "ls-your-key-here")
+FALSE_VALUES = ("false", "0", "no", "off")
 LLM_MAX_RETRIES = 3  # the OpenAI client retries rate limits, timeouts and 5xx errors with backoff
 LLM_TIMEOUT_SECONDS = 60.0
 DEFAULT_TOP_K = 8  # chunks retrieved per question; covers the case where a second evidence section ranks around 7th
@@ -97,3 +100,19 @@ def chat_model() -> str:
 def rewrite_model() -> str:
     """Name of the model that rewrites follow-up questions (REWRITE_MODEL); defaults to the answer model."""
     return os.environ.get("REWRITE_MODEL", "").strip() or chat_model()
+
+
+def langsmith_api_key() -> str:
+    """The LangSmith key, or an empty string if it is unset or still the placeholder. Never log or print the value."""
+    value = os.environ.get("LANGSMITH_API_KEY", "").strip()
+    return "" if value in PLACEHOLDER_LANGSMITH_KEYS else value
+
+
+def tracing_enabled() -> bool:
+    """Tracing is on when a LangSmith key is present, unless LANGSMITH_TRACING is explicitly false."""
+    switched_off = os.environ.get("LANGSMITH_TRACING", "").strip().lower() in FALSE_VALUES and bool(os.environ.get("LANGSMITH_TRACING", "").strip())
+    return bool(langsmith_api_key()) and not switched_off
+
+
+def langsmith_project() -> str:
+    return os.environ.get("LANGSMITH_PROJECT", "").strip() or DEFAULT_LANGSMITH_PROJECT

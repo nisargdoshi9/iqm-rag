@@ -126,6 +126,7 @@ def _developer_details(answer: Answer) -> tuple[tuple[str, str], ...]:
         ("Search query", answer.rewrite.query),
         ("Rewrite", _rewrite_detail(answer)),
         ("Status", answer.status),
+        ("Trace", f"{answer.trace_id} · {'sent to LangSmith' if answer.traced else 'tracing off'}"),
         ("Answer model", f"{answer.model} · prompt {answer.prompt_version} · {answer.llm_attempts} attempt(s)"),
         ("Embedding model", f"{retrieval.embedding_model} · top_k {retrieval.top_k} · {retrieval.embedding_tokens} query tokens"),
         ("Tokens", tokens),
@@ -172,3 +173,7 @@ def evidence_counts(items: Sequence[EvidenceItem]) -> tuple[int, int]:
 def format_clock(moment: datetime) -> str:
     """A 12-hour clock without a leading zero, such as "9:05 AM". The page script re-formats it in the reader's time zone."""
     return moment.astimezone().strftime("%I:%M %p").lstrip("0")
+
+
+def tracing_status_text(enabled: bool, project: str) -> str:
+    return f"Tracing on · LangSmith project {project}" if enabled else "Tracing off · set LANGSMITH_API_KEY to turn it on"

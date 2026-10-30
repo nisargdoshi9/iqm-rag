@@ -24,6 +24,10 @@ class ContextDoc:
     best_rank: int
     best_similarity: float
 
+    def dict(self) -> dict:
+        """The hook LangSmith uses (pydantic-v1 style) to log this object compactly; the prompt step holds the text."""
+        return {"number": self.number, "header": self.header, "chunk_ids": list(self.chunk_ids), "characters": len(self.text)}
+
 
 def _section_key(chunk: dict) -> str:
     """Chunk ID without the part suffix: parts of one split section share it."""

@@ -14,6 +14,7 @@ from iqm_rag.generation.chain import GenerationError, default_chain
 from iqm_rag.generation.conversation import Conversation
 from iqm_rag.ingestion.embeddings import EmbeddingError
 from iqm_rag.ingestion.indexing import IndexMismatchError, IndexNotBuiltError
+from iqm_rag.observability.tracing import flush_traces
 from iqm_rag.retrieval.retriever import RetrievalError
 
 PROMPT = "\nYou: "
@@ -35,8 +36,10 @@ def main(argv: Optional[list[str]] = None) -> int:
             line = input(PROMPT).strip()
         except (EOFError, KeyboardInterrupt):
             print()
+            flush_traces()
             return 0
         if line == "/quit":
+            flush_traces()
             return 0
         if line == "/new":
             conversation.reset()

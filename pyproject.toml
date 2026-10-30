@@ -17,6 +17,7 @@ dependencies = [
     "langchain-core>=1.7",
     "langchain-openai>=1.7",
     "streamlit>=1.66",
+    "langsmith>=0.14",
 ]
 
 [tool.setuptools.packages.find]

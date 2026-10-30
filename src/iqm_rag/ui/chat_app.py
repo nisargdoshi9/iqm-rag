@@ -13,6 +13,7 @@ from typing import Callable, Optional
 
 import streamlit as st
 
+from iqm_rag import config
 from iqm_rag.generation.chain import AnswerChain
 from iqm_rag.generation.conversation import Conversation
 from iqm_rag.ui.render import (brand_html, details_html, evidence_section_html, hero_html, how_it_works_html, loading_html,
@@ -20,7 +21,7 @@ from iqm_rag.ui.render import (brand_html, details_html, evidence_section_html, 
 from iqm_rag.ui.scripts import page_script
 from iqm_rag.ui.styles import CSS
 from iqm_rag.ui.view import (LOADING_INTERVAL_SECONDS, LOADING_MESSAGES, AnswerView, build_answer_view,
-                             build_error_view, loading_message, pick_examples)
+                             build_error_view, loading_message, pick_examples, tracing_status_text)
 
 PAGE_TITLE = "Help Center Assistant"
 PLACEHOLDER_FIRST = "Ask about campaigns, creatives, reports…"
@@ -89,6 +90,8 @@ def _sidebar(locked: bool) -> bool:
             _new_chat()
         developer = st.toggle("Developer mode", key="developer_mode", disabled=locked,
                               help="Show the search query, scores, tokens and timings.")
+        if developer:
+            st.caption(tracing_status_text(getattr(st.session_state.get("chain"), "tracing_enabled", False), config.langsmith_project()))
         st.markdown(how_it_works_html(), unsafe_allow_html=True)
     return developer
 
@@ -132,7 +135,7 @@ def _ask_with_loader(question: str, placeholder) -> AnswerView:
     state = st.session_state
     start, tick = random.randrange(len(LOADING_MESSAGES)), 0
     with ThreadPoolExecutor(max_workers=1) as pool:
-        future = pool.submit(state.chain.answer, question, state.conversation.history())
+        future = pool.submit(state.chain.answer, question, state.conversation.history(), session_id=state.conversation.session_id)
         while True:
             placeholder.markdown(loading_html(loading_message(start, tick)), unsafe_allow_html=True)
             done, _ = wait([future], timeout=LOADING_INTERVAL_SECONDS)

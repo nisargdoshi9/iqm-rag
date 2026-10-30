@@ -25,7 +25,7 @@ def app_script(factory):
 
 
 class BrokenChain:
-    def answer(self, question, history):
+    def answer(self, question, history, **kwargs):
         raise GenerationError("model request failed: secret detail")
 
 
@@ -35,11 +35,11 @@ class FlakyChain:
     def __init__(self, real) -> None:
         self.real, self.calls = real, 0
 
-    def answer(self, question, history):
+    def answer(self, question, history, **kwargs):
         self.calls += 1
         if self.calls == 1:
             raise GenerationError("model request failed")
-        return self.real.answer(question, history)
+        return self.real.answer(question, history, **kwargs)
 
 
 class PageTests(ChainTestCase):
@@ -132,6 +132,21 @@ class PageTests(ChainTestCase):
         at.chat_input[0].set_value("x" * 2500).run()
         self.assertFalse(at.exception)
         self.assertIn("couldn't use that question", self.texts(at))
+
+    def test_developer_mode_shows_the_tracing_state_and_the_trace_id(self):
+        at = self.page()
+        at.chat_input[0].set_value("schedule a report").run()
+        at.toggle(key="developer_mode").set_value(True).run()
+        self.assertIn("Tracing off", " ".join(c.value for c in at.caption))
+        self.assertIn("tracing off", self.texts(at))
+        trace_id = at.session_state["conversation"].turns[0].answer.trace_id
+        self.assertIn(trace_id, self.texts(at))
+
+    def test_each_chat_has_its_own_session_id_for_grouping_traces(self):
+        at = self.page()
+        first = at.session_state["conversation"].session_id
+        at.button(key="new_chat").click().run()
+        self.assertNotEqual(first, at.session_state["conversation"].session_id)
 
     def test_the_page_is_unlocked_again_once_an_answer_is_shown(self):
         at = self.page()
