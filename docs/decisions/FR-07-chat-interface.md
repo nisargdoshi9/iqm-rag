@@ -98,6 +98,35 @@ demonstrations. It adds no new retrieval or answering logic; it shows what the c
 - **"+N more"** now expands the extra pills inline, after the visible ones, and the toggle changes to "Show less". Before, the
   extra pills appeared on a new row and the button kept its label, so it looked as if nothing had happened.
 
+## Chat UI best-practice pass (2026-10-31)
+
+Triggered by review feedback on the composer and spacing, and widened to a checklist from published chat-UI guidance (mostly
+developer guides, issue threads and design-system docs, not controlled studies). Sources: Stream chat SDK docs (scroll-to-bottom
+button), the Zoom chat SDK developer forum, a Jitsi issue on scrolling for one's own messages, a ChatLayout issue on a
+bottom tolerance, a Jupyter AI issue on a "new message" indicator, the Nord Health chat component docs (reduced motion,
+optional timestamps) and a UXPin chat-UI guide (live regions, retry on failure).
+
+| Guidance | Applied |
+|---|---|
+| The composer is a fixed region that never hides the newest message and that messages do not show through | The composer is a solid band with a soft fade above it; its padding was cut (it had 56 px of empty space below the box); the gap under the last message went from 177 px to 58 px |
+| Always scroll for the user's own send; scroll for a reply only if the reader has not scrolled up | The send scrolls to the loading card. A reply scrolls only if the reader did not scroll up while waiting (checked: the scroll position did not move) |
+| Show a jump-to-latest control only when away from the bottom | A "Latest" pill appears when more than 160 px from the bottom, above the composer; clicking it also returns the cursor to the input |
+| Timestamps as small optional metadata | A small grey time on every message, shown in the reader's own time zone (with the date if not today) |
+| Announce new messages to screen readers; mark the loading state | The transcript is a polite live region; the loading card has role status |
+| Clear error with a retry on the failed message | "Try again" on the latest error card; it re-asks the same question without repeating the user's message |
+| Respect reduced-motion preferences | Animations, transitions and smooth scrolling are switched off under prefers-reduced-motion |
+| Visible keyboard focus, sufficient contrast, phone ergonomics | Focus rings on pills and buttons; muted text darkened to about 5.2:1; 16 px input text (no iOS zoom); safe-area padding; wider bubbles on phones |
+
+Not applied: a stop-generating control (the call is short and cannot be cancelled cleanly), streaming, and human hand-off
+(not applicable to a documentation assistant).
+
+Bugs found while verifying in a real browser:
+- The "Latest" button was first built from an HTML string inside the script. Streamlit's sanitizer (DOMPurify) removes a
+  script whose text contains "<" before a letter, so the whole script silently did nothing (no focus, no scroll). It is now
+  built with DOM calls and a test fails if the script text contains such a sequence.
+- Collapsing the sidebar left a 40 px strip visible: Streamlit slides it 300 px but ours is 340 px wide. A collapsed sidebar
+  now slides fully out (checked on desktop and phone widths).
+
 ## Limits
 
 - Light theme only; no dark mode design.

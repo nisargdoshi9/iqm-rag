@@ -1,5 +1,6 @@
 """Tests for the JavaScript snippets (FR-7). They check the generated text; behaviour is checked in a real browser."""
 
+import re
 import unittest
 
 from iqm_rag.ui.scripts import INPUT_SELECTOR, MESSAGE_SELECTOR, page_script
@@ -48,6 +49,41 @@ class PageScriptTests(unittest.TestCase):
         self.assertIn("if (!window.__iqmUx)", script)
         self.assertIn("event.key !== '/'", script)
         self.assertNotIn("clipboard", script)
+
+    def test_a_latest_button_appears_only_when_the_reader_is_away_from_the_bottom(self):
+        script = page_script(1, False)
+        self.assertIn("jump-latest", script)
+        self.assertIn("button.classList.toggle('visible'", script)
+        self.assertIn("> 160", script)
+        click = script.split("button.addEventListener('click'")[1].split("document.body.appendChild")[0]
+        self.assertIn("box.focus", click)  # after jumping down the cursor goes back to the input
+
+    def test_an_arriving_answer_does_not_pull_the_page_if_the_reader_scrolled_up(self):
+        script = page_script(1, False, scroll="start")
+        self.assertIn("if (window.__iqmUserMoved)", script)
+        self.assertIn("event.deltaY < 0", script)
+
+    def test_the_users_own_send_always_scrolls_and_resets_the_reader_flag(self):
+        script = page_script(1, False, scroll="end")
+        self.assertIn("if (align === 'end') { window.__iqmUserMoved = false;", script)
+
+    def test_motion_preferences_and_screen_readers_are_respected(self):
+        script = page_script(1, False)
+        self.assertIn("prefers-reduced-motion: reduce", script)
+        self.assertIn("aria-live", script)
+        self.assertIn("'log'", script)
+
+    def test_times_are_shown_in_the_readers_time_zone(self):
+        script = page_script(1, False)
+        self.assertIn(".msg-time[data-ts]", script)
+        self.assertIn("toLocaleTimeString", script)
+
+    def test_the_script_text_has_nothing_the_html_sanitizer_would_strip_it_for(self):
+        # st.html sanitizes with DOMPurify, which removes a script whose text contains "<" followed by a letter, "/" or "!"
+        for flags in ((False, False, "", ), (True, True, "start"), (True, False, "end")):
+            script = page_script(1, flags[0], flags[1], flags[2])
+            body = script[len("<script>"):-len("</script>")]
+            self.assertIsNone(re.search(r"<[/\w!]", body), body[:80])
 
     def test_the_nonce_cannot_inject_code(self):
         with self.assertRaises(ValueError):

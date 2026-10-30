@@ -29,6 +29,19 @@ class BrokenChain:
         raise GenerationError("model request failed: secret detail")
 
 
+class FlakyChain:
+    """Fails on the first question, then behaves like the real chain."""
+
+    def __init__(self, real) -> None:
+        self.real, self.calls = real, 0
+
+    def answer(self, question, history):
+        self.calls += 1
+        if self.calls == 1:
+            raise GenerationError("model request failed")
+        return self.real.answer(question, history)
+
+
 class PageTests(ChainTestCase):
     def page(self, llm: FakeLLM = None, chain=None) -> AppTest:
         built = chain or self.chain(llm or FakeLLM(draft([1])))
@@ -83,6 +96,28 @@ class PageTests(ChainTestCase):
         self.assertEqual(at.chat_input[0].placeholder, PLACEHOLDER_FOLLOW_UP)
         at.button(key="new_chat").click().run()
         self.assertEqual(at.chat_input[0].placeholder, PLACEHOLDER_FIRST)
+
+    def test_every_message_has_a_small_time(self):
+        at = self.page()
+        at.chat_input[0].set_value("schedule a report").run()
+        self.assertEqual(self.texts(at).count('class="msg-time"'), 2)
+
+    def test_a_failed_answer_offers_try_again_which_does_not_repeat_the_question(self):
+        flaky = FlakyChain(self.chain(FakeLLM(draft([1]))))
+        at = self.page(chain=flaky)
+        at.chat_input[0].set_value("schedule a report").run()
+        self.assertIn("Something went wrong", self.texts(at))
+        at.button(key="retry").click().run()
+        self.assertFalse(at.exception)
+        self.assertEqual([m.name for m in at.chat_message], ["user", "assistant"])
+        self.assertIn("From the Help Center", self.texts(at))
+        self.assertEqual(flaky.calls, 2)
+
+    def test_try_again_is_only_offered_on_the_latest_error(self):
+        at = self.page(chain=BrokenChain())
+        at.chat_input[0].set_value("one").run()
+        at.button(key="retry").click().run()
+        self.assertEqual(len([b for b in at.button if b.key == "retry"]), 1)
 
     def test_there_is_no_copy_button_hint_or_character_counter(self):
         at = self.page()
@@ -162,6 +197,14 @@ class PageTests(ChainTestCase):
         at = AppTest.from_function(app_script, args=(failing_factory,), default_timeout=10).run()
         self.assertTrue(any(SETUP_HELP in e.value for e in at.error))
         self.assertFalse(at.exception)
+
+
+class StyleTests(unittest.TestCase):
+    def test_a_collapsed_sidebar_slides_fully_out_even_though_it_is_wider_than_streamlits_default(self):
+        from iqm_rag.ui.styles import CSS
+
+        self.assertIn("min(340px, 88vw)", CSS)
+        self.assertIn('[data-testid="stExpandSidebarButton"]) section[data-testid="stSidebar"] { transform: translateX(-100%)', CSS)
 
 
 class ConfigTests(unittest.TestCase):

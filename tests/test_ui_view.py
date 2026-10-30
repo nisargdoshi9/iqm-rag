@@ -2,10 +2,11 @@
 
 import random
 import unittest
+from datetime import datetime, timezone
 
 from iqm_rag.generation.chain import GenerationError
 from iqm_rag.ingestion.embeddings import EmbeddingError
-from iqm_rag.ui.view import (EXAMPLE_QUESTIONS, LOADING_MESSAGES, STATUS_LABELS, build_answer_view, build_error_view,
+from iqm_rag.ui.view import (format_clock, EXAMPLE_QUESTIONS, LOADING_MESSAGES, STATUS_LABELS, build_answer_view, build_error_view,
                              evidence_counts, loading_message, pick_examples, source_label)
 from test_generation import ChainTestCase, FakeLLM, draft
 
@@ -74,6 +75,12 @@ class ErrorViewTests(unittest.TestCase):
 
     def test_an_unexpected_failure_is_generic(self):
         self.assertIn("unexpected", build_error_view(KeyError("x")).text)
+
+
+class ClockTests(unittest.TestCase):
+    def test_the_clock_is_twelve_hour_with_no_leading_zero(self):
+        self.assertRegex(format_clock(datetime(2026, 10, 31, 9, 5, tzinfo=timezone.utc)), r"^\d{1,2}:\d{2} [AP]M$")
+        self.assertFalse(format_clock(datetime(2026, 10, 31, 9, 5, tzinfo=timezone.utc)).startswith("0"))
 
 
 class LoadingAndExampleTests(unittest.TestCase):

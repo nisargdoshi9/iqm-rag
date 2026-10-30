@@ -7,15 +7,16 @@ written the page is locked (input and sidebar disabled) so nothing can interrupt
 
 import random
 from concurrent.futures import ThreadPoolExecutor, wait
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Callable, Optional
 
 import streamlit as st
 
 from iqm_rag.generation.chain import AnswerChain
 from iqm_rag.generation.conversation import Conversation
-from iqm_rag.ui.render import (badge_html, brand_html, details_html, evidence_section_html, hero_html, how_it_works_html,
-                               loading_html, sources_html, trust_html)
+from iqm_rag.ui.render import (brand_html, details_html, evidence_section_html, hero_html, how_it_works_html, loading_html,
+                               meta_row_html, sources_html, trust_html, user_time_html)
 from iqm_rag.ui.scripts import page_script
 from iqm_rag.ui.styles import CSS
 from iqm_rag.ui.view import (LOADING_INTERVAL_SECONDS, LOADING_MESSAGES, AnswerView, build_answer_view,
@@ -29,11 +30,16 @@ SETUP_HELP = ("The assistant could not start. Check that the index is built (scr
               "is set in .env.")
 
 
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 @dataclass
 class ChatMessage:
     role: str  # "user" or "assistant"
     text: str = ""
     view: Optional[AnswerView] = None
+    at: datetime = field(default_factory=_now)
 
 
 def _init_state(chain_factory: Callable[[], AnswerChain]) -> None:
@@ -67,6 +73,15 @@ def _inject_js(focus: bool, scroll: str = "", force_focus: bool = False) -> None
     st.html(page_script(st.session_state.js_nonce, focus, force_focus, scroll), unsafe_allow_javascript=True)
 
 
+def _retry() -> None:
+    """Ask the failed question again without repeating the user's message: drop the error card and lock the page."""
+    state = st.session_state
+    if len(state.messages) >= 2 and state.messages[-1].view is not None and state.messages[-1].view.status == "error":
+        state.pending_question = state.messages[-2].text
+        state.messages.pop()
+        st.rerun()
+
+
 def _sidebar(locked: bool) -> bool:
     with st.sidebar:
         st.markdown(brand_html(), unsafe_allow_html=True)
@@ -90,22 +105,25 @@ def _welcome() -> Optional[str]:
     return typed
 
 
-def _render_assistant(view: AnswerView, developer: bool) -> None:
-    st.markdown(badge_html(view.status), unsafe_allow_html=True)
+def _render_assistant(view: AnswerView, developer: bool, at: datetime, retry: bool = False, locked: bool = False) -> None:
+    st.markdown(meta_row_html(view.status, at), unsafe_allow_html=True)
     st.markdown(view.text)
     st.markdown(sources_html(view.sources), unsafe_allow_html=True)
+    if retry and view.status == "error" and st.button("Try again", key="retry", disabled=locked):
+        _retry()
     if developer:
         with st.expander("Developer details"):
             st.markdown(details_html(view), unsafe_allow_html=True)
             st.markdown(evidence_section_html(view.evidence), unsafe_allow_html=True)
 
 
-def _render_message(message: ChatMessage, developer: bool) -> None:
+def _render_message(message: ChatMessage, developer: bool, latest: bool = False, locked: bool = False) -> None:
     with st.chat_message(message.role):
         if message.view is None:
             st.markdown(message.text)
+            st.markdown(user_time_html(message.at), unsafe_allow_html=True)
         else:
-            _render_assistant(message.view, developer)
+            _render_assistant(message.view, developer, message.at, retry=latest, locked=locked)
 
 
 def _ask_with_loader(question: str, placeholder) -> AnswerView:
@@ -136,8 +154,9 @@ def _answer_pending(developer: bool) -> None:
         placeholder = st.empty()
         _inject_js(focus=False, scroll="end")  # bring the loading card into view straight away
         view = _ask_with_loader(state.pending_question, placeholder)
-        _render_assistant(view, developer)
-    state.messages.append(ChatMessage("assistant", view=view))
+        answered_at = _now()
+        _render_assistant(view, developer, answered_at)
+    state.messages.append(ChatMessage("assistant", view=view, at=answered_at))
     state.pending_question = None
     state.scroll = "start"  # the next run shows the top of the new answer and returns the cursor to the box
     st.rerun()
@@ -164,8 +183,8 @@ def run(chain_factory: Callable[[], AnswerChain]) -> None:
             typed = _welcome()
     if typed and not locked:
         _submit(typed)
-    for message in state.messages:
-        _render_message(message, developer)
+    for index, message in enumerate(state.messages):
+        _render_message(message, developer, latest=index == len(state.messages) - 1, locked=locked)
     if locked:
         _answer_pending(developer)
     scroll, force = state.scroll, state.force_focus

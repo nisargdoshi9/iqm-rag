@@ -7,6 +7,7 @@ retrieved evidence and a list of developer details. Nothing here calls a model o
 import random
 import re
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional, Sequence
 
 from iqm_rag.generation.chain import Answer, GenerationError
@@ -166,3 +167,8 @@ def source_label(link: SourceLink) -> str:
 def evidence_counts(items: Sequence[EvidenceItem]) -> tuple[int, int]:
     """(retrieved, used in the answer)."""
     return len(items), sum(item.cited for item in items)
+
+
+def format_clock(moment: datetime) -> str:
+    """A 12-hour clock without a leading zero, such as "9:05 AM". The page script re-formats it in the reader's time zone."""
+    return moment.astimezone().strftime("%I:%M %p").lstrip("0")

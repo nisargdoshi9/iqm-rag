@@ -11,7 +11,7 @@ BASE_CSS = """
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap');
 
 :root {
-  --bg: #F5F6FB; --card: #FFFFFF; --ink: #1E2140; --muted: #6A7094; --line: #E4E6F3;
+  --bg: #F5F6FB; --card: #FFFFFF; --ink: #1E2140; --muted: #5F658A; --line: #E4E6F3;
   --accent: #4F46E5; --accent-2: #7C3AED; --accent-soft: #EEF0FF; --accent-line: #DCDFFB;
   --ok: #0F8F66; --ok-soft: #E4F6EE; --warn: #A8650B; --warn-soft: #FFF3D9;
   --info: #2457D6; --info-soft: #E7EFFF; --err: #C2410C; --err-soft: #FFEDE3;
@@ -28,10 +28,12 @@ header[data-testid="stHeader"] { background: transparent; }
 [data-testid="stExpandSidebarButton"] { visibility: visible; width: 40px; height: 40px; border-radius: 12px; background: var(--card);
   border: 1px solid var(--line); box-shadow: var(--shadow); color: var(--accent); transition: all .15s ease; }
 [data-testid="stExpandSidebarButton"]:hover { background: var(--accent-soft); border-color: var(--accent); transform: translateX(2px); }
-.block-container { max-width: 800px; padding-top: 2.2rem; padding-bottom: 8rem; }
-section[data-testid="stSidebar"] { width: 340px !important; min-width: 340px; }
+.block-container { max-width: 800px; padding-top: 2.2rem; padding-bottom: .75rem; }
+section[data-testid="stSidebar"] { width: min(340px, 88vw) !important; min-width: min(340px, 88vw); }
+/* Streamlit hides a collapsed sidebar by sliding it 300px left, which leaves a strip of our wider one showing: slide it all the way out */
+.stApp:has([data-testid="stExpandSidebarButton"]) section[data-testid="stSidebar"] { transform: translateX(-100%) !important; }
 [data-testid="stMain"], section.main { scroll-behavior: smooth; }
-[data-testid="stChatMessage"] { scroll-margin-top: 28px; scroll-margin-bottom: 150px; }
+[data-testid="stChatMessage"] { scroll-margin-top: 28px; scroll-margin-bottom: 120px; }
 
 /* sidebar */
 section[data-testid="stSidebar"] { background: var(--card); border-right: 1px solid var(--line); }
@@ -70,7 +72,8 @@ section[data-testid="stSidebar"] .stButton > button:hover { background: var(--ac
   color: var(--ink); font-weight: 600; line-height: 1.4; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
 [class*="st-key-example_"] button:hover { transform: translateY(-3px); border-color: var(--accent); color: var(--accent);
   box-shadow: 0 14px 30px -14px rgba(79,70,229,.45); }
-[class*="st-key-example_"] button p { text-align: left; white-space: normal; overflow: visible; text-overflow: clip; }
+[class*="st-key-example_"] button > div { width: 100%; justify-content: flex-start; text-align: left; }
+[class*="st-key-example_"] button p { width: 100%; text-align: left; white-space: normal; overflow: visible; text-overflow: clip; }
 [class*="st-key-example_"] button div, [class*="st-key-example_"] button span { white-space: normal; overflow: visible; text-overflow: clip; }
 
 /* chat messages: a clear speaker on each side, a consistent rhythm inside every card */
@@ -97,6 +100,41 @@ section[data-testid="stSidebar"] .stButton > button:hover { background: var(--ac
 .badge-not_covered { color: var(--warn); background: var(--warn-soft); }
 .badge-clarification { color: var(--info); background: var(--info-soft); }
 .badge-error { color: var(--err); background: var(--err-soft); }
+.meta-row { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+.meta-row .badge { margin-bottom: 0; }
+.msg-time { font-size: .7rem; font-weight: 500; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.time-row { text-align: right; margin-top: 2px; line-height: 1; }
+
+/* "Latest" button: only visible when the reader has scrolled away from the bottom */
+.jump-latest { position: fixed; z-index: 80; transform: translateX(-50%); display: none; align-items: center; gap: .4rem; cursor: pointer;
+  font: inherit; font-size: .78rem; font-weight: 600; color: var(--accent); background: var(--card); border: 1px solid var(--accent-line);
+  border-radius: 999px; padding: .42rem .9rem; box-shadow: 0 10px 26px -10px rgba(30,33,64,.4); transition: background .15s ease, color .15s ease; }
+.jump-latest.visible { display: inline-flex; animation: rise .25s ease both; }
+.jump-latest:hover { background: var(--accent); color: #fff; }
+
+/* retry on an error card */
+[class*="st-key-retry"] button { border-radius: 10px; font-weight: 600; font-size: .85rem; padding: .35rem .9rem; border: 1px solid var(--accent-line);
+  background: var(--accent-soft); color: var(--accent); transition: all .15s ease; }
+[class*="st-key-retry"] button:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* keyboard focus is always visible */
+a.src:focus-visible, summary.src:focus-visible, .stApp button:focus-visible, .jump-latest:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important;
+    scroll-behavior: auto !important; }
+}
+
+/* small screens: more room, no iOS zoom on focus (inputs need 16px), wider bubbles */
+@media (max-width: 640px) {
+  .block-container { padding-left: 1rem; padding-right: 1rem; }
+  [data-testid="stBottomBlockContainer"] { padding-left: 1rem; padding-right: 1rem; }
+  [data-testid="stChatInput"] textarea { font-size: 16px; }
+  [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) { max-width: 94%; }
+  [data-testid="stChatMessage"] { padding-left: 1rem; padding-right: 1rem; }
+  .hero h1 { font-size: 2.1rem; }
+}
 
 /* sources: compact pills, details in a tooltip */
 .sources-label { font-size: .7rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
@@ -169,6 +207,11 @@ dl.dev dd { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospa
 [data-testid="stChatInput"] { border-radius: 18px; border: 1px solid var(--line); background: var(--card);
   box-shadow: 0 12px 34px -14px rgba(30,33,64,.28); }
 [data-testid="stChatInput"]:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(79,70,229,.12), 0 12px 34px -14px rgba(30,33,64,.28); }
+/* the composer: a solid band that the messages scroll under, never through (with a soft fade at its top edge) */
+[data-testid="stBottom"] { background: var(--bg); }
+[data-testid="stBottom"]::before { content: ""; position: absolute; left: 0; right: 0; top: -28px; height: 28px; pointer-events: none;
+  background: linear-gradient(to top, var(--bg), rgba(245,246,251,0)); }
+[data-testid="stBottomBlockContainer"] { padding: .8rem 1.5rem max(1.2rem, env(safe-area-inset-bottom)); }
 [data-testid="stBottom"] > div { background: transparent; }
 [data-testid="stChatInput"] { max-width: 640px; margin-left: auto; margin-right: auto; }
 """

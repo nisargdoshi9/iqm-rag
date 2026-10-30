@@ -1,8 +1,9 @@
 """Tests for the HTML snippets (FR-7): escaping, safe links and the pieces that must be present."""
 
 import unittest
+from datetime import datetime, timezone
 
-from iqm_rag.ui.render import (badge_html, brand_html, trust_html, details_html, evidence_html, evidence_section_html, evidence_title,
+from iqm_rag.ui.render import (meta_row_html, time_html, user_time_html, badge_html, brand_html, trust_html, details_html, evidence_html, evidence_section_html, evidence_title,
                                hero_html, loading_html, sources_html)
 from iqm_rag.ui.view import AnswerView, EvidenceItem, SourceLink
 
@@ -102,6 +103,25 @@ class OtherPieceTests(unittest.TestCase):
     def test_badges_carry_the_status_and_its_label(self):
         self.assertIn("badge-not_covered", badge_html("not_covered"))
         self.assertIn("Not in the Help Center", badge_html("not_covered"))
+
+    def test_a_time_carries_utc_for_the_browser_and_a_readable_fallback(self):
+        moment = datetime(2026, 10, 31, 9, 5, tzinfo=timezone.utc)
+        html = time_html(moment)
+        self.assertIn('data-ts="2026-10-31T09:05:00+00:00"', html)
+        self.assertRegex(html, r">\d{1,2}:\d{2} [AP]M<")
+
+    def test_the_assistant_row_has_the_status_badge_and_the_time(self):
+        html = meta_row_html("answered", datetime(2026, 10, 31, 9, 5, tzinfo=timezone.utc))
+        self.assertIn("badge-answered", html)
+        self.assertIn('class="msg-time"', html)
+
+    def test_the_user_time_sits_in_its_own_right_aligned_row(self):
+        self.assertIn('class="time-row"', user_time_html(datetime(2026, 10, 31, 9, 5, tzinfo=timezone.utc)))
+
+    def test_the_loading_card_is_announced_politely_to_screen_readers(self):
+        html = loading_html("Reading…")
+        self.assertIn('role="status"', html)
+        self.assertIn('aria-live="polite"', html)
 
     def test_developer_details_are_escaped(self):
         view = AnswerView("answered", "t", (), (), (("Question as typed", EVIL),), ())

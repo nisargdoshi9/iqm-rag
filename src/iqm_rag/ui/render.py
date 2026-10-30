@@ -4,11 +4,12 @@ Titles and section names come from the corpus and the question text comes from t
 into HTML without `html.escape`, and links are only emitted for http(s) URLs.
 """
 
+from datetime import datetime, timezone
 from html import escape
 from typing import Sequence
 from urllib.parse import urlparse
 
-from iqm_rag.ui.view import STATUS_LABELS, AnswerView, EvidenceItem, SourceLink, evidence_counts
+from iqm_rag.ui.view import STATUS_LABELS, AnswerView, EvidenceItem, SourceLink, evidence_counts, format_clock
 
 PERCENT = 100
 
@@ -51,6 +52,21 @@ def _source_pill(link: SourceLink) -> str:
     if not url:
         return f'<span class="src">{body}</span>'
     return f'<a class="src" href="{url}" target="_blank" rel="noopener noreferrer">{body}</a>'
+
+
+def time_html(moment: datetime) -> str:
+    """A small grey time. `data-ts` carries UTC so the browser can show the reader's own time zone."""
+    stamp = moment.astimezone(timezone.utc).isoformat()
+    return f'<span class="msg-time" data-ts="{escape(stamp)}">{escape(format_clock(moment))}</span>'
+
+
+def meta_row_html(status: str, moment: datetime) -> str:
+    """The top row of an assistant card: the status badge on the left and the time on the right."""
+    return f'<div class="meta-row">{badge_html(status)}{time_html(moment)}</div>'
+
+
+def user_time_html(moment: datetime) -> str:
+    return f'<div class="time-row">{time_html(moment)}</div>'
 
 
 def sources_html(sources: Sequence[SourceLink]) -> str:
@@ -103,7 +119,7 @@ def details_html(view: AnswerView) -> str:
 
 
 def loading_html(message: str) -> str:
-    return (f'<div class="thinking"><span class="dots"><i></i><i></i><i></i></span>'
+    return (f'<div class="thinking" role="status" aria-live="polite"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>'
             f'<span class="phrase">{escape(message)}</span></div>')
 
 
