@@ -265,7 +265,9 @@ class _Drafter:
         tokens = estimate_tokens(text, self.cfg)
         parent = section["heading_path"][:-1]
         pending = self.pending
-        if pending and not (pending.parent == parent and pending.tokens + tokens <= self.cfg.max_tokens):
+        # Top-level sections (no parent heading) are separate topics and never merge with each other.
+        can_merge = bool(parent) and pending is not None and pending.parent == parent
+        if pending and not (can_merge and pending.tokens + tokens <= self.cfg.max_tokens):
             self._flush()
             pending = None
         if pending:

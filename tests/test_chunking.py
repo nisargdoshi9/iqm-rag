@@ -91,6 +91,10 @@ class MergeTests(unittest.TestCase):
         sections = [section(1, ["P", "B1"], [para("x" * 8)]), section(2, ["Q", "B2"], [para("x" * 8)])]
         self.assertEqual(len(chunk_article(article(sections), CFG)), 2)
 
+    def test_top_level_sections_never_merge(self):
+        sections = [section(1, ["A"], [para("x" * 8)]), section(2, ["B"], [para("y" * 8)])]
+        self.assertEqual(len(chunk_article(article(sections), CFG)), 2)
+
     def test_merging_never_exceeds_the_maximum(self):
         sections = [section(1, ["P", "B1"], [para("x" * 8)]), section(2, ["P", "B2"], [para("y" * 50)])]
         self.assertEqual(len(chunk_article(article(sections), CFG)), 2)

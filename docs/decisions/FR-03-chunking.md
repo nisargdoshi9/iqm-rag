@@ -157,7 +157,7 @@ Result on the real corpus (200 articles, sizes estimated as characters / 4):
 
 | Chunks | Median | p90 | Max | Merged chunks | Sections split | Chunks under 60 tokens |
 |---|---|---|---|---|---|---|
-| 2,168 | 206 | 419 | 700 | 514 | 37 | 111 |
+| 2,310 | 194 | 406 | 691 | 376 | 37 | 142 |
 
 Chunk fields: the SPECS schema (`chunk_id`, `article_id`, `article_title`, `article_url`, `collection`,
 `section_path`, `chunk_index`, `text`, `content_hash`) plus `section_ids`, `media_section_ids`, `part`/`parts`,
@@ -176,14 +176,20 @@ Behaviour worth knowing:
 - Splits repeat the section heading; a list piece that starts mid-list repeats the intro sentence and keeps the
   original item numbers; table pieces repeat the header row; FAQ pairs are never separated.
 
-Findings to decide on (not changed yet):
-1. **Top-level merging:** 138 of the 514 merged chunks join top-level sections, which share the article as their
-   "parent". Their header is then the title only, so heading context is weaker and the topics are more distinct than
-   siblings under one subsection. Option: allow merging only between sections that share a real parent heading.
-2. **Tiny parent intros:** 111 chunks (5%) are under 60 tokens. All are single sections, typically a short intro
-   to a subsection whose children have a different parent, so nothing merges with them. Option: merge a short intro
-   into its first child section. This is the "tiny tail" open item below.
-3. **Mechanical merges** such as "Delete a chart" + "Style the report" (described above) remain.
+Decisions on the findings (owner, 2026-10-30):
+1. **Top-level merging: stopped (applied).** 138 of 514 merged chunks had joined top-level sections, which only share
+   the article as their "parent" (for example "Assign a Contextual audience to a campaign" with "Locate additional
+   Contextual audience resources": a how-to blended with a link list, labelled with the title only). Top-level
+   sections now never merge; only sections under a real shared heading do. Measured effect: chunks 2,168 to 2,310
+   (+142), chunks under 60 tokens 111 to 142 (+31), merged chunks 514 to 376. Chosen because a blended vector is the
+   precision problem chunking is meant to avoid, and the cost is a few cents of embedding.
+2. **Tiny parent intros: left as is, to be revisited.** 142 chunks are under 60 tokens, mostly one-sentence intros to
+   a subsection whose children have a different parent (example: "Expand the drop-down arrow next to a question to
+   reveal the answer." as a 19-token chunk). Merging an intro into its first child was rejected for now because the
+   intro describes all children, not only the first. Revisit with the evidence-hit-rate check (open items): if these
+   intros crowd out real answers in the top-k, add the merge then.
+3. **Mechanical merges** such as "Delete a chart" + "Style the report" (described above) remain; harmless because each
+   part keeps its heading line.
 
 ## Why these values are a starting point, not a proven optimum
 
@@ -218,8 +224,6 @@ boundaries.
 - **Come back to: evidence hit rate.** Once the index exists, measure for each evaluation question whether its
   evidence section appears in the top-k results. It needs no LLM calls. If the 120 and 150 variants differ, use it in
   the write-up. Owner asked to revisit this later.
-- Tiny tail: about 168 chunks stay under 60 tokens because they are lone short sections. Possible fix (not decided):
-  allow a short section to merge with the previous sibling even if that one was already flushed. Only do this if
-  the evidence hit rate points at it.
+- Tiny intro chunks (142 under 60 tokens): see decision 2 above. Revisit after the evidence hit rate.
 - Write the chunker, embedder and indexer (batching about 100 per request, content-hash skip, model and dimension
   stored with the index, refuse to query on mismatch).
