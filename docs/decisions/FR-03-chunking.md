@@ -1,7 +1,8 @@
 # FR-3: Chunking decisions
 
 Status: chunking strategy, embedding model and vector store decided (2026-10-30). The chunker is written and run
-(see "Implementation"); the embedder and indexer are not written yet. SPECS.md numbers (500-700 token target, 50-100 overlap) were treated as hypotheses only, not constraints.
+(see "Implementation"); the embedder and Chroma indexer are written and
+run (see "Embedding and indexing"). SPECS.md numbers (500-700 token target, 50-100 overlap) were treated as hypotheses only, not constraints.
 
 ## Embedding model and vector store (decided by the project owner)
 
@@ -191,6 +192,36 @@ Decisions on the findings (owner, 2026-10-30):
 3. **Mechanical merges** such as "Delete a chart" + "Style the report" (described above) remain; harmless because each
    part keeps its heading line.
 
+## Embedding and indexing (2026-10-30)
+
+Code: `src/iqm_rag/ingestion/embeddings.py` (OpenAI embedder), `src/iqm_rag/ingestion/indexing.py` (Chroma), run with
+`python scripts/chunk.py` then `python scripts/index.py` (`--dry-run` plans without API calls or writes, `--rebuild`
+re-embeds everything). Tests: `tests/test_indexing.py` (14 tests, fake embedder and a throwaway Chroma folder, no
+network). Index location `data/index/chroma` (untracked, regenerable), run report `data/index/index_report.json`.
+
+First real run: 2,310 chunks, 24 batches of up to 100, model `text-embedding-3-large`, dimension 3,072, 480,738 tokens
+billed (about $0.06 at the third-party-reported price of $0.13 per 1M tokens; the dry-run estimate of 553k tokens was
+about 15% high), about one minute. A re-run embeds nothing (2,310 unchanged).
+
+Behaviour:
+- **Cosine distance** is set explicitly on the collection. Chroma's collection stores the embedding model name.
+- **Incremental:** each record stores the content hash of the embedded text (header + text). A run embeds only new or
+  changed chunks, upserts them by chunk ID (no duplicates), and deletes stored chunks that no longer exist.
+- **Resumable:** each batch is stored as soon as it is embedded. A failure keeps earlier batches and a re-run
+  continues (tested: failing the third of three batches leaves 200 of 250 stored, the re-run embeds the remaining 50).
+- **Model and dimension changes are refused** with a message pointing at `--rebuild`, instead of mixing vectors from
+  different models. Chroma also rejects a wrong dimension on its own.
+- **Metadata** is scalar-only: list fields are stored as JSON strings and decoded by `record_to_chunk()`, which
+  rebuilds the full chunk for retrieval. The collection is created without a Chroma embedding function, so Chroma never
+  downloads or runs a model of its own; we always pass our vectors.
+- The OpenAI client retries rate limits, timeouts and 5xx errors (3 retries, 60 s timeout). Provider errors are
+  wrapped in `EmbeddingError` with the batch size and model.
+
+Smoke check (not an evaluation): three evaluation questions (VCR calculation, Daily Pacing update frequency, impression-
+vs budget-based IO) embedded and queried against the index. The expected article appeared in the top 3 results for all
+three (top distances 0.22, 0.40, 0.30). Three questions, retrieval only, one run: it shows the index works, it does not
+measure quality. The evidence-hit-rate check on the full set is still to do (open items).
+
 ## Why these values are a starting point, not a proven optimum
 
 The values come from our data distribution plus general guidance. Nothing has been measured on retrieval yet. The
@@ -225,5 +256,3 @@ boundaries.
   evidence section appears in the top-k results. It needs no LLM calls. If the 120 and 150 variants differ, use it in
   the write-up. Owner asked to revisit this later.
 - Tiny intro chunks (142 under 60 tokens): see decision 2 above. Revisit after the evidence hit rate.
-- Write the chunker, embedder and indexer (batching about 100 per request, content-hash skip, model and dimension
-  stored with the index, refuse to query on mismatch).
