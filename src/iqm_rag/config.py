@@ -30,6 +30,7 @@ USER_AGENT_PRODUCT = "IQM-RAG-Assignment-Bot"
 
 DEFAULT_DELAY_SECONDS = 2.0
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large"
+DEFAULT_CHAT_MODEL = "gpt-4.1-mini"
 DEFAULT_TOP_K = 8  # chunks retrieved per question; covers the case where a second evidence section ranks around 7th
 MAX_TOP_K = 50
 
@@ -84,3 +85,8 @@ def retrieval_top_k() -> int:
     if not 1 <= value <= MAX_TOP_K:
         raise RuntimeError(f"RETRIEVAL_TOP_K must be between 1 and {MAX_TOP_K}, got {value}.")
     return value
+
+
+def chat_model() -> str:
+    """Name of the OpenAI chat model that writes the answers (CHAT_MODEL)."""
+    return os.environ.get("CHAT_MODEL", "").strip() or DEFAULT_CHAT_MODEL
