@@ -16,7 +16,7 @@ src/iqm_rag/
 ├── observability/   # tracing
 └── evaluation/      # dataset, metrics, runner
 app.py               # chat interface entry point
-scripts/             # scrape.py, index.py, evaluate.py
+scripts/             # scrape.py, index.py, retrieve.py, evaluate.py
 tests/
 data/                # raw/, processed/, chunks/, evaluation/
 docs/                # architecture, design decisions, evaluation report, write-up, demo script

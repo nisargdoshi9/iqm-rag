@@ -30,6 +30,8 @@ USER_AGENT_PRODUCT = "IQM-RAG-Assignment-Bot"
 
 DEFAULT_DELAY_SECONDS = 2.0
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large"
+DEFAULT_TOP_K = 8  # chunks retrieved per question; covers the case where a second evidence section ranks around 7th
+MAX_TOP_K = 50
 
 load_dotenv(ROOT_DIR / ".env")  # does not override variables already set in the process environment
 
@@ -68,3 +70,17 @@ def openai_api_key() -> str:
 def embedding_model() -> str:
     """Name of the embedding model. Stored with the index so a model change is detected."""
     return os.environ.get("EMBEDDING_MODEL", "").strip() or DEFAULT_EMBEDDING_MODEL
+
+
+def retrieval_top_k() -> int:
+    """How many chunks to retrieve per question (RETRIEVAL_TOP_K)."""
+    raw = os.environ.get("RETRIEVAL_TOP_K", "").strip()
+    if not raw:
+        return DEFAULT_TOP_K
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise RuntimeError(f"RETRIEVAL_TOP_K must be a whole number, got {raw!r}.") from exc
+    if not 1 <= value <= MAX_TOP_K:
+        raise RuntimeError(f"RETRIEVAL_TOP_K must be between 1 and {MAX_TOP_K}, got {value}.")
+    return value

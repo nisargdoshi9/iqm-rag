@@ -28,6 +28,10 @@ class IndexMismatchError(RuntimeError):
     """The existing index was built with a different embedding model or dimension. Re-run with rebuild."""
 
 
+class IndexNotBuiltError(RuntimeError):
+    """There is no usable index to query. Build it with scripts/index.py."""
+
+
 @dataclass
 class IndexPlan:
     to_embed: list[dict]
@@ -113,7 +117,7 @@ def _stored_hashes(collection: chromadb.Collection) -> dict[str, str]:
     return {chunk_id: meta["content_hash"] for chunk_id, meta in zip(records["ids"], records["metadatas"])}
 
 
-def _stored_dimension(collection: chromadb.Collection) -> Optional[int]:
+def stored_dimension(collection: chromadb.Collection) -> Optional[int]:
     records = collection.get(limit=1, include=["embeddings"])
     return len(records["embeddings"][0]) if len(records["ids"]) else None
 
@@ -132,7 +136,7 @@ def _check_dimension(vectors: list[list[float]], expected: Optional[int], model:
 
 def _embed_and_store(collection: chromadb.Collection, chunks: list[dict], embedder: Embedder) -> tuple[int, Optional[int], int]:
     tokens, batches = 0, 0
-    dimension = _stored_dimension(collection)
+    dimension = stored_dimension(collection)
     for batch in batched(chunks, BATCH_SIZE):
         result = embedder.embed([embedding_text(chunk) for chunk in batch])
         if len(result.vectors) != len(batch):
@@ -147,6 +151,18 @@ def _embed_and_store(collection: chromadb.Collection, chunks: list[dict], embedd
         tokens += result.tokens
         batches += 1
     return tokens, dimension, batches
+
+
+def open_index(path: Path, model: str) -> chromadb.Collection:
+    """The existing collection for querying. Refuses a missing or empty index and one built with another model."""
+    if not path.exists():
+        raise IndexNotBuiltError(f"No index found at {path}. Build it with scripts/chunk.py then scripts/index.py.")
+    collection = _get_collection(_client(path), model)
+    if collection is None:
+        raise IndexNotBuiltError(f"The index at {path} has no collection {COLLECTION_NAME!r}. Run scripts/index.py.")
+    if collection.count() == 0:
+        raise IndexNotBuiltError(f"The index at {path} is empty. Run scripts/index.py.")
+    return collection
 
 
 # --- Running -----------------------------------------------------------------------------------------
@@ -185,7 +201,7 @@ def run_indexing(chunks: list[dict], embedder: Embedder, path: Path, rebuild: bo
     if plan.stale_ids:
         collection.delete(ids=plan.stale_ids)
     return {
-        "collection": COLLECTION_NAME, "embedding_model": embedder.model, "dimension": dimension or _stored_dimension(collection),
+        "collection": COLLECTION_NAME, "embedding_model": embedder.model, "dimension": dimension or stored_dimension(collection),
         "chunks": len(chunks), "added": len(plan.to_embed) - plan.updated, "updated": plan.updated,
         "unchanged": plan.unchanged, "deleted": len(plan.stale_ids), "embedded_tokens": tokens, "batches": batches,
         "index_path": str(path),
