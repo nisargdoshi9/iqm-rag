@@ -105,6 +105,12 @@ class PromptTests(ChainTestCase):
         self.assertEqual(order, sorted(order))
         self.assertIn("schedule a report", text.split("# Question")[1])
 
+    def test_the_rules_forbid_document_numbers_in_the_answer_and_ask_for_clarification_when_vague(self):
+        system, human = self.prompt_for()
+        for text in (system.content, human.content):
+            self.assertIn("document numbers", text)
+            self.assertIn("clarifying question", text)
+
     def test_no_url_reaches_the_model(self):
         self.assertNotIn("help.iqm.com", "".join(m.content for m in self.prompt_for()))
 

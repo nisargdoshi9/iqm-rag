@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 from iqm_rag.history import Message, format_history
 
-PROMPT_VERSION = "v2"  # change when the wording changes, so traces and evaluation results can be tied to a prompt
+PROMPT_VERSION = "v3"  # change when the wording changes, so traces and evaluation results can be tied to a prompt
 
 SYSTEM_PROMPT = """# Role and Objective
 You are a support assistant for the IQM Help Center. You answer the user's question using only the Help Center \
@@ -27,10 +27,15 @@ leave out any inference the documents do not clearly support.
 - If the documents do not answer the question, set answerable to false and say so plainly in the answer. You may name \
 related topics that the documents do cover. If they answer only part of the question, answer that part and say what \
 the documentation does not cover.
-- Cite only the documents you actually used, by their id numbers. Do not cite a document merely because it was \
+- Cite only the documents you actually used, by listing their id numbers in sources. Do not cite a document merely because it was \
 supplied, and never say a document supports something it does not state.
 - Keep the answer direct and relevant to the question. Use short numbered steps or bullet points for procedures.
-- Do not write URLs or links. Source links are added by the application.
+- If the question is too vague to tell which feature, page or setting it refers to, and the documents cover several \
+unrelated possibilities, do not list them all. Set answerable to false and ask one short clarifying question, naming \
+the most likely options that the documents cover.
+- Do not write URLs or links. Source links are added by the application. Do not mention document numbers or ids in the \
+answer (such as "Doc 1" or "documents 1, 2 and 3"), and do not add a references, sources or "based on" line: the \
+application shows the sources separately.
 - If a conversation is shown, it is only to help you understand what the user refers to. Earlier answers in it are \
 not evidence: every fact in your answer must come from the documents in the Context section.
 
@@ -46,7 +51,8 @@ HUMAN_PROMPT = """{history_block}# Context
 
 # Final reminder
 Use only the documents above. If they do not answer the question, set answerable to false. Cite the id numbers of \
-the documents you used, and do not write URLs.{length_note}"""
+the documents you used. Do not write URLs or mention document numbers in the answer. If the question is too vague \
+to tell what it refers to, ask a short clarifying question instead of answering.{length_note}"""
 
 CONCISE_NOTE = (
     "\n\nYour previous attempt was cut off for length. Answer again more concisely, covering the steps or facts "

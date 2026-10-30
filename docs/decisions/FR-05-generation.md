@@ -61,6 +61,20 @@ features, settings, limits, workflows or policies; separate what the documentati
 avoid unsupported inference; say plainly when the documentation does not answer; cite only the documents actually used
 and do not claim a source says what it does not; keep answers direct.
 
+## Prompt revisions
+
+- v1: first prompt (2026-10-31).
+- v2: labelled conversation history, "earlier answers are not evidence" (FR-6).
+- v3: two changes after a manual test session. (1) Answers mentioned document numbers ("documents 1, 2, 3", "(Doc 1)")
+  and added "references" lines; the rules now forbid that, since the numbers mean nothing to a user and the application
+  shows the sources. (2) A vague question ("can I change those settings", best similarity 0.346) got a list of unrelated
+  settings; the rules now ask for one short clarifying question that names the most likely options. A clarifying
+  question is returned as `answerable` false with no sources, so the interface should not label it "not in the Help
+  Center" (decided in FR-7).
+  Re-checked live on the same conversations: no document numbers in any answer, the vague question asked which
+  settings were meant (user, organization, dashboard, Bid Model or memory settings), and a clear question was answered
+  normally. Five questions; a smoke test, not a measurement.
+
 ## Open items
 
 - Prompt wording is tuned on the dev questions only; the test split is used once at the end.
