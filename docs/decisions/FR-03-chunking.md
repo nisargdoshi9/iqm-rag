@@ -13,7 +13,7 @@ run (see "Embedding and indexing"). SPECS.md numbers (500-700 token target, 50-1
 | Answer LLM | OpenAI (exact model chosen later) |
 | Chunk cap | Stays at 700 tokens (the model accepts about 8,191), minimum 150 |
 
-Why large and not small (answer if asked): at our size (about 0.55M tokens, roughly $0.07 vs $0.01 by my estimate,
+Why large and not small: at our size (about 0.55M tokens, roughly $0.07 vs $0.01 by my estimate,
 prices from third-party catalogue pages) the price gap is cents, so the more capable model was chosen to rule the
 embedding model out as a cause of weak retrieval. OpenAI's launch numbers put English retrieval (MTEB) at 62.3 for small
 and 64.6 for large, a modest gap of about 2.3 points, so no big gain is claimed. The corpus has near-identical sibling
@@ -238,17 +238,6 @@ tokens and vaguer citations. SPECS.md has no guidance on it (its bonus lists onl
 query rewriting). Hook kept: every chunk stores `section_id` and `part`, so "expand to the whole section" is a
 retrieval-time lookup that needs no re-index. Build it only if evaluation failures show answers cut at split
 boundaries.
-
-## Likely evaluator questions
-
-- Why this chunk size? Median section about 140 tokens, only 3% over 500, evidence sections cluster at 100-300.
-- Why no overlap between sections? Cuts are only at semantic boundaries, and the context header carries the heading.
-- Why not a recursive splitter? We hold the structure, so we do not have to guess it.
-- What if the answer spans two chunks? Top-k retrieval; the multi-source evaluation questions exercise this.
-- How were tables and lists handled? Header-row repeat, intro-sentence repeat, and splits only between rows, items
-  and Q/A pairs.
-- Was it tested? Not yet beyond data analysis; see open items.
-- What happens when a page changes? Content hashes and deterministic IDs let us re-embed only changed chunks.
 
 ## Open items
 
