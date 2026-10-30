@@ -27,6 +27,8 @@ def format_answer(answer: Answer, evidence: bool) -> str:
         lines.append("Sources:")
         lines += [f"  - {c.article_title}: {'; '.join(c.sections)}\n    {c.url}" for c in answer.citations]
     lines += [f"Warning: {warning}" for warning in answer.warnings]
+    if answer.rewrite.rewritten:
+        lines += ["", f"Searched for: {answer.rewrite.query}"]
     if evidence:
         lines += ["", "Chunks shown to the model:"]
         lines += [f"  [{d.number}] similarity {d.best_similarity:.3f}  {d.header}" for d in answer.docs]

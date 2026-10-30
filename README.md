@@ -12,11 +12,12 @@ src/iqm_rag/
 ├── scraping/        # discovery, scraper, normalization
 ├── ingestion/       # chunking, embeddings, indexing
 ├── retrieval/       # retriever, query rewriting
+├── history.py       # chat messages and the history window
 ├── generation/      # context, prompts, citations, RAG chain
 ├── observability/   # tracing
 └── evaluation/      # dataset, metrics, runner
 app.py               # chat interface entry point
-scripts/             # scrape.py, index.py, retrieve.py, ask.py, evaluate.py
+scripts/             # scrape.py, index.py, retrieve.py, ask.py, chat.py, evaluate.py
 tests/
 data/                # raw/, processed/, chunks/, evaluation/
 docs/                # architecture, design decisions, evaluation report, write-up, demo script

@@ -76,7 +76,7 @@ and do not claim a source says what it does not; keep answers direct.
   `build_context`, `generate`, `check_output`. Each `Answer` keeps the unchecked draft, token usage (None when the
   provider reports none), model time, prompt version and the full retrieval result, ready for tracing.
 - The structured output uses OpenAI's strict JSON schema through `ChatOpenAI.with_structured_output`. The answer is
-  limited to 700 output tokens.
+  limited to 2,000 output tokens, with one bounded retry if a reply is cut off (see FR-6, "Answer length cap").
 - Packages added and pinned: `langchain-core` 1.7.3, `langchain-openai` 1.7.3. New settings: `CHAT_MODEL`.
 - `scripts/ask.py "question"` runs one question end to end (`--evidence`, `--json`).
 - Tests: 157 in total (37 new) with a fake model and fake embedder; no network.
