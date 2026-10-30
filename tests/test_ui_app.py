@@ -55,10 +55,14 @@ class PageTests(ChainTestCase):
         self.assertIn("https://help.iqm.com/en/articles/1-t", text)
         self.assertNotIn("What can I help you find?", text)
 
-    def test_an_evidence_expander_lists_what_was_searched(self):
+    def test_the_retrieved_passages_are_only_shown_in_developer_mode(self):
         at = self.page()
         at.chat_input[0].set_value("schedule a report").run()
-        self.assertTrue(any(e.label.startswith("Evidence") for e in at.expander))
+        self.assertEqual(len(at.expander), 0)
+        self.assertNotIn("Retrieved passages", self.texts(at))
+        at.toggle(key="developer_mode").set_value(True).run()
+        self.assertIn("Retrieved passages", self.texts(at))
+        self.assertTrue(any(e.label == "Developer details" for e in at.expander))
 
     def test_clicking_an_example_asks_that_question(self):
         at = self.page()

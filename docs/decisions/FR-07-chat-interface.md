@@ -15,7 +15,7 @@ demonstrations. It adds no new retrieval or answering logic; it shows what the c
 |---|---|---|---|
 | 1 | Technology | Streamlit, Gradio, FastAPI with a page, REST only | Streamlit: built-in chat widgets and per-tab session state that maps onto `Conversation`. Considerable effort on the look (see Design) |
 | 2 | Outcomes | Three-way status in the model output; two states with a neutral style; guess from a trailing "?" | Three-way `status` (`answered`, `not_covered`, `clarification`) plus `error` in the page. A clarifying question is never labelled "not in the Help Center". Replaced the earlier `answerable` flag (prompt v4) |
-| 3 | Under an answer | Sources only; sources plus an evidence view; everything | Sources always visible, an "Evidence" expander (the retrieved passages with match score, snippet, link and a "used in answer" mark) and a sidebar Developer mode (search query and rewrite, models, prompt version, tokens, timings, warnings) |
+| 3 | Under an answer | Sources only; sources plus an evidence view; everything | Sources only for the user, as compact pills (see Revisions). The retrieved passages (match score, snippet, link, "used" mark) and the search query, rewrite, models, prompt version, tokens, timings and warnings are in the sidebar Developer mode. The first version showed an Evidence expander to everyone; feedback was that it is too much for a user |
 | 4 | Loading | Spinner; streamed answer | A loading card that cycles 12 friendly messages every 1.8 s from a random starting point, while the chain runs in a worker thread. Streaming was not done: the output is structured JSON with the answer inside |
 | 5 | Sessions | Session state; saved chats | One `Conversation` and transcript per browser session, in session state; the screen keeps the whole transcript, the model gets the last 3 exchanges. Saved past chats: see Open items |
 | 6 | Feedback controls | None, local file, tracing service | Skipped; logged for later (best fit is the tracing tool's feedback feature) |
@@ -50,6 +50,17 @@ demonstrations. It adds no new retrieval or answering logic; it shows what the c
 - Verified by screenshots of every state with a canned chain (welcome, loading, answer, evidence, not covered,
   clarification, error, developer details, phone width) and by two real turns end to end. Checked in one browser engine
   only.
+
+## Revisions after review (2026-10-31)
+
+- **Sidebar could not be reopened.** The "show sidebar" arrow lives inside Streamlit's toolbar, and the stylesheet hid the
+  whole toolbar. Now only the menu and deploy button are hidden and the arrow is styled as a visible button.
+- **Evidence moved to developer mode** and made compact (two-line snippets, small score bar, one row per passage).
+- **Sources are compact pills**: article title on one line (shortened if long); the cited sections and a "Click to open
+  this article in the Help Center" hint appear in a hover tooltip; the label says "hover for details, click to open".
+  More than three sources show the first three and a "+N more" toggle.
+- **Friendlier avatars**: a smiling chat bubble for the assistant and a simple person on a warm background for the user,
+  drawn as SVG (replacing Streamlit's robot and face icons).
 
 ## Limits
 

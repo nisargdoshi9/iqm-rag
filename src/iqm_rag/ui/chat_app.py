@@ -13,8 +13,8 @@ import streamlit as st
 
 from iqm_rag.generation.chain import AnswerChain
 from iqm_rag.generation.conversation import Conversation
-from iqm_rag.ui.render import (badge_html, brand_html, details_html, evidence_html, evidence_title, hero_html,
-                               how_it_works_html, loading_html, sources_html)
+from iqm_rag.ui.render import (badge_html, brand_html, details_html, evidence_section_html, hero_html, how_it_works_html,
+                               loading_html, sources_html)
 from iqm_rag.ui.styles import CSS
 from iqm_rag.ui.view import (LOADING_INTERVAL_SECONDS, LOADING_MESSAGES, AnswerView, build_answer_view,
                              build_error_view, loading_message, pick_examples)
@@ -78,12 +78,10 @@ def _render_assistant(view: AnswerView, developer: bool) -> None:
     st.markdown(badge_html(view.status), unsafe_allow_html=True)
     st.markdown(view.text)
     st.markdown(sources_html(view.sources), unsafe_allow_html=True)
-    if view.evidence:
-        with st.expander(evidence_title(view.evidence)):
-            st.markdown(evidence_html(view.evidence), unsafe_allow_html=True)
     if developer:
         with st.expander("Developer details"):
             st.markdown(details_html(view), unsafe_allow_html=True)
+            st.markdown(evidence_section_html(view.evidence), unsafe_allow_html=True)
 
 
 def _render_message(message: ChatMessage, developer: bool) -> None:

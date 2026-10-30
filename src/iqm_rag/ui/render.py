@@ -20,28 +20,44 @@ def badge_html(status: str) -> str:
     return f'<span class="badge badge-{escape(status)}"><i></i>{escape(STATUS_LABELS[status])}</span>'
 
 
+MAX_VISIBLE_SOURCES = 3  # the rest sit behind a "+N more" toggle so a long list never takes over the answer
+
+
+def _source_pill(link: SourceLink) -> str:
+    url = _safe_url(link.url)
+    sections = "".join(f'<span class="tip-sec">{escape(section)}</span>' for section in link.sections)
+    tip = (f'<span class="tip"><span class="tip-title">{escape(link.title)}</span>{sections}'
+           f'<span class="tip-hint">Click to open this article in the Help Center ↗</span></span>')
+    body = f'<span class="src-icon">↗</span><span class="src-text">{escape(link.title)}</span>{tip}'
+    if not url:
+        return f'<span class="src">{body}</span>'
+    return f'<a class="src" href="{url}" target="_blank" rel="noopener noreferrer">{body}</a>'
+
+
 def sources_html(sources: Sequence[SourceLink]) -> str:
+    """Compact source pills: the title on one line, the section(s) and an "opens the article" hint in a hover tooltip."""
     if not sources:
         return ""
-    chips = "".join(
-        f'<a class="chip" href="{_safe_url(link.url)}" target="_blank" rel="noopener noreferrer">'
-        f'<span class="chip-icon">↗</span><span class="chip-body"><span class="chip-title">{escape(link.title)}</span>'
-        + "".join(f'<span class="chip-sub">{escape(section)}</span>' for section in link.sections) + "</span></a>"
-        for link in sources
-    )
-    return f'<div class="sources-label">Sources</div><div class="chips">{chips}</div>'
+    pills = "".join(_source_pill(link) for link in sources[:MAX_VISIBLE_SOURCES])
+    hidden = sources[MAX_VISIBLE_SOURCES:]
+    more = ""
+    if hidden:
+        rest = "".join(_source_pill(link) for link in hidden)
+        more = f'<details class="more"><summary class="src more-btn">+{len(hidden)} more</summary><div class="more-list">{rest}</div></details>'
+    return ('<div class="sources-label">Sources <span>· hover for details, click to open</span></div>'
+            f'<div class="chips">{pills}{more}</div>')
 
 
 def _evidence_row(item: EvidenceItem) -> str:
-    used = '<span class="pill">used in answer</span>' if item.cited else ""
+    used = '<span class="pill">used</span>' if item.cited else ""
     width = max(0.0, min(1.0, item.similarity)) * PERCENT
-    link = f' · <a href="{_safe_url(item.url)}" target="_blank" rel="noopener noreferrer">open article ↗</a>' if _safe_url(item.url) else ""
+    link = f'<a href="{_safe_url(item.url)}" target="_blank" rel="noopener noreferrer">open ↗</a>' if _safe_url(item.url) else ""
     return (
         f'<div class="ev{" ev-used" if item.cited else ""}"><div class="ev-rank">{item.rank}</div><div class="ev-main">'
         f'<div class="ev-head"><span class="ev-title">{escape(item.header)}</span>{used}</div>'
         f'<div class="ev-snippet">{escape(item.snippet)}</div>'
         f'<div class="ev-meta"><span class="bar"><i style="width:{width:.0f}%"></i></span>'
-        f'<span>{item.similarity:.2f} match</span>{link}</div></div></div>'
+        f'<span>{item.similarity:.2f}</span>{link}</div></div></div>'
     )
 
 
@@ -51,7 +67,14 @@ def evidence_html(items: Sequence[EvidenceItem]) -> str:
 
 def evidence_title(items: Sequence[EvidenceItem]) -> str:
     retrieved, used = evidence_counts(items)
-    return f"Evidence · {retrieved} passages searched, {used} used" if used else f"Evidence · {retrieved} passages searched"
+    return f"Retrieved passages · {retrieved} searched, {used} used in the answer"
+
+
+def evidence_section_html(items: Sequence[EvidenceItem]) -> str:
+    """The retrieved passages for developer mode: a heading and one compact row per passage."""
+    if not items:
+        return ""
+    return f'<div class="dev-heading">{escape(evidence_title(items))}</div><div class="ev-list">{evidence_html(items)}</div>'
 
 
 def details_html(view: AnswerView) -> str:
