@@ -65,6 +65,12 @@ practitioner posts on topic dilution. History kept for the rewrite and for gener
 
 ## Open items
 
+- Link-list chunks: 201 of 2,310 chunks (8.7%, 185 articles) are more than 60% link text, mostly "Locate additional ...
+  resources" sections with no answerable content. In one live query ("how to manage creatives overview") two of the
+  top 8 were such chunks and a third was a collection summary. None of the 26 evaluation evidence sections is a
+  link-list chunk. Options: leave, drop at index time, or tag in metadata and filter at query time (preferred, since it
+  can be compared). Deferred; decide together with the collection-overview pages (decision 6) using the hit-rate check.
+
 - Evidence-hit-rate check on the full evaluation set (no LLM calls): confirms or changes `top_k`, compares small vs
   large embeddings, and shows whether overview pages or tiny intro chunks crowd out evidence.
 - Hybrid search and a reranker: only if the hit-rate check shows relevant chunks retrieved but ranked too low.
