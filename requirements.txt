@@ -1,3 +1,6 @@
 # Pinned versions for reproducible installs. Tested with these; update deliberately.
 requests==2.34.2
 beautifulsoup4==4.15.0
+openai==3.41.0
+chromadb==1.5.9
+python-dotenv==1.2.4

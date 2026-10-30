@@ -6,6 +6,8 @@ Values come from the process environment. Export them, or load `.env` before run
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 ROOT_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT_DIR / "data"
 RAW_DIR = DATA_DIR / "raw"
@@ -24,6 +26,9 @@ BASE_URL = "https://help.iqm.com/en"
 USER_AGENT_PRODUCT = "IQM-RAG-Assignment-Bot"
 
 DEFAULT_DELAY_SECONDS = 2.0
+DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large"
+
+load_dotenv(ROOT_DIR / ".env")  # does not override variables already set in the process environment
 
 
 def scraper_user_agent() -> str:
@@ -47,3 +52,16 @@ def scraper_delay_seconds() -> float:
     if value < 0:
         raise RuntimeError(f"SCRAPER_DELAY_SECONDS must be 0 or more, got {value}.")
     return value
+
+
+def openai_api_key() -> str:
+    """Return the OpenAI key from the environment. Never log or print the value."""
+    value = os.environ.get("OPENAI_API_KEY", "").strip()
+    if not value or value == "sk-your-key-here":
+        raise RuntimeError("OPENAI_API_KEY is not set. Copy .env.example to .env and add your key.")
+    return value
+
+
+def embedding_model() -> str:
+    """Name of the embedding model. Stored with the index so a model change is detected."""
+    return os.environ.get("EMBEDDING_MODEL", "").strip() or DEFAULT_EMBEDDING_MODEL
