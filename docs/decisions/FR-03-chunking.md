@@ -1,7 +1,7 @@
 # FR-3: Chunking decisions
 
-Status: chunking strategy, embedding model and vector store decided (2026-10-30). The chunker and indexer are not
-written yet. SPECS.md numbers (500-700 token target, 50-100 overlap) were treated as hypotheses only, not constraints.
+Status: chunking strategy, embedding model and vector store decided (2026-10-30). The chunker is written and run
+(see "Implementation"); the embedder and indexer are not written yet. SPECS.md numbers (500-700 token target, 50-100 overlap) were treated as hypotheses only, not constraints.
 
 ## Embedding model and vector store (decided by the project owner)
 
@@ -146,6 +146,44 @@ Sources:
 - DEV, chunking strategies that survive production: https://dev.to/numb_code_07/rag-chunking-strategies-that-survive-production-beyond-the-512-token-default-1hkk
 - Late chunking paper: https://arxiv.org/pdf/2409.04701v2
 - Jina, late chunking: https://jina.ai/news/late-chunking-in-long-context-embedding-models/
+
+## Implementation (chunker, 2026-10-30)
+
+Code: `src/iqm_rag/ingestion/chunking.py`, run with `python scripts/chunk.py` (reads `data/processed/`, writes
+`data/chunks/chunks.jsonl` and `chunking_report.json`, no network). Tests: `tests/test_chunking.py` (84 tests in the
+suite pass).
+
+Result on the real corpus (200 articles, sizes estimated as characters / 4):
+
+| Chunks | Median | p90 | Max | Merged chunks | Sections split | Chunks under 60 tokens |
+|---|---|---|---|---|---|---|
+| 2,168 | 206 | 419 | 700 | 514 | 37 | 111 |
+
+Chunk fields: the SPECS schema (`chunk_id`, `article_id`, `article_title`, `article_url`, `collection`,
+`section_path`, `chunk_index`, `text`, `content_hash`) plus `section_ids`, `media_section_ids`, `part`/`parts`,
+`context_header`, `token_estimate`, `last_updated`. The embedded string is `context_header + "\n\n" + text`
+(`embedding_text()`), and `content_hash` is the hash of that string. Chunk ID format `{first_section_id}:p{part}`.
+36 chunks carry the ID of a neighbouring media-only section in `media_section_ids` so its video can be shown.
+
+Behaviour worth knowing:
+- **The maximum is a hard limit on the final chunk text.** My first version let pieces overshoot (up to 905 tokens)
+  because the repeated heading, list intro or table header, and the overlap unit were not counted. The packing budget
+  now subtracts them, and the real corpus tops out at exactly 700. Found by inspecting the largest chunks, not by a
+  test, so a regression test now covers it.
+- **Content check:** all 11,353 units (paragraphs, list items, table rows, Q/A pairs) in the corpus appear in some
+  chunk (compared on the first 80 characters). No unit exceeds 400 tokens, so the last-resort sentence cutting never
+  fires on this corpus.
+- Splits repeat the section heading; a list piece that starts mid-list repeats the intro sentence and keeps the
+  original item numbers; table pieces repeat the header row; FAQ pairs are never separated.
+
+Findings to decide on (not changed yet):
+1. **Top-level merging:** 138 of the 514 merged chunks join top-level sections, which share the article as their
+   "parent". Their header is then the title only, so heading context is weaker and the topics are more distinct than
+   siblings under one subsection. Option: allow merging only between sections that share a real parent heading.
+2. **Tiny parent intros:** 111 chunks (5%) are under 60 tokens. All are single sections, typically a short intro
+   to a subsection whose children have a different parent, so nothing merges with them. Option: merge a short intro
+   into its first child section. This is the "tiny tail" open item below.
+3. **Mechanical merges** such as "Delete a chart" + "Style the report" (described above) remain.
 
 ## Why these values are a starting point, not a proven optimum
 

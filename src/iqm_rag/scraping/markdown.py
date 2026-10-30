@@ -34,10 +34,14 @@ def row_markdown(row: dict) -> str:
     return "| " + " | ".join(cell_markdown(cell) for cell in row["cells"]) + " |"
 
 
+def table_header_lines(rows: list[dict]) -> list[str]:
+    """The header row and the Markdown separator line of a pipe table."""
+    separator = "| " + " | ".join("---" for _ in rows[0]["cells"]) + " |"
+    return [row_markdown(rows[0]), separator]
+
+
 def _pipe_table(rows: list[dict]) -> list[str]:
-    header = rows[0]["cells"]
-    separator = "| " + " | ".join("---" for _ in header) + " |"
-    return [row_markdown(rows[0]), separator] + [row_markdown(row) for row in rows[1:]]
+    return table_header_lines(rows) + [row_markdown(row) for row in rows[1:]]
 
 
 def _callout_lines(block: Block) -> list[str]:
@@ -72,16 +76,22 @@ def _table_lines(block: Block) -> list[str]:
     return _fallback_rows(block)
 
 
+def list_item_markdown(item: dict, number: int, ordered: bool) -> str:
+    """One list item with its marker (empty string if the item has no text). Nested lists stay inside the item."""
+    marker = f"{number}. " if ordered else "- "
+    item_lines = [line for child in item["blocks"] for line in render_block(child)]
+    if not item_lines:
+        return ""
+    pad = " " * len(marker)
+    return "\n".join([marker + item_lines[0]] + [(pad + line) if line else "" for line in item_lines[1:]])
+
+
 def _list_lines(block: Block) -> list[str]:
     lines: list[str] = []
     for number, item in enumerate(block["items"], start=1):
-        marker = f"{number}. " if block["ordered"] else "- "
-        item_lines = [line for child in item["blocks"] for line in render_block(child)]
-        if not item_lines:
-            continue
-        pad = " " * len(marker)
-        lines.append(marker + item_lines[0])
-        lines.extend((pad + line) if line else "" for line in item_lines[1:])
+        text = list_item_markdown(item, number, block["ordered"])
+        if text:
+            lines.extend(text.split("\n"))
     return lines
 
 
