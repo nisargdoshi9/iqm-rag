@@ -2,7 +2,7 @@
 
 import unittest
 
-from iqm_rag.generation.citations import ABSTENTION_MESSAGE, resolve_answer
+from iqm_rag.generation.citations import ABSTENTION_MESSAGE, CLARIFICATION_FALLBACK, resolve_answer
 from iqm_rag.generation.context import build_context_docs
 from iqm_rag.generation.prompts import AnswerDraft
 from test_context import hit
@@ -10,8 +10,8 @@ from test_context import hit
 DOCS = build_context_docs([hit(1, 1, "alpha", article="10"), hit(2, 2, "beta", article="10"), hit(3, 3, "gamma", article="20")])
 
 
-def draft(sources: list[int], answerable: bool = True, answer: str = "An answer.") -> AnswerDraft:
-    return AnswerDraft(answerable=answerable, answer=answer, sources=sources)
+def draft(sources: list[int], status: str = "answered", answer: str = "An answer.") -> AnswerDraft:
+    return AnswerDraft(status=status, answer=answer, sources=sources)
 
 
 class CitationMappingTests(unittest.TestCase):
@@ -53,15 +53,34 @@ class SafetyNetTests(unittest.TestCase):
             self.assertTrue(result.warnings)
 
     def test_an_abstention_ignores_listed_sources(self):
-        result = resolve_answer(draft([1, 2], answerable=False, answer="The documentation does not cover TikTok."), DOCS)
+        result = resolve_answer(draft([1, 2], status="not_covered", answer="The documentation does not cover TikTok."), DOCS)
         self.assertFalse(result.answerable)
         self.assertEqual((result.text, result.citations), ("The documentation does not cover TikTok.", ()))
         self.assertTrue(result.warnings)
 
     def test_an_abstention_without_text_uses_the_standard_message(self):
-        result = resolve_answer(draft([], answerable=False, answer="  "), DOCS)
+        result = resolve_answer(draft([], status="not_covered", answer="  "), DOCS)
         self.assertEqual(result.text, ABSTENTION_MESSAGE)
         self.assertEqual(result.warnings, ())
+
+    def test_a_clarifying_question_is_kept_without_links_and_is_not_an_abstention(self):
+        result = resolve_answer(draft([1], status="clarification", answer="Which settings do you mean?"), DOCS)
+        self.assertEqual((result.status, result.text, result.citations), ("clarification", "Which settings do you mean?", ()))
+        self.assertFalse(result.answerable)
+        self.assertTrue(result.warnings)
+
+    def test_a_clarification_without_text_uses_a_neutral_question(self):
+        result = resolve_answer(draft([], status="clarification", answer=""), DOCS)
+        self.assertEqual((result.status, result.text), ("clarification", CLARIFICATION_FALLBACK))
+
+    def test_the_status_is_reported_for_each_outcome(self):
+        self.assertEqual(resolve_answer(draft([1]), DOCS).status, "answered")
+        self.assertEqual(resolve_answer(draft([], status="not_covered"), DOCS).status, "not_covered")
+        self.assertEqual(resolve_answer(draft([9]), DOCS).status, "not_covered")  # invented source: shown as not covered
+
+    def test_an_unknown_status_is_rejected_by_the_schema(self):
+        with self.assertRaises(ValueError):
+            AnswerDraft(status="maybe", answer="x", sources=[])
 
     def test_a_blank_answer_cannot_pass_as_an_answer(self):
         result = resolve_answer(draft([1], answer="   "), DOCS)

@@ -16,14 +16,18 @@ class EmptyRetriever:
 
 class AbstentionTests(ChainTestCase):
     def test_the_models_abstention_is_shown_without_links(self):
-        answer = self.chain(FakeLLM(draft([], answerable=False, answer="The Help Center does not cover TikTok."))).answer("tiktok")
-        self.assertFalse(answer.answerable)
+        answer = self.chain(FakeLLM(draft([], status="not_covered", answer="The Help Center does not cover TikTok."))).answer("tiktok")
+        self.assertEqual(answer.status, "not_covered")
         self.assertEqual((answer.text, answer.citations), ("The Help Center does not cover TikTok.", ()))
 
     def test_sources_listed_on_an_abstention_are_not_shown(self):
-        answer = self.chain(FakeLLM(draft([1, 2], answerable=False, answer="Not covered."))).answer("tiktok")
+        answer = self.chain(FakeLLM(draft([1, 2], status="not_covered", answer="Not covered."))).answer("tiktok")
         self.assertEqual(answer.citations, ())
         self.assertTrue(answer.warnings)
+
+    def test_a_clarifying_question_comes_through_as_its_own_status_with_no_links(self):
+        answer = self.chain(FakeLLM(draft([1], status="clarification", answer="Which settings do you mean?"))).answer("settings")
+        self.assertEqual((answer.status, answer.text, answer.citations), ("clarification", "Which settings do you mean?", ()))
 
     def test_an_answer_citing_only_an_invented_number_becomes_an_abstention(self):
         answer = self.chain(FakeLLM(draft([99]))).answer("schedule a report")

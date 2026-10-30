@@ -20,7 +20,7 @@ def format_answer(answer: Answer, evidence: bool) -> str:
     usage = answer.usage
     tokens = "tokens unknown" if usage is None else f"tokens in {usage.input_tokens} / out {usage.output_tokens}"
     lines = [f"Question: {answer.question}",
-             f"Answerable: {'yes' if answer.answerable else 'no'}  ({answer.model}, prompt {answer.prompt_version}, "
+             f"Status: {answer.status}  ({answer.model}, prompt {answer.prompt_version}, "
              f"{tokens}, model {answer.llm_ms:.0f} ms, retrieval {answer.retrieval.embed_ms + answer.retrieval.search_ms:.0f} ms)",
              "", answer.text, ""]
     if answer.citations:

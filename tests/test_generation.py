@@ -43,8 +43,8 @@ class FakeLLM:
         return RunnableLambda(self)
 
 
-def draft(sources: list[int], answerable: bool = True, answer: str = "Use the Reports tab.") -> AnswerDraft:
-    return AnswerDraft(answerable=answerable, answer=answer, sources=sources)
+def draft(sources: list[int], status: str = "answered", answer: str = "Use the Reports tab.") -> AnswerDraft:
+    return AnswerDraft(status=status, answer=answer, sources=sources)
 
 
 class ChainTestCase(unittest.TestCase):
@@ -86,7 +86,7 @@ class AnswerFlowTests(ChainTestCase):
 
     def test_the_result_is_json_serialisable(self):
         data = json.loads(json.dumps(self.chain(FakeLLM(draft([1]))).answer("schedule a report").to_dict()))
-        self.assertEqual((data["answerable"], len(data["citations"]), data["usage"]["total_tokens"]), (True, 1, 120))
+        self.assertEqual((data["status"], len(data["citations"]), data["usage"]["total_tokens"]), ("answered", 1, 120))
         self.assertIn("hits", data["retrieval"])
 
 
@@ -109,7 +109,7 @@ class PromptTests(ChainTestCase):
         system, human = self.prompt_for()
         for text in (system.content, human.content):
             self.assertIn("document numbers", text)
-            self.assertIn("clarifying question", text)
+            self.assertIn("clarif", text)
 
     def test_no_url_reaches_the_model(self):
         self.assertNotIn("help.iqm.com", "".join(m.content for m in self.prompt_for()))
@@ -268,7 +268,7 @@ class TruncationTests(ChainTestCase):
 
     def test_two_cut_off_replies_give_a_friendly_message_not_an_error(self):
         answer = self.chain_with(ScriptedLLM(length_error()), ScriptedLLM(length_error())).answer("schedule a report")
-        self.assertEqual((answer.answerable, answer.text, answer.citations, answer.llm_attempts), (False, TRUNCATED_MESSAGE, (), 2))
+        self.assertEqual((answer.status, answer.text, answer.citations, answer.llm_attempts), ("clarification", TRUNCATED_MESSAGE, (), 2))
         self.assertTrue(any("cut off" in w for w in answer.warnings))
 
     def test_without_a_retry_model_a_cut_off_reply_still_gives_the_friendly_message(self):

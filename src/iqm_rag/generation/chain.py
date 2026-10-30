@@ -17,7 +17,7 @@ from openai import LengthFinishReasonError, OpenAIError
 from iqm_rag import config
 from iqm_rag.generation.citations import Citation, ResolvedAnswer, resolve_answer
 from iqm_rag.generation.context import ContextDoc, build_context_docs, format_context
-from iqm_rag.generation.prompts import CONCISE_NOTE, PROMPT_VERSION, AnswerDraft, build_prompt, render_history_block
+from iqm_rag.generation.prompts import CONCISE_NOTE, PROMPT_VERSION, AnswerDraft, Status, build_prompt, render_history_block
 from iqm_rag.history import Message, trim_history
 from iqm_rag.retrieval.query_rewriting import QueryRewriter, RewriteResult, default_rewriter
 from iqm_rag.retrieval.retriever import RetrievalResult, Retriever, default_retriever
@@ -39,7 +39,7 @@ class GenerationError(RuntimeError):
 @dataclass(frozen=True)
 class Answer:
     question: str  # the user's own message
-    answerable: bool
+    status: Status  # answered, not_covered (the Help Center does not cover it) or clarification (we ask the user)
     text: str
     citations: tuple[Citation, ...]
     warnings: tuple[str, ...]
@@ -54,9 +54,13 @@ class Answer:
     llm_ms: float
     llm_attempts: int  # 0 when no evidence was retrieved, 2 when the first reply was cut off
 
+    @property
+    def answerable(self) -> bool:
+        return self.status == "answered"
+
     def to_dict(self) -> dict:
         return {
-            "question": self.question, "answerable": self.answerable, "answer": self.text,
+            "question": self.question, "status": self.status, "answerable": self.answerable, "answer": self.text,
             "citations": [{"url": c.url, "article_title": c.article_title, "sections": list(c.sections)} for c in self.citations],
             "warnings": list(self.warnings), "rewrite": self.rewrite.to_dict(),
             "history": [{"role": m.role, "content": m.content} for m in self.history],
@@ -148,17 +152,17 @@ class AnswerChain:
     def _resolve(self, state: dict) -> tuple[Optional[AnswerDraft], ResolvedAnswer]:
         if state["truncated"]:
             note = f"The reply was cut off at the length limit after {state['attempts']} attempt(s)."
-            return None, ResolvedAnswer(False, TRUNCATED_MESSAGE, (), (note,))
+            return None, ResolvedAnswer("clarification", TRUNCATED_MESSAGE, (), (note,))
         output = state["output"]
         draft = None if output is None else _parsed_draft(output)
-        return draft, resolve_answer(draft or AnswerDraft(answerable=False, answer="", sources=[]), state["docs"])
+        return draft, resolve_answer(draft or AnswerDraft(status="not_covered", answer="", sources=[]), state["docs"])
 
     def _finish(self, state: dict) -> Answer:
         draft, resolved = self._resolve(state)
         output, rewrite = state["output"], state["rewrite"]
         warnings = resolved.warnings + ((rewrite.fallback_reason,) if rewrite.fallback_reason else ())
         return Answer(
-            question=state["question"], answerable=resolved.answerable, text=resolved.text, citations=resolved.citations,
+            question=state["question"], status=resolved.status, text=resolved.text, citations=resolved.citations,
             warnings=warnings, rewrite=rewrite, history=state["history"], retrieval=state["retrieval"], docs=state["docs"],
             draft=draft, model=self._model, prompt_version=PROMPT_VERSION,
             usage=None if output is None else usage_from_message(output.get("raw")), llm_ms=state["llm_ms"],

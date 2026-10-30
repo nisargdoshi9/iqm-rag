@@ -8,8 +8,9 @@ cannot be detected here; the evaluation measures that.
 from dataclasses import dataclass
 
 from iqm_rag.generation.context import ContextDoc
-from iqm_rag.generation.prompts import AnswerDraft
+from iqm_rag.generation.prompts import AnswerDraft, Status
 
+CLARIFICATION_FALLBACK = "Could you tell me a little more about what you are looking for?"
 ABSTENTION_MESSAGE = (
     "I couldn't find this in the IQM Help Center, so I can't answer it reliably. "
     "Try rephrasing the question or contact IQM support."
@@ -25,14 +26,19 @@ class Citation:
 
 @dataclass(frozen=True)
 class ResolvedAnswer:
-    answerable: bool
+    status: Status
     text: str
     citations: tuple[Citation, ...]
     warnings: tuple[str, ...]
 
+    @property
+    def answerable(self) -> bool:
+        return self.status == "answered"
 
-def _abstain(text: str, warnings: list[str]) -> ResolvedAnswer:
-    return ResolvedAnswer(answerable=False, text=text or ABSTENTION_MESSAGE, citations=(), warnings=tuple(warnings))
+
+def _without_sources(status: Status, text: str, warnings: list[str]) -> ResolvedAnswer:
+    fallback = CLARIFICATION_FALLBACK if status == "clarification" else ABSTENTION_MESSAGE
+    return ResolvedAnswer(status=status, text=text or fallback, citations=(), warnings=tuple(warnings))
 
 
 def _valid_numbers(sources: list[int], docs: list[ContextDoc], warnings: list[str]) -> list[int]:
@@ -58,12 +64,12 @@ def _citations(numbers: list[int], docs: list[ContextDoc]) -> tuple[Citation, ..
 def resolve_answer(draft: AnswerDraft, docs: list[ContextDoc]) -> ResolvedAnswer:
     warnings: list[str] = []
     text = draft.answer.strip()
-    if not draft.answerable:
+    if draft.status != "answered":
         if draft.sources:
-            warnings.append("The model listed sources on an abstention; they were ignored.")
-        return _abstain(text, warnings)
+            warnings.append(f"The model listed sources on a {draft.status} reply; they were ignored.")
+        return _without_sources(draft.status, text, warnings)
     numbers = _valid_numbers(draft.sources, docs, warnings)
     if not text or not numbers:
         warnings.append("The model gave an answer without a usable answer text or valid source; shown as an abstention.")
-        return _abstain("", warnings)
-    return ResolvedAnswer(answerable=True, text=text, citations=_citations(numbers, docs), warnings=tuple(warnings))
+        return _without_sources("not_covered", "", warnings)
+    return ResolvedAnswer(status="answered", text=text, citations=_citations(numbers, docs), warnings=tuple(warnings))
