@@ -82,5 +82,8 @@ def retrieval_documents(result) -> dict:
                       "chunk_id": hit.chunk["chunk_id"], "header": hit.chunk["context_header"], "url": hit.chunk["article_url"]}}
         for hit in result.hits
     ]
-    return {"documents": documents, "embedding_model": result.embedding_model, "embedding_tokens": result.embedding_tokens,
-            "embed_ms": round(result.embed_ms, 1), "search_ms": round(result.search_ms, 1)}
+    output = {"documents": documents, "embedding_model": result.embedding_model, "embedding_tokens": result.embedding_tokens,
+              "embed_ms": round(result.embed_ms, 1), "search_ms": round(result.search_ms, 1)}
+    if getattr(result, "steps", None):  # the pipeline's settings and what each stage did
+        output["steps"] = result.steps
+    return output

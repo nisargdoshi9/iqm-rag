@@ -102,7 +102,7 @@ class RetrievalPipeline:
             self._keyword = KeywordIndex(self._retriever.all_chunks())
         return self._keyword
 
-    @traceable(run_type="chain", name="retrieval_pipeline", process_inputs=lambda inputs: {"query": inputs.get("query"), "settings": inputs["self"].settings.to_dict()},
+    @traceable(run_type="chain", name="retrieval_pipeline", process_inputs=lambda inputs: {"query": inputs.get("query"), "top_k": inputs.get("top_k")},
                process_outputs=retrieval_documents)
     def retrieve(self, query: str, top_k: Optional[int] = None) -> RetrievalResult:
         k = self.top_k if top_k is None else top_k
