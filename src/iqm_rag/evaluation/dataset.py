@@ -13,11 +13,12 @@ from iqm_rag import config
 from iqm_rag.scraping.normalization import read_jsonl, section_markdown
 
 QUESTIONS_PATH = config.EVALUATION_DIR / "questions.jsonl"
+HOLDOUT_PATH = config.EVALUATION_DIR / "holdout.jsonl"  # written after the first test run, so no fix was tuned on it
 CATEGORIES = {
     "direct_factual", "procedural", "list_multi_condition", "multi_section", "follow_up",
     "unanswerable", "similar_but_wrong", "table_lookup",
 }
-SPLITS = {"dev", "test"}
+SPLITS = {"dev", "test", "holdout"}
 MIN_QUESTIONS = 15  # the assignment's minimum
 REQUIRED_FIELDS = ("id", "category", "split", "question", "history", "expected_answer", "key_facts",
                    "expected_source_urls", "evidence", "should_abstain")

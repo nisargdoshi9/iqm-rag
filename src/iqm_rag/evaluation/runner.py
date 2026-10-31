@@ -12,16 +12,17 @@ import subprocess
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, Optional, Sequence
+from typing import Callable, Optional, Sequence, Union
 
 from iqm_rag import config
 from iqm_rag.evaluation import metrics
-from iqm_rag.evaluation.dataset import QUESTIONS_PATH
+from iqm_rag.evaluation.dataset import HOLDOUT_PATH, QUESTIONS_PATH
 from iqm_rag.evaluation.judge import JUDGE_PROMPT_VERSION, Judge, should_judge
 from iqm_rag.history import messages_from_dicts
 
 RESULTS_DIR = config.EVALUATION_DIR / "results"
-SPLITS = ("dev", "test", "all")
+SPLITS = ("dev", "test", "holdout", "all")
+FROZEN_SPLITS = ("test", "holdout")  # need verified questions and are run once per dataset version
 ROUGH_TOKENS = {"answer": (3000, 150), "rewrite": (480, 15), "judge": (3600, 350), "embedding": 15}  # planning figures from a measured trace
 MANUAL_COLUMNS = ("manual_verdict", "manual_notes")
 REVIEW_COLUMNS = ("id", "split", "category", "question", "history", "expected_answer", "key_facts", "bot_answer", "bot_status", "outcome",
@@ -44,9 +45,15 @@ def select_questions(questions: Sequence[dict], split: str = "all", ids: Optiona
     return chosen[:limit] if limit else chosen
 
 
-def dataset_hash(path: Path = QUESTIONS_PATH) -> str:
+def question_files(split: str) -> list[Path]:
+    """The question files a split lives in: the frozen set (dev and test) and the held-out set are kept apart so neither changes the other's hash."""
+    return {"holdout": [HOLDOUT_PATH], "all": [QUESTIONS_PATH, HOLDOUT_PATH]}.get(split, [QUESTIONS_PATH])
+
+
+def dataset_hash(paths: Union[Path, Sequence[Path]] = QUESTIONS_PATH) -> str:
     """A hash of the questions' content. The `status` field is left out, so verifying the set does not change its identity."""
-    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    files = [paths] if isinstance(paths, Path) else list(paths)
+    rows = [json.loads(line) for path in files for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
     for row in rows:
         row.pop("status", None)
     return hashlib.sha256(json.dumps(rows, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
@@ -76,7 +83,7 @@ def plan_run(questions: Sequence[dict], chunks: Sequence[dict], judge_enabled: b
     if judges:
         parts.append(metrics.cost_usd(judge_model, judges * ROUGH_TOKENS["judge"][0], judges * ROUGH_TOKENS["judge"][1]))
     tokens = in_chat + out_chat + n * ROUGH_TOKENS["embedding"] + judges * sum(ROUGH_TOKENS["judge"][:2])
-    return {"api_calls_made": 0, "questions": n, "by_split": {s: sum(1 for q in questions if q["split"] == s) for s in ("dev", "test") if any(q["split"] == s for q in questions)},
+    return {"api_calls_made": 0, "questions": n, "by_split": {s: sum(1 for q in questions if q["split"] == s) for s in ("dev", "test", "holdout") if any(q["split"] == s for q in questions)},
             "calls": {"answer": n, "rewrite": rewrites, "embedding": n, "judge_at_most": judges},
             "rough_estimate": {"tokens": tokens, "cost_usd": None if None in parts else round(sum(parts), 4)},
             "evidence_in_chunks": _evidence_coverage(questions, chunks), "statuses": _count(q["status"] for q in questions),
@@ -91,15 +98,15 @@ def _count(values) -> dict:
 
 
 def check_freeze(questions: Sequence[dict], allow_unverified: bool) -> list[str]:
-    """The final test split must be run on verified questions; the dev split may be run on drafts while debugging."""
-    unverified = [q["id"] for q in questions if q["split"] == "test" and q["status"] != "verified"]
+    """The test and holdout splits must be run on verified questions; the dev split may be run on drafts while debugging."""
+    unverified = [q["id"] for q in questions if q["split"] in FROZEN_SPLITS and q["status"] != "verified"]
     if unverified and not allow_unverified:
-        return [f"{len(unverified)} test question(s) are not verified yet ({', '.join(unverified[:5])}...). Review and verify the set before the final run."]
+        return [f"{len(unverified)} frozen-split question(s) are not verified yet ({', '.join(unverified[:5])}...). Review and verify the set before the final run."]
     return []
 
 
 def previous_test_runs(results_dir: Path, current_hash: str) -> list[str]:
-    """Completed runs that included the test split for this exact dataset: the test split is used once per dataset version."""
+    """Completed runs that included a frozen split (test or holdout) for this exact dataset: each is used once per dataset version."""
     found = []
     for config_file in sorted(results_dir.glob("*/config.json")) if results_dir.exists() else []:
         setup = json.loads(config_file.read_text())
@@ -303,7 +310,7 @@ def run_evaluation(questions: Sequence[dict], chain, judge: Optional[Judge], run
     describe = getattr(chain, "describe", lambda: {})()
     full_setup = {**setup, **describe, "run_id": run_id, "created_at": datetime.now(timezone.utc).isoformat(), "git_commit": git_commit(),
                   "judge_model": None if judge is None else judge.model, "judge_prompt_version": None if judge is None else JUDGE_PROMPT_VERSION,
-                  "dataset_statuses": _count(q["status"] for q in questions), "includes_test": any(q["split"] == "test" for q in questions),
+                  "dataset_statuses": _count(q["status"] for q in questions), "includes_test": any(q["split"] in FROZEN_SPLITS for q in questions),
                   "question_ids": [q["id"] for q in questions], "completed": False}
     (run_dir / "config.json").write_text(json.dumps(full_setup, indent=2), encoding="utf-8")
     records = []

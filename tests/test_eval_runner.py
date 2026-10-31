@@ -104,6 +104,22 @@ class GuardTests(unittest.TestCase):
         self.assertEqual(runner.check_freeze([eval_question("t", split="test")], allow_unverified=False), [])
         self.assertEqual(runner.check_freeze([eval_question("d", status="drafted")], allow_unverified=False), [])
 
+    def test_holdout_questions_are_frozen_like_test_questions(self):
+        problems = runner.check_freeze([eval_question("h", split="holdout", status="drafted")], allow_unverified=False)
+        self.assertTrue(problems and "verified" in problems[0])
+        self.assertEqual(runner.check_freeze([eval_question("h", split="holdout")], allow_unverified=False), [])
+
+    def test_the_holdout_file_is_separate_so_it_cannot_change_the_frozen_hash(self):
+        self.assertEqual(runner.question_files("test"), [runner.QUESTIONS_PATH])
+        self.assertEqual(runner.question_files("holdout"), [runner.HOLDOUT_PATH])
+        self.assertEqual(runner.question_files("all"), [runner.QUESTIONS_PATH, runner.HOLDOUT_PATH])
+        with tempfile.TemporaryDirectory() as tmp:
+            one, two = Path(tmp) / "a.jsonl", Path(tmp) / "b.jsonl"
+            one.write_text(json.dumps(eval_question("a")) + "\n", encoding="utf-8")
+            two.write_text(json.dumps(eval_question("b")) + "\n", encoding="utf-8")
+            self.assertEqual(runner.dataset_hash(one), runner.dataset_hash([one]))
+            self.assertNotEqual(runner.dataset_hash(one), runner.dataset_hash([one, two]))
+
     def test_the_unverified_flag_overrides_the_check(self):
         self.assertEqual(runner.check_freeze([eval_question("t", split="test", status="drafted")], allow_unverified=True), [])
 
