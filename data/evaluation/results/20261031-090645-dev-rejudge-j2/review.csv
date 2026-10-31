@@ -1,0 +1,156 @@
+﻿id,split,category,question,history,expected_answer,key_facts,bot_answer,bot_status,outcome,cited_urls,expected_urls,search_query,evidence_rank,top_retrieved,judge_facts,judge_fact_notes,judge_unsupported,judge_claims,judge_comment,auto_pass,manual_verdict,manual_notes,trace_id,error
+eval-001,dev,direct_factual,How is Video Completion Rate (VCR) calculated?,,"VCR is the total number of video completions divided by the total number of impressions (video starts), multiplied by 100. For example, 100 starts with 60 completions gives a VCR of 60%.","- VCR = video completions divided by impressions (video starts), times 100
+- Example: 100 starts and 60 completions gives 60%","Video Completion Rate (VCR) is calculated by dividing the total number of video completions by the total number of impressions (video starts), and then multiplying that value by 100. For example, if 100 people start watching the video ad and 60 of those people watch until the end, the VCR is 60%.",answered,answered,https://help.iqm.com/en/articles/10343754-video-completion-rate-vcr-reporting-metrics-overview,https://help.iqm.com/en/articles/10343754-video-completion-rate-vcr-reporting-metrics-overview,How is Video Completion Rate (VCR) calculated?,1,"1. Video Completion Rate (VCR) reporting metrics overview › Video Completion Rate (VCR)
+2. Video Completion Rate (VCR) reporting metrics overview › Video 100%
+3. Video Completion Rate (VCR) reporting metrics overview › VCR reporting overview",2/2,"YES | VCR = video completions divided by impressions (video starts), times 100 | The answer clearly states the formula as described in the document.
+YES | Example: 100 starts and 60 completions gives 60% | The example given matches the example in the document.",,"OK  doc 1 | Video Completion Rate (VCR) is calculated by dividing the total number of video completions by the total number of impressions (video starts), and then multiplying that value by 100.
+OK  doc 1 | For example, if 100 people start watching the video ad and 60 of those people watch until the end, the VCR is 60%.",None,yes,,,fd341234-e131-4672-babc-5e1d13fcb50a,
+eval-005,dev,procedural,How do I restore an expired proposal in Planner?,,"In the Planner app, find the proposal on the Proposals page, tick the checkbox next to the Expired proposal, click Restore, choose a new Start Date and End Date, and select Restore. Restored proposals show a Ready status.","- Select the checkbox next to the Expired proposal
+- Click Restore to open the Restore Proposals pop-up window
+- Choose a new Start Date and End Date, then select Restore
+- Restored proposals show a Ready status","To restore an expired proposal in Planner, follow these steps:
+
+1. Open the Planner app.
+2. Locate the expired proposal on the Proposals page. You can search or filter proposals to find it.
+3. Select the checkbox next to the expired proposal you want to restore. You can select multiple proposals to restore them in bulk, but they will share the same new date range.
+4. Click the Restore button. This opens the Restore Proposals pop-up window.
+5. Choose a new Start Date and End Date for the proposal.
+6. Click Restore to complete the process.
+
+After restoring, the proposal will have a Ready status on the Proposals page.",answered,answered,"https://help.iqm.com/en/articles/10104761-create-or-manage-a-planner-proposal
+https://help.iqm.com/en/articles/15265999-create-or-manage-a-political-planner-plan",https://help.iqm.com/en/articles/10104761-create-or-manage-a-planner-proposal,How do I restore an expired proposal in Planner?,1,"1. Create or manage a Planner proposal › Manage a proposal (media plan) › Restore an expired proposal
+2. Create or manage a Political Planner plan › Review and manage a generated proposal
+3. Create or manage a Planner proposal › Manage a proposal (media plan)",4/4,"YES | Select the checkbox next to the Expired proposal | The answer states to select the checkbox next to the expired proposal.
+YES | Click Restore to open the Restore Proposals pop-up window | The answer states to click Restore which opens the Restore Proposals pop-up window.
+YES | Choose a new Start Date and End Date, then select Restore | The answer states to choose a new Start Date and End Date, then click Restore.
+YES | Restored proposals show a Ready status | The answer states that after restoring, the proposal will have a Ready status.",,"OK  doc 1 | Open the Planner app.
+OK  doc 1 | Locate the expired proposal on the Proposals page.
+OK  doc 1 | You can search or filter proposals to find it.
+OK  doc 1 | Select the checkbox next to the expired proposal you want to restore.
+OK  doc 1 | You can select multiple proposals to restore them in bulk, but they will share the same new date range.
+OK  doc 1 | Click the Restore button. This opens the Restore Proposals pop-up window.
+OK  doc 1 | Choose a new Start Date and End Date for the proposal.
+OK  doc 1 | Click Restore to complete the process.
+OK  doc 1 | After restoring, the proposal will have a Ready status on the Proposals page.","The answer is complete and accurate, covering all key facts with additional helpful details about bulk restoring and searching/filtering proposals.",no,,,b97806bd-6ba3-49fd-9217-548f4b90d24a,
+eval-007,dev,list_multi_condition,"What win rate is considered good, normal, or in need of improvement?",,"A win rate of 50-80% is generally good, 20-30% is normal, and under 20% signals an opportunity to improve your bidding strategy.","- 50-80% is good
+- 20-30% is normal
+- Under 20% signals an opportunity to improve bidding","Win rate ranges and their general interpretations are as follows:
+
+- A win rate of 50-80% is considered good.
+- A win rate of 20-30% is considered normal.
+- A win rate under 20% signals an opportunity to improve your bidding strategy.",answered,answered,https://help.iqm.com/en/articles/10471960-troubleshoot-a-campaign-that-s-pacing-behind,https://help.iqm.com/en/articles/10471960-troubleshoot-a-campaign-that-s-pacing-behind,"What win rate is considered good, normal, or in need of improvement?",3,"1. Performance reporting metrics overview › Win rate
+2. Troubleshoot a campaign that's pacing behind › Win rate
+3. Troubleshoot a campaign that's pacing behind › Win rate",3/3,"YES | 50-80% is good | The answer states this range as good, matching doc 3.
+YES | 20-30% is normal | The answer states this range as normal, matching doc 3.
+YES | Under 20% signals an opportunity to improve bidding | The answer states this and matches doc 3.",,"OK  doc 3 | A win rate of 50-80% is considered good.
+OK  doc 3 | A win rate of 20-30% is considered normal.
+OK  doc 3 | A win rate under 20% signals an opportunity to improve your bidding strategy.","The answer is accurate and fully supported by the documents, specifically document 3.",yes,,,45f41d87-c4f0-4d66-9604-667858364b42,
+eval-010,dev,multi_section,What's the difference between a Matched audience and a Segmented audience?,,"A Matched audience is built from your own first-party data (such as CRM data, NPI lists or past voters), matched through IQM's Identity Graph. A Segmented audience is a group of users who share common characteristics, built by adding segments from a data provider.","- Matched audiences use first-party data such as CRM data, NPI lists or past voters
+- Segmented audiences are groups of users who share common characteristics, built from segments","The difference between a Matched audience and a Segmented audience is based on how the audience is defined and sourced:
+
+- **Matched audience:** These audiences are made up of users from your first-party data such as Customer Relationship Management (CRM) data, NPI lists for Healthcare campaigns, or past voters for Political campaigns. The audience is generated by matching your customer lists to users across channels and devices using IQM’s privacy-compliant Identity Graph, which unifies offline and online identifiers to a single profile. This allows you to reach offline users through digital channels.
+
+- **Segmented audience:** These audiences consist of groups of users who share common characteristics or traits. You create these audiences by adding segments or groups of segments based on shared attributes, which can be highly specific or broad depending on campaign goals. For example, you might target users who are empty nesters interested in hiking or doctors specializing in pediatrics.
+
+In summary, Matched audiences are based on your own first-party data matched to users, while Segmented audiences are created by grouping users based on shared traits or characteristics.",answered,answered,"https://help.iqm.com/en/articles/5651486-segmented-audience-overview
+https://help.iqm.com/en/articles/11535636-matched-audience-overview
+https://help.iqm.com/en/articles/11497708-campaign-targeting-guide
+https://help.iqm.com/en/articles/15496620-create-or-manage-a-matched-audience-with-vera
+https://help.iqm.com/en/articles/11749120-create-or-manage-a-segmented-audience","https://help.iqm.com/en/articles/11535636-matched-audience-overview
+https://help.iqm.com/en/articles/11749120-create-or-manage-a-segmented-audience",What's the difference between a Matched audience and a Segmented audience?,"2, 7","1. Segmented audience overview › Segmented audience overview
+2. Matched audience overview › Matched audience overview
+3. Campaign targeting guide › Audience (optional) › Audience key terms and concepts › Segmented audiences",2/2,"YES | Matched audiences use first-party data such as CRM data, NPI lists or past voters | The answer states Matched audiences use first-party data such as CRM data, NPI lists, or past voters.
+YES | Segmented audiences are groups of users who share common characteristics, built from segments | The answer states Segmented audiences are groups of users who share common characteristics, built by adding segments.",,"OK  doc 2 | Matched audiences are made up of users from your first-party data such as Customer Relationship Management (CRM) data, NPI lists for Healthcare campaigns, or past voters for Political campaigns.
+OK  doc 2 | The audience is generated by matching your customer lists to users across channels and devices using IQM’s privacy-compliant Identity Graph, which unifies offline and online identifiers to a single profile.
+OK  doc 2 | This allows you to reach offline users through digital channels.
+OK  doc 1 | Segmented audiences consist of groups of users who share common characteristics or traits.
+OK  doc 1 | You create these audiences by adding segments or groups of segments based on shared attributes, which can be highly specific or broad depending on campaign goals.
+OK  doc 1 | For example, you might target users who are empty nesters interested in hiking or doctors specializing in pediatrics.
+OK  doc 1 | In summary, Matched audiences are based on your own first-party data matched to users, while Segmented audiences are created by grouping users based on shared traits or characteristics.","The answer is accurate and well supported by the documents, covering both key facts clearly and correctly.",no,,,80202c77-86ed-4f33-a3fa-da980b9b6c02,
+eval-013,dev,follow_up,How do I remove those scheduling settings from an existing campaign?,"user: What is campaign scheduling (dayparting)?
+assistant: Campaign scheduling lets you set a weekly schedule that determines when your campaign's ads are displayed, so your message reaches users at the right time.","In the Campaigns app, open the IO and the campaign, expand the Scheduling section, and select the checkbox in the top-left corner of the table to select all cells. The settings are cleared once the calendar grid shows only blue cells.","- Open the campaign and expand the Scheduling section
+- Select the checkbox in the top-left corner of the table to select all cells
+- Settings are cleared when the calendar grid shows only blue cells","To remove scheduling settings from an existing campaign, follow these steps:
+
+1. Open the Campaigns app.
+2. Select the insertion order (IO), then locate the campaign you want to update.
+3. Click the campaign’s name to open its landing page.
+4. Expand the Scheduling section.
+5. Select the checkbox in the top-left corner of the scheduling table to select all cells.
+   - When all cells are selected, the calendar grid will show only blue cells, indicating the campaign can serve impressions at any time.
+6. Click Save to apply the changes.
+
+This will clear the campaign’s scheduling restrictions and allow it to serve ads at any day and time.",answered,answered,https://help.iqm.com/en/articles/11498313-schedule-a-campaign-s-ads-dayparting,https://help.iqm.com/en/articles/11498313-schedule-a-campaign-s-ads-dayparting,How do I remove campaign scheduling (dayparting) settings from an existing campaign in the IQM platform?,1,"1. Schedule a campaign's ads (dayparting) › Remove a campaign’s scheduling settings
+2. Campaign scheduling (dayparting) overview › Campaign scheduling overview
+3. Schedule a campaign's ads (dayparting) › Campaign scheduling overview",3/3,"YES | Open the campaign and expand the Scheduling section | The answer states to open the campaign and expand the Scheduling section.
+YES | Select the checkbox in the top-left corner of the table to select all cells | The answer instructs to select the checkbox in the top-left corner of the scheduling table to select all cells.
+YES | Settings are cleared when the calendar grid shows only blue cells | The answer explains that when all cells are selected, the calendar grid shows only blue cells, indicating settings are cleared.",,"OK  doc 1 | Open the Campaigns app.
+OK  doc 1 | Select the insertion order (IO), then locate the campaign you want to update.
+OK  doc 1 | Click the campaign’s name to open its landing page.
+OK  doc 1 | Expand the Scheduling section.
+OK  doc 1 | Select the checkbox in the top-left corner of the scheduling table to select all cells.
+OK  doc 1 | When all cells are selected, the calendar grid will show only blue cells, indicating the campaign can serve impressions at any time.
+OK  doc 1 | Click Save to apply the changes.
+OK  doc 1 | This will clear the campaign’s scheduling restrictions and allow it to serve ads at any day and time.","The answer is complete and accurate but could explicitly mention that selecting all cells clears the scheduling settings, as stated in the documents.",yes,,,af077f39-9b8a-4218-8513-55e134e5ab8a,
+eval-016,dev,unanswerable,Can I run my IQM campaigns on TikTok or Snapchat?,,"The Help Center does not say anything about TikTok or Snapchat, so the bot should say it cannot answer from the documentation.","- States that the Help Center does not provide this information
+- Does not invent support for TikTok or Snapchat","The provided documentation does not specify whether IQM campaigns can be run on TikTok or Snapchat. It covers campaign creation, management, targeting, and platform hierarchy but does not mention supported advertising platforms or channels.",not_covered,correct_abstention,,,Can I run my IQM campaigns on TikTok or Snapchat?,n/a,"1. IQM platform overview › Campaigns app
+2. Campaigns frequently asked questions (FAQ) › Campaign creation and management FAQ
+3. IQM platform overview › Campaigns app",,,,,,yes,,,a581afe7-6f2b-4073-ab7e-80c2baafcd4e,
+eval-020,dev,similar_but_wrong,How do I create a Matched audience with Vera?,,"Open the Vera app, select Audience below the input box (or type your own request), describe the source data you'll provide, and submit. This opens a new conversation with Vera.","- Use the Vera app, not the Audiences app
+- Select Audience below the input box or type a request
+- Describe the type of source data, such as voter IDs or NPIs","To create a Matched audience with Vera, follow these steps:
+
+1. Open the Vera app.
+2. Select **Audience** below the input box to start from a ready-made prompt, or type your own request.
+3. Alternatively, use the chat box to ask Vera to create a new Matched audience by describing the audience details such as the type of source data you will provide (e.g., voter IDs for Political or NPIs for Healthcare).
+4. Click the submit button to start a new conversation with Vera.
+5. Upload your first-party data file (XLSX or CSV) by either uploading from your device, dragging and dropping, or selecting from an external account like Google Drive or Dropbox.
+6. Enter a name for the audience.
+7. Open the **Primary Matching Criteria** menu and select the system field(s) in your file to be used for matching.
+8. Complete the required **System Fields** and **Uploaded File Columns** in the table.
+9. Optionally, click **+ Add Field** to add more fields to improve match rate.
+10. Depending on the audience subtype, provide any additional details or agree to terms as prompted.
+11. Select **Generate Audience** to create the Matched audience.
+
+You can also create a Matched audience within an existing chat by asking Vera to create it and then following the upload and setup steps.
+
+This process enables you to target users from your first-party data across digital channels using IQM’s privacy-compliant Identity Graph.",answered,answered,https://help.iqm.com/en/articles/15496620-create-or-manage-a-matched-audience-with-vera,https://help.iqm.com/en/articles/15496620-create-or-manage-a-matched-audience-with-vera,How do I create a Matched audience with Vera?,1,"1. Create or manage a Matched audience with Vera › Create a Matched audience with Vera
+2. Create or manage a Matched audience with Vera › Vera overview
+3. “Vera - IQM’s artificial intelligence (AI) agent” collection overview › Create audiences with Vera",3/3,"YES | Use the Vera app, not the Audiences app | The answer states to open the Vera app.
+YES | Select Audience below the input box or type a request | The answer states to select Audience below the input box or type your own request.
+YES | Describe the type of source data, such as voter IDs or NPIs | The answer states to describe the audience details such as the type of source data you will provide (e.g., voter IDs for Political or NPIs for Healthcare).",,"OK  doc 1 | Open the Vera app.
+OK  doc 1 | Select Audience below the input box to start from a ready-made prompt, or type your own request.
+OK  doc 1 | Alternatively, use the chat box to ask Vera to create a new Matched audience by describing the audience details such as the type of source data you will provide (e.g., voter IDs for Political or NPIs for Healthcare).
+OK  doc 1 | Click the submit button to start a new conversation with Vera.
+OK  doc 1 | Upload your first-party data file (XLSX or CSV) by either uploading from your device, dragging and dropping, or selecting from an external account like Google Drive or Dropbox.
+OK  doc 1 | Enter a name for the audience.
+OK  doc 1 | Open the Primary Matching Criteria menu and select the system field(s) in your file to be used for matching.
+OK  doc 1 | Complete the required System Fields and Uploaded File Columns in the table.
+OK  doc 1 | Optionally, click + Add Field to add more fields to improve match rate.
+OK  doc 1 | Depending on the audience subtype, provide any additional details or agree to terms as prompted.
+OK  doc 1 | Select Generate Audience to create the Matched audience.
+OK  doc 1 | You can also create a Matched audience within an existing chat by asking Vera to create it and then following the upload and setup steps.
+OK  doc 4 | This process enables you to target users from your first-party data across digital channels using IQM’s privacy-compliant Identity Graph.",The answer is accurate and complete with respect to the key facts and provides additional helpful details from the documents.,yes,,,5ba11eb7-8715-4508-8eb1-05a643c00ce2,
+eval-023,dev,table_lookup,What does an orange bar on the Spent/Served pacing chart mean?,,"Orange means pacing behind (60-89%): the campaign is pacing behind, and you should consider changes to hit spending targets.","- Orange = pacing behind
+- Range is 60-89%","An orange bar on the Spent/Served pacing chart means the campaign is pacing behind, with pacing performance between 60% and 89%. This indicates that the campaign is spending less than expected, and you should consider applying changes to hit your spending targets.",answered,answered,https://help.iqm.com/en/articles/8672915-pacing-overview,https://help.iqm.com/en/articles/8672915-pacing-overview,What does an orange bar on the Spent/Served pacing chart mean?,1,"1. Pacing overview › Pacing bar charts › Spent/Served chart
+2. Pacing overview › Pacing bar charts
+3. Pacing overview › Pacing bar charts › Days Left chart",2/2,"YES | Orange = pacing behind | The answer states that orange means pacing behind.
+YES | Range is 60-89% | The answer specifies the range as 60-89%.",,"OK  doc 1 | An orange bar on the Spent/Served pacing chart means the campaign is pacing behind
+OK  doc 1 | with pacing performance between 60% and 89%
+OK  doc 1 | This indicates that the campaign is spending less than expected
+OK  doc 1 | you should consider applying changes to hit your spending targets",none,yes,,,63f21d79-5812-4f8c-a31f-419a925a05be,
+eval-026,dev,follow_up,What is the 3rd Party ID field you mentioned for?,"user: How do I add an image creative from the Creatives app?
+assistant: Open the Creatives app, select Image, click + Add New and choose how to add the images: upload local files, drag and drop them, or pull them from Google Drive or Dropbox. Then name the creative, enter the Click URL and, if you like, fill in the 3rd Party ID or Pixel URL fields.","It is an optional field for the ID you assigned to the creative on an external third-party platform. It lets you reconcile performance data with IQM, keep track of your uploaded ads, compare delivery information, or use the identifier in your own reporting, for example in an external data visualization tool.","- The field is optional
+- It holds the ID assigned to the creative on an external third-party platform
+- It is used to reconcile performance data with IQM and compare delivery information","The 3rd Party ID field is an optional identifier that you can assign to a creative on an external, third-party platform. It is used to reconcile performance data with IQM, keep track of your uploaded ads, compare delivery information, and apply the identifier for your own reporting purposes, such as in an external data visualization tool. This field helps you link and verify data between IQM and other systems you use for tracking and reporting.",answered,answered,"https://help.iqm.com/en/articles/5651450-upload-an-image-creative
+https://help.iqm.com/en/articles/5651452-upload-an-html-creative",https://help.iqm.com/en/articles/5651450-upload-an-image-creative,What is the purpose of the 3rd Party ID field in the Creatives app when adding an image creative?,5,"1. Upload an image creative › Add custom tracking to an image creative › Add a Pixel URL or 3rd Party ID to an image creative
+2. Upload a video creative › Add custom tracking to a video creative › Add a 3rd Party ID, Custom Tracking URL, or Pixel URL
+3. Upload an HTML creative › Add custom tracking to a HTML creative › Add a 3rd Party ID, tracking URL, or Pixel URL to an HTML creative",3/3,"YES | The field is optional | The answer states it is optional.
+YES | It holds the ID assigned to the creative on an external third-party platform | The answer states it is an identifier assigned on an external third-party platform.
+YES | It is used to reconcile performance data with IQM and compare delivery information | The answer states it is used to reconcile performance data with IQM and compare delivery information.",This field helps you link and verify data between IQM and other systems you use for tracking and reporting,"OK  doc 5 | The 3rd Party ID field is an optional identifier
+OK  doc 5 | you can assign to a creative on an external, third-party platform
+OK  doc 5 | It is used to reconcile performance data with IQM
+OK  doc 5 | keep track of your uploaded ads
+OK  doc 5 | compare delivery information
+OK  doc 5 | apply the identifier for your own reporting purposes, such as in an external data visualization tool
+NO  doc None | This field helps you link and verify data between IQM and other systems you use for tracking and reporting",The answer is mostly accurate but adds an unsupported claim about linking and verifying data between IQM and other systems.,no,,,61efca22-579a-4656-9a32-ea34f9a8ddec,

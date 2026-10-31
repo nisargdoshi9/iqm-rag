@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iqm-rag"
+version = "0.1.0"
+description = "RAG chatbot over the IQM Help Center"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "openai>=3.0",
+    "chromadb>=1.5",
+    "python-dotenv>=1.0",
+    "langchain-core>=1.7",
+    "langchain-openai>=1.7",
+    "streamlit>=1.66",
+    "langsmith>=0.14",
+    "rank-bm25>=0.2.2",
+    "mcp>=2.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

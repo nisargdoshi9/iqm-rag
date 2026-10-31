@@ -1,0 +1,34 @@
+{
+  "split": "dev",
+  "dataset_hash": "248fcb765871ed37cd2582826a8c7cf1b92cec5955d3c0cffb931bf2dc30708e",
+  "dataset_path": "/Users/nisarg/Projects/new/rag/data/evaluation/questions.jsonl",
+  "allow_unverified": false,
+  "chat_model": "gpt-4.1-mini",
+  "rewrite_model": "gpt-4.1-mini",
+  "embedding_model": "text-embedding-3-large",
+  "top_k": 8,
+  "index_chunks": 2310,
+  "prompt_version": "v4",
+  "tracing": true,
+  "run_id": "20261031-090645-dev",
+  "created_at": "2026-10-31T09:06:45.758395+00:00",
+  "git_commit": "bfea16b",
+  "judge_model": "gpt-4.1-mini",
+  "judge_prompt_version": "j1",
+  "dataset_statuses": {
+    "drafted": 9
+  },
+  "includes_test": false,
+  "question_ids": [
+    "eval-001",
+    "eval-005",
+    "eval-007",
+    "eval-010",
+    "eval-013",
+    "eval-016",
+    "eval-020",
+    "eval-023",
+    "eval-026"
+  ],
+  "completed": true
+}

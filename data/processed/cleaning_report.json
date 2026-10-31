@@ -1,0 +1,52 @@
+{
+  "normalization_version": 1,
+  "articles_processed": 200,
+  "skipped": [],
+  "failed": [],
+  "sections": 2977,
+  "block_counts": {
+    "callout": 63,
+    "code": 15,
+    "image": 1292,
+    "list": 1976,
+    "paragraph": 16975,
+    "table": 668,
+    "video": 65
+  },
+  "tables_by_class": {
+    "callout": 284,
+    "data": 325,
+    "media_layout": 58,
+    "unknown": 1
+  },
+  "unknown_tables": {
+    "count": 1,
+    "reasons": {
+      "single row without a bold label or images": 1
+    }
+  },
+  "furniture_removed": {
+    "toc": 197,
+    "back_to_top": 145
+  },
+  "media": {
+    "total": 1357,
+    "by_type": {
+      "video_embed": 65,
+      "image": 1292
+    },
+    "by_association": {
+      "after_heading": 208,
+      "before_list": 625,
+      "list_item": 274,
+      "after_heading_text": 111,
+      "table_row": 44,
+      "table_layout": 95
+    },
+    "excluded_by_reason": {
+      "app_label": 52
+    }
+  },
+  "unknown_blocks": 0,
+  "empty_markdown_articles": []
+}

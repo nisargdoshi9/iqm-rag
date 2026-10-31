@@ -1,0 +1,254 @@
+{
+  "summary": {
+    "questions": 19,
+    "errors": 0,
+    "answerable": 16,
+    "should_abstain": 3,
+    "statuses": {
+      "answered": 16,
+      "not_covered": 3
+    },
+    "outcomes": {
+      "answered": 16,
+      "correct_abstention": 3
+    },
+    "abstention": {
+      "passed": {
+        "count": 19,
+        "of": 19,
+        "percent": 100.0
+      },
+      "answered_when_answerable": {
+        "count": 16,
+        "of": 16,
+        "percent": 100.0
+      },
+      "correct_abstentions": {
+        "count": 3,
+        "of": 3,
+        "percent": 100.0
+      }
+    },
+    "retrieval": {
+      "recall@1": {
+        "count": 9,
+        "of": 19,
+        "percent": 47.4
+      },
+      "recall@3": {
+        "count": 15,
+        "of": 19,
+        "percent": 78.9
+      },
+      "recall@5": {
+        "count": 15,
+        "of": 19,
+        "percent": 78.9
+      },
+      "recall@8": {
+        "count": 15,
+        "of": 19,
+        "percent": 78.9
+      },
+      "evidence_items": 19,
+      "mrr": 0.74,
+      "article_hit": {
+        "count": 16,
+        "of": 16,
+        "percent": 100.0
+      }
+    },
+    "citation": {
+      "mean_precision": 0.702,
+      "mean_recall": 1.0,
+      "no_wrong_citation": {
+        "count": 10,
+        "of": 19,
+        "percent": 52.6
+      }
+    },
+    "generation": {
+      "claims": {
+        "total": 108,
+        "supported": 108,
+        "quote_found": 102
+      },
+      "judged": 16,
+      "judge_errors": 0,
+      "all_facts_covered": {
+        "count": 13,
+        "of": 16,
+        "percent": 81.2
+      },
+      "mean_fact_coverage": 0.901,
+      "faithful": {
+        "count": 16,
+        "of": 16,
+        "percent": 100.0
+      },
+      "end_to_end_correct": {
+        "count": 13,
+        "of": 16,
+        "percent": 81.2
+      }
+    },
+    "operational": {
+      "wall_s": {
+        "n": 19,
+        "median": 2.548,
+        "p90": 3.655,
+        "mean": 2.581,
+        "max": 3.668
+      },
+      "tokens_total": 103262,
+      "estimated_cost_usd": 0.0542,
+      "estimated_cost_per_question_usd": 0.00285
+    }
+  },
+  "by_category": {
+    "direct_factual": {
+      "n": 2,
+      "passed": {
+        "count": 2,
+        "of": 2,
+        "percent": 100.0
+      },
+      "recall@8": {
+        "count": 2,
+        "of": 2,
+        "percent": 100.0
+      },
+      "end_to_end_correct": {
+        "count": 2,
+        "of": 2,
+        "percent": 100.0
+      }
+    },
+    "follow_up": {
+      "n": 4,
+      "passed": {
+        "count": 4,
+        "of": 4,
+        "percent": 100.0
+      },
+      "recall@8": {
+        "count": 4,
+        "of": 4,
+        "percent": 100.0
+      },
+      "end_to_end_correct": {
+        "count": 4,
+        "of": 4,
+        "percent": 100.0
+      }
+    },
+    "list_multi_condition": {
+      "n": 2,
+      "passed": {
+        "count": 2,
+        "of": 2,
+        "percent": 100.0
+      },
+      "recall@8": {
+        "count": 2,
+        "of": 2,
+        "percent": 100.0
+      },
+      "end_to_end_correct": {
+        "count": 1,
+        "of": 2,
+        "percent": 50.0
+      }
+    },
+    "multi_section": {
+      "n": 2,
+      "passed": {
+        "count": 2,
+        "of": 2,
+        "percent": 100.0
+      },
+      "recall@8": {
+        "count": 2,
+        "of": 5,
+        "percent": 40.0
+      },
+      "end_to_end_correct": {
+        "count": 1,
+        "of": 2,
+        "percent": 50.0
+      }
+    },
+    "procedural": {
+      "n": 2,
+      "passed": {
+        "count": 2,
+        "of": 2,
+        "percent": 100.0
+      },
+      "recall@8": {
+        "count": 2,
+        "of": 2,
+        "percent": 100.0
+      },
+      "end_to_end_correct": {
+        "count": 2,
+        "of": 2,
+        "percent": 100.0
+      }
+    },
+    "similar_but_wrong": {
+      "n": 2,
+      "passed": {
+        "count": 2,
+        "of": 2,
+        "percent": 100.0
+      },
+      "recall@8": {
+        "count": 1,
+        "of": 2,
+        "percent": 50.0
+      },
+      "end_to_end_correct": {
+        "count": 1,
+        "of": 2,
+        "percent": 50.0
+      }
+    },
+    "table_lookup": {
+      "n": 2,
+      "passed": {
+        "count": 2,
+        "of": 2,
+        "percent": 100.0
+      },
+      "recall@8": {
+        "count": 2,
+        "of": 2,
+        "percent": 100.0
+      },
+      "end_to_end_correct": {
+        "count": 2,
+        "of": 2,
+        "percent": 100.0
+      }
+    },
+    "unanswerable": {
+      "n": 3,
+      "passed": {
+        "count": 3,
+        "of": 3,
+        "percent": 100.0
+      },
+      "recall@8": {
+        "count": 0,
+        "of": 0,
+        "percent": null
+      },
+      "end_to_end_correct": {
+        "count": 0,
+        "of": 0,
+        "percent": null
+      }
+    }
+  }
+}

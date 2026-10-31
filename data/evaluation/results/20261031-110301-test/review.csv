@@ -1,0 +1,220 @@
+﻿id,split,category,question,history,expected_answer,key_facts,bot_answer,bot_status,outcome,cited_urls,expected_urls,search_query,evidence_rank,top_retrieved,judge_facts,judge_fact_notes,judge_unsupported,judge_claims,judge_comment,auto_pass,manual_verdict,manual_notes,trace_id,error
+eval-002,test,direct_factual,How often are Daily Pacing values updated?,,Daily Pacing values are updated once every hour.,- Daily Pacing updates once every hour,Daily Pacing values are updated once every hour.,answered,answered,https://help.iqm.com/en/articles/8672915-pacing-overview,https://help.iqm.com/en/articles/8672915-pacing-overview,How often are Daily Pacing values updated?,1,"1. Pacing overview › Pacing metrics › Daily Pacing
+2. Priority overview › Key terms and concepts › Daily spend pacing
+3. Pacing overview › Pacing metrics",,,,,,yes,,,c83681eb-fd78-48b5-9a72-d22b0b7f4224,
+eval-003,test,direct_factual,When should I choose an impression-based IO instead of a budget-based IO?,,Choose an impression-based IO when monetary budgets are somewhat flexible and your main intent is to generate a certain number of impressions.,"- Impression-based fits when monetary budgets are somewhat flexible
+- The main intent is to generate a certain number of impressions","You should choose an impression-based IO when your monetary budgets are somewhat flexible and your main goal is to generate a certain number of impressions. Impression-based IOs are suitable if you want to emphasize brand exposure and ad visibility, and you want each campaign within the IO to stop serving impressions once their cumulative impressions reach the impression cap. This approach helps ensure you don’t overspend based on the overall IO impression budget.",answered,answered,https://help.iqm.com/en/articles/8481053-budget-based-and-impression-based-insertion-order-io-overview,https://help.iqm.com/en/articles/8481053-budget-based-and-impression-based-insertion-order-io-overview,When should I choose an impression-based IO instead of a budget-based IO?,2,"1. Budget-based and impression-based insertion order (IO) overview › Budget-based and impression-based IO comparison
+2. Budget-based and impression-based insertion order (IO) overview › Impression-based IOs
+3. Budget-based and impression-based insertion order (IO) overview › Budget-based IOs",,,,,,yes,,,abcb87fd-c169-4617-88ec-40f488c19ce4,
+eval-004,test,procedural,How do I reset my password?,,"Select Reset Your Password to open the Reset Password pop-up, enter your current password, enter and confirm the new password (the two must be identical), then select Reset.","- Select Reset Your Password to open the Reset Password pop-up window
+- Type the current password into the Current Password field
+- Enter the new password and retype it in Confirm New Password; they must be identical
+- Select Reset to apply the new password","To reset your password, follow these steps:
+
+1. Select **Reset Your Password** to open the **Reset Password** pop-up window.
+2. Enter your current password in the **Current Password** field.
+3. Review the password requirements and decide on your new password.
+4. Type the new password into the **New Password** field.
+5. Retype the new password into the **Confirm New Password** field.
+6. Ensure the current password is correct and the new password fields match. You can use the eyeball icon to unhide the fields and verify.
+7. Select **Reset** to apply the new password to your account.",answered,answered,https://help.iqm.com/en/articles/12003355-manage-a-user-profile,https://help.iqm.com/en/articles/12003355-manage-a-user-profile,How do I reset my password?,1,"1. Manage a user profile › Manage account details › Reset your password
+2. Manage a user's account security settings › Log in with an MFA verification code
+3. Manage a user profile › Manage account details",,,,,,yes,,,32b83183-ee31-4eaf-ae42-f6c49b62a43b,
+eval-006,test,procedural,How do I invite a new user to my organization?,,"In the Organization app, open the Users tab, click + Invite, optionally upload a CSV for bulk invites, enter each user's email ID and full name, and select Send Invite. Invited users show an Invited status until they accept.","- Open the Users tab of the Organization app and click + Invite
+- Enter the user's email ID and full name (CSV upload is optional for bulk)
+- Select Send Invite
+- The user shows an Invited status until accepting","To invite a new user to your Organization's Workspace, follow these steps:
+
+1. Select the **Users** tab of the Organization app.
+2. Click **+ Invite** to open the **Invite Users** pop-up window.
+3. Enter the user's email ID and full name into the provided fields.
+   - For each additional user, click **+ Add New**.
+4. Select **Send Invite**.
+
+You can also upload, drag-and-drop, or import a CSV file to add multiple new users in bulk.
+
+All newly invited users will appear in the **Users** list with an **Invited** status until they accept the invitation.",answered,answered,https://help.iqm.com/en/articles/12003324-invite-and-manage-users,https://help.iqm.com/en/articles/12003324-invite-and-manage-users,How do I invite a new user to my organization?,1,"1. Invite and manage users › Invite users to your Organization › Invite a new user
+2. Invite and manage users › Invite and manage users overview
+3. Invite and manage users › Invite users to your Organization › Resend an invite",,,,,,yes,,,917bb6be-3988-4a12-be31-f7dfb48200c0,
+eval-008,test,list_multi_condition,What are the four elements of a campaign's Optimization & Delivery settings?,,"Optimization, Bid Pacing, Budget Capping (budget caps and impression caps), and Frequency Capping.","- Optimization
+- Bid Pacing
+- Budget Capping (budget caps and impression caps)
+- Frequency Capping","The four elements of a campaign's Optimization & Delivery settings are:
+
+1. Optimization (which can be Rule Based or AI Based)
+2. Bid Pacing
+3. Budget Capping (including budget caps and impression caps)
+4. Frequency Capping
+
+These elements determine how optimizations are applied, how aggressively the campaign bids, how bidding is paced, and how often users see an ad, all of which impact campaign performance and pacing.",answered,answered,"https://help.iqm.com/en/articles/10906959-optimization-delivery-overview
+https://help.iqm.com/en/articles/11497708-campaign-targeting-guide
+https://help.iqm.com/en/articles/12004298-optimization-overview",https://help.iqm.com/en/articles/10906959-optimization-delivery-overview,What are the four elements of a campaign's Optimization & Delivery settings?,1,"1. Optimization & Delivery overview › Optimization & Delivery overview
+2. Manage a campaign's Optimization & Delivery settings › Optimization & Delivery overview
+3. Campaign targeting guide › Optimization & Delivery (optional)",,,,,,no,,,cc42bcb6-0696-4f39-9c21-9c2316e7fbc4,
+eval-009,test,list_multi_condition,"In a Healthcare Professional (HCP) Planner plan, how many creative types can I select, and do I have to select any?",,"You can choose up to five creative formats. All are selected by default, and at least one is required. For CTV or OTT devices, select both the Video tile and the TV-Ad Buying toggle.","- Choose up to five creative formats
+- All are selected by default; at least one is required
+- For CTV or OTT, select the Video tile and the TV-Ad Buying toggle","In a Healthcare Professional (HCP) Planner plan, you can select up to five creative types. All creative types are selected by default, and you must select at least one creative type per plan.",answered,answered,"https://help.iqm.com/en/articles/12238868-create-or-manage-a-healthcare-professional-hcp-planner-plan
+https://help.iqm.com/en/articles/12238826-healthcare-professional-hcp-planner-overview",https://help.iqm.com/en/articles/12238868-create-or-manage-a-healthcare-professional-hcp-planner-plan,"In a Healthcare Professional (HCP) Planner plan, how many creative types can I select, and do I have to select any?",1,"1. Create or manage a Healthcare Professional (HCP) Planner plan › Create a plan
+2. Healthcare Professional (HCP) Planner overview › Key terms and concepts › Audience Methods › Number of audiences created
+3. Create or manage a Healthcare Professional (HCP) Planner plan › Create a plan",,,,,,no,,,6899d7f1-36e1-42c6-b5e9-fa2b9533169c,
+eval-011,test,multi_section,"What's the difference between budget-based and impression-based IOs, and how do I create a budget-based one from the Campaigns app?",,"A budget-based IO caps the total monetary spend of its campaigns, while an impression-based IO caps total impressions. To create a budget-based IO, open the Campaigns app, select + Create Insertion Order, and choose Budget under Budget Type. The Budget Type can't be changed after the IO is created.","- Budget-based IOs set a monetary cap on spend; impression-based IOs cap impressions
+- In the Campaigns app, select + Create Insertion Order
+- Choose Budget in the Budget Type section
+- The Budget Type can't be changed after creation","The difference between budget-based and impression-based insertion orders (IOs) lies in their primary goals and how budgets are managed:
+
+- Budget-based IOs have a fixed monetary budget. Campaigns under this IO stop serving impressions once their cumulative spend reaches the set monetary budget. This type is suitable when you want to regulate overall campaign spending and have financial control.
+- Impression-based IOs have a flexible monetary budget but a fixed impression cap. Campaigns stop serving once their cumulative impressions reach the set limit. This type is ideal when the goal is to emphasize brand exposure and ad visibility.
+
+To create a budget-based IO from the Campaigns app:
+
+1. When creating a new IO, choose the **Budget Type** as **Budget** for a budget-based IO.
+2. Set the overall monetary cap for the total spend of the campaigns assigned to the IO.
+3. Optionally, regulate spending on a daily, weekly, or overall basis.
+
+Note that once the IO is created, the Budget Type setting cannot be changed.
+
+For more detailed steps on creating a budget-based IO, refer to the specific guide on creating or managing budget-based IOs.",answered,answered,"https://help.iqm.com/en/articles/8481053-budget-based-and-impression-based-insertion-order-io-overview
+https://help.iqm.com/en/articles/10907105-create-or-manage-an-impression-based-insertion-order-io
+https://help.iqm.com/en/articles/10907165-create-or-manage-a-budget-based-insertion-order-io","https://help.iqm.com/en/articles/8481053-budget-based-and-impression-based-insertion-order-io-overview
+https://help.iqm.com/en/articles/10907165-create-or-manage-a-budget-based-insertion-order-io
+https://help.iqm.com/en/articles/10907165-create-or-manage-a-budget-based-insertion-order-io","What's the difference between budget-based and impression-based IOs, and how do I create a budget-based one from the Campaigns app?","2, not retrieved, not retrieved","1. Budget-based and impression-based insertion order (IO) overview › IO budget overview
+2. Budget-based and impression-based insertion order (IO) overview › Budget-based IOs
+3. Budget-based and impression-based insertion order (IO) overview › Impression-based IOs",,,,,,no,,,8788cd10-3ce8-4df8-957e-8888523e0ed7,
+eval-012,test,multi_section,"What is a Pre-bid audience, and how do I add one to a new campaign from the Campaigns app?",,"A Pre-bid audience is a group of fraud and invalid traffic (IVT), brand suitability, viewability and supply refinement pre-bid segments that you select. To add one: open the Campaigns app, choose an IO, click + Create Campaign, expand the Pre-bid Audience section, and pick an audience from the Select Audiences menu (or add individual segments).","- Pre-bid audiences group IVT, brand suitability, viewability and supply refinement pre-bid segments
+- Open the Campaigns app, choose an IO and click + Create Campaign
+- Expand the Pre-bid Audience section
+- Choose an existing audience from Select Audiences, or add individual segments","A Pre-bid audience is a group of multiple pre-bid segments combined to ensure higher media quality and ad targeting that aligns with a brand's standards. These segments include criteria like fraud, invalid traffic (IVT), brand suitability, viewability, and supply refinement, verified on an impression-by-impression basis to avoid unnecessarily eliminating entire sites or publications. Advertisers use Pre-bid audiences to apply the same set of pre-bid segments across multiple campaigns efficiently.
+
+To add a Pre-bid audience to a new campaign from the Campaigns app, follow these steps:
+
+1. Open the Campaigns app.
+2. Choose an Insertion Order (IO) to go to the Insertion Order Info page.
+3. Click + Create Campaign to open the new campaign form.
+4. Locate and expand the Pre-bid Audience section.
+5. To add an existing audience, open the Select Audiences menu and click the audience's name.
+6. To add individual segments instead, click + Add Pre-bid Segments, then search for and select the desired segments.
+7. Review and manage the segments added; you can remove any unwanted segments without affecting the original Pre-bid audience.
+8. Optionally, save your targeting settings as a new campaign template.
+9. Save your changes by clicking Save as Draft or Run to create the campaign.
+
+Note that the platform supports one creative type per campaign, so choose only one pre-bid segment format (Display or Video) to avoid extra charges.
+
+This process allows you to efficiently apply pre-bid targeting to your campaign to improve media quality and brand alignment.",answered,answered,"https://help.iqm.com/en/articles/11497708-campaign-targeting-guide
+https://help.iqm.com/en/articles/9949037-target-pre-bid-audiences-or-pre-bid-segments","https://help.iqm.com/en/articles/9949037-target-pre-bid-audiences-or-pre-bid-segments
+https://help.iqm.com/en/articles/9949037-target-pre-bid-audiences-or-pre-bid-segments","What is a Pre-bid audience, and how do I add one to a new campaign from the Campaigns app?","not retrieved, 2","1. Target Pre-bid audiences or pre-bid segments › Target a pre-bid audience
+2. Target Pre-bid audiences or pre-bid segments › Target a pre-bid audience › From the Campaigns app - New campaign
+3. Target Pre-bid audiences or pre-bid segments › Target a pre-bid audience › From the Audiences app - New campaign",,,,,,no,,,e4547008-c7b3-440e-9dea-9c6093202201,
+eval-014,test,follow_up,And how do I test that the pixel is working?,"user: How do I create a conversion?
+assistant: In the Conversion app you can create Pixel, Postback, or Universal Pixel conversions.","In the Conversions app, find the Pixel or Universal Pixel conversion, select Test in the Status column, enter the URL of the page where you installed the code in Integration page URL, select Test Pixel, then complete the conversion action on that page.","- Select Test from the Status column of the conversion
+- Enter the page URL in the Integration page URL field and select Test Pixel
+- Complete the conversion action on the webpage to check the pixel fires","To test that the pixel is working, follow these steps:
+
+1. Open the Conversions app.
+2. Locate the Pixel conversion or Universal Pixel conversion you want to test.
+3. Select **Test** from the **Status** column to open the test pop-up window.
+4. Enter the URL of the webpage where you installed the Pixel Script Code or Universal Pixel Code in the **Integration page URL** field.
+5. Click **Test Pixel**. A new tab will open and redirect you to the webpage you entered.
+6. Complete the conversion action on that webpage to verify if the pixel is capturing events.
+
+You need to complete the last two steps in the new browser tab to register the conversion and confirm the pixel installation. Once a successful conversion is recorded, the status will change from **Pending** to **Active** in the **Status** column, though this may take up to two hours.",answered,answered,"https://help.iqm.com/en/articles/5735120-create-or-manage-a-conversion
+https://help.iqm.com/en/articles/8422465-install-and-test-a-pixel-or-universal-pixel",https://help.iqm.com/en/articles/8422465-install-and-test-a-pixel-or-universal-pixel,How do I test that a pixel conversion is working in the IQM platform?,2,"1. Conversions overview › Pixel Conversions
+2. Install and test a Pixel or Universal Pixel › Test a Pixel or Universal Pixel conversion
+3. IQM platform overview › Conversion app › Primary Conversion app use cases:",,,,,,no,,,edffe0d0-bee4-44e2-b7c8-1f6a6c2860b2,
+eval-015,test,follow_up,What does my campaign need to qualify for one?,"user: What is a Bid Modifier?
+assistant: A Bid Modifier lets you bid a higher or lower price for the Creative, Location, Device, or Inventory targeting dimensions that are most or least important to your campaign.","A campaign needs daily spend of $100 or more, a Draft, Pending, Running, Paused or Rejected status, a duration of 3 or more days, a Base Bid Price and a Max Bid Price, and its inventory targeting can't rely on Deal IDs alone.","- Daily spend of $100+
+- Status: Draft, Pending, Running, Paused or Rejected
+- Campaign duration of 3+ days
+- Must have a Base Bid Price and a Max Bid Price
+- Deal IDs are not supported for inventory targeting","To qualify for applying a Bid Modifier to your campaign, it must meet all of the following requirements:
+
+- Have a daily spend of $100 or more.
+- Campaign status must be one of: Draft, Pending, Running, Paused, or Rejected.
+- Campaign duration must be at least 3 days.
+- Campaign must have a Base Bid Price defined.
+- Campaign must have a Max Bid Price defined.
+- Campaign targeting cannot include Deal IDs if you want Bid Modifiers to apply to those deals (Bid Modifiers apply only to Open Exchange inventory when both Open Exchange and Deal IDs are targeted).
+
+These requirements ensure your campaign is eligible to use Bid Modifiers to adjust bids for Creative, Location, Device, or Inventory targeting dimensions based on their importance to your campaign.",answered,answered,https://help.iqm.com/en/articles/9298560-bid-modifier-overview,https://help.iqm.com/en/articles/9298560-bid-modifier-overview,What does my campaign need to qualify for a Bid Modifier?,1,"1. Bid Modifier overview › Bid Modifier eligibility requirements
+2. Troubleshoot a campaign that's pacing behind › Win rate › Optimize bid prices - Bid Modifiers
+3. Bid Model overview › Bid Model eligibility requirements",,,,,,yes,,,bde616c0-61e9-4111-b6da-e9035c922b8f,
+eval-017,test,unanswerable,Does IQM integrate with Salesforce?,,"The Help Center does not mention a Salesforce integration, so the bot should say it cannot answer from the documentation.","- States that the Help Center does not provide this information
+- Does not claim a Salesforce integration exists",The provided documentation does not mention whether IQM integrates with Salesforce.,not_covered,correct_abstention,,,Does IQM integrate with Salesforce?,n/a,"1. ""Reporting and analytics"" collection overview › Data visualization
+2. Import IQM campaign data into Google Looker Studio › Data import overview
+3. Import an audience from the L2 DataMapping platform › L2 audience import overview",,,,,,yes,,,73eec12b-c77e-4675-9758-a4121a66364c,
+eval-018,test,unanswerable,Can I set up single sign-on (SSO) for my organization?,,"The Help Center does not describe single sign-on, so the bot should say it cannot answer from the documentation.","- States that the Help Center does not provide this information
+- Does not invent SSO setup steps",The provided documentation does not mention the ability to set up single sign-on (SSO) for an organization. It covers managing multi-factor authentication (MFA) and other security settings but does not address SSO setup.,not_covered,correct_abstention,,,Can I set up single sign-on (SSO) for my organization?,n/a,"1. Manage a user's account security settings › Enable or disable MFA - Organization
+2. ""Account setup and management"" collection overview › Organization management
+3. Manage an Organization Profile › Manage security settings for an Organization’s users",,,,,,yes,,,fb78ba12-cc8e-4167-8cea-421668cbe7c8,
+eval-019,test,unanswerable,How do I create a campaign in Google Ads?,,"This is about a different product. The Help Center only covers the IQM platform, so the bot should say it cannot answer from the documentation.","- States that the Help Center does not cover this
+- Does not present IQM campaign steps as Google Ads steps","The provided documents explain how to create and manage campaigns within the IQM platform, including using the Campaigns app, Dashboard app, and Vera AI agent. However, they do not contain information on how to create a campaign in Google Ads.",not_covered,correct_abstention,,,How do I create a campaign in Google Ads?,n/a,"1. Create or manage a campaign › Create a new campaign
+2. Create or manage a campaign › Create a new campaign › Create a new campaign from the Campaigns app
+3. Create or manage a campaign › Campaigns overview",,,,,,yes,,,68958f2d-8d32-49a9-90db-2da70e2620e3,
+eval-021,test,similar_but_wrong,How do I generate a Nurse Level Data Insights report?,,"In the Insights app, select Nurse Level Data, click + Create New, name the template, choose the campaign status, select campaigns, and choose a one-time, daily, weekly or monthly delivery schedule with its dates. It can also be started from the Campaigns or Dashboard app.","- Open the Insights app, select Nurse Level Data and click + Create New
+- Name the template, choose campaign status and select campaigns
+- Choose a one-time, daily, weekly or monthly delivery frequency","To generate a Nurse Level Data (NLD) Insights report, follow these steps:
+
+1. Open the Insights app.
+2. Select ""Nurse Level Data"".
+3. Click ""+ Create New"" to open the Generate and Schedule NLD pop-up window.
+4. Enter a name for the NLD template.
+5. Choose the campaign status (Running, Paused, or Expired).
+6. Search and select the campaign(s) for which you want to generate insights.
+7. Choose the delivery frequency for the report (One-Time, Daily, Weekly, Monthly, or Custom).
+8. Select the appropriate date range or schedule details depending on the frequency.
+9. Enter email aliases for report recipients.
+10. Optionally, enable data aggregation for certain delivery frequencies.
+11. Review the summary and then select Generate (for one-time) or Schedule (for recurring).
+
+The report will then be generated and available on the Nurse Level Data page in the Insights app for review and management.
+
+This process allows you to create either a one-time or recurring NLD Insights report based on your campaign data and scheduling preferences.",answered,answered,https://help.iqm.com/en/articles/14125174-generate-or-manage-a-nurse-level-data-nld-insights-report,https://help.iqm.com/en/articles/14125174-generate-or-manage-a-nurse-level-data-nld-insights-report,How do I generate a Nurse Level Data Insights report?,8,"1. Generate or manage a Nurse Level Data (NLD) Insights report › NLD Insights report overview
+2. Generate or manage a Nurse Level Data (NLD) Insights report › Manage an NLD Insights report › Download an NLD Insights report
+3. Generate or manage a Nurse Level Data (NLD) Insights report › Manage an NLD Insights report",,,,,,yes,,,9904ce53-6ef1-4994-a589-a9ca1fca66df,
+eval-022,test,similar_but_wrong,Why can't I duplicate my Retargeted audience?,,Duplication isn't supported for Retargeted audiences because each one includes a unique Pixel Script Code. Create a new Retargeted audience to generate a new code.,"- Duplication isn't supported for Retargeted audiences
+- Each Retargeted audience has a unique Pixel Script Code
+- Create a new audience to get a new Pixel Script Code","You cannot duplicate a Retargeted audience because each Retargeted audience includes a unique Pixel Script Code. Duplication isn’t supported to ensure the uniqueness of this code. Instead, you need to create a new Retargeted audience, which will generate a new Pixel Script Code that you can install to begin capturing users for the new audience.",answered,answered,"https://help.iqm.com/en/articles/11750322-troubleshoot-a-retargeted-audience
+https://help.iqm.com/en/articles/11750312-create-or-manage-a-retargeted-audience",https://help.iqm.com/en/articles/11750322-troubleshoot-a-retargeted-audience,Why can't I duplicate my Retargeted audience?,1,"1. Troubleshoot a Retargeted audience › Troubleshoot Retargeted audience creation or management issues
+2. Troubleshoot a Matched audience › Troubleshoot Matched audience creation or management issues
+3. Troubleshoot a Segmented audience › Troubleshoot Segmented audience creation or management issues",,,,,,no,,,12875f3f-169b-497e-ac69-f5c98a54a7db,
+eval-024,test,table_lookup,What aspect ratio is a 728 x 90 image creative?,,Horizontal 8.09:1.,- The 728 x 90 pixel image size is Horizontal 8.09:1,A 728 x 90 image creative has an aspect ratio of 8.09:1.,answered,answered,https://help.iqm.com/en/articles/7019246-creative-ad-specs-and-requirements,https://help.iqm.com/en/articles/7019246-creative-ad-specs-and-requirements,What aspect ratio is a 728 x 90 image creative?,1,"1. Creative ad specs and requirements › Image creatives
+2. Creative ad specs and requirements › Native creatives › Native image creatives
+3. Creative ad specs and requirements › Creative ad specs overview",,,,,,yes,,,dc1c5e74-a1c8-4d9e-a41c-3dddcddc6531,
+eval-025,test,table_lookup,How long can a native video creative be?,,"15 to 120 seconds (minimum/maximum), with 30 seconds recommended.","- Minimum 15 seconds, maximum 120 seconds
+- 30 seconds is recommended","A native video creative can be between 15 and 120 seconds in length, with 30 seconds being the recommended length.",answered,answered,https://help.iqm.com/en/articles/7019246-creative-ad-specs-and-requirements,https://help.iqm.com/en/articles/7019246-creative-ad-specs-and-requirements,How long can a native video creative be?,1,"1. Creative ad specs and requirements › Native creatives › Native video creatives
+2. Upload a native creative › Upload a native video creative › Creatives app - New video
+3. Upload a native creative › Native creative overview",,,,,,yes,,,899e6b86-ed64-4ffe-b208-f9bc34e74dce,
+eval-027,test,follow_up,And how do I cancel it for good?,"user: How do I schedule a report to be emailed every week?
+assistant: Find the report, select the envelope icon in the Email Scheduled column, add the recipient email aliases, choose XLSX or CSV, pick a weekly delivery frequency, set an end date, and click Schedule.
+user: Can I change those settings later?
+assistant: Yes. Select the pencil icon in the Email Scheduled column to reopen the Schedule Email Delivery window, then update the recipients, file format or delivery frequency.","Hover over the report row and select the pencil icon in the Email Scheduled column to reopen the Schedule Email Delivery window, then click Stop Schedule to cancel all future scheduled email deliveries.","- Select the pencil icon in the Email Scheduled column (visible on hover)
+- Click Stop Schedule
+- This cancels all future scheduled email deliveries","To cancel a recurring report email delivery schedule permanently, follow these steps:
+
+1. Locate the report you want to cancel by filtering or searching your reports.
+2. Select the pencil icon in the Email Scheduled column to open the Schedule Email Delivery pop-up window.
+3. Click the Stop Schedule button to cancel all future scheduled email deliveries.
+4. Confirm your choice by selecting Update Changes to apply the cancellation.
+
+This will stop all future recurring email deliveries for that report.
+
+If you want to pause the schedule instead (which can be resumed later), you can change the report template status from Active to Inactive in the report's delivery details section, but to cancel completely, use the Stop Schedule option.",answered,answered,"https://help.iqm.com/en/articles/10343879-generate-manage-or-send-a-report
+https://help.iqm.com/en/articles/14126938-generate-or-manage-an-integrated-care-team-ict-insights-report
+https://help.iqm.com/en/articles/10774835-generate-or-manage-a-provider-level-data-pld-insights-report",https://help.iqm.com/en/articles/10343879-generate-manage-or-send-a-report,How do I cancel a scheduled report email delivery permanently in the IQM platform?,2,"1. Generate, manage, or send a report › Send a report › Schedule recurring email delivery
+2. Generate, manage, or send a report › Send a report › Edit or stop a report schedule
+3. Generate, manage, or send a report with Vera › Send and schedule a report with Vera › Change an existing report delivery schedule",,,,,,no,,,3b0843fa-8211-4123-a996-9628ca4d66e4,
+eval-028,test,follow_up,How do I add an image creative by dragging files in from my computer?,"user: How do I schedule a report to be emailed every week?
+assistant: Find the report, select the envelope icon in the Email Scheduled column, add the recipient email aliases, choose XLSX or CSV, pick a weekly delivery frequency, set an end date, and click Schedule.","Open the Creatives app, select Image, click + Add New, choose the drag-and-drop method, then open your local files, choose one or more image files and drag them to the or Drag & Drop section.","- Open the Creatives app, select Image and click + Add New
+- Choose the drag-and-drop method
+- Drag the image files to the or Drag & Drop section","To add an image creative by dragging files from your computer, follow these steps:
+
+1. Open the Creatives app.
+2. Select **Image**.
+3. Click **+ Add New** to open the Image Creative pop-up window.
+4. Open your computer’s local files, select one or more image files, and drag them to the **or Drag & Drop** section in the pop-up window.
+5. Review the creative preview(s) to confirm that each image renders as expected.
+6. Type a unique name for the creative into the **Name** field (the file’s name populates by default).
+7. Enter the full URL address in the **Click URL** field where users will be directed when they click on the creative.
+8. Optionally, complete the **3rd Party ID** or **Pixel URL** fields.
+9. Select **Add Creative** to save the image(s) to the Creatives app.",answered,answered,https://help.iqm.com/en/articles/5651450-upload-an-image-creative,https://help.iqm.com/en/articles/5651450-upload-an-image-creative,How do I add an image creative by dragging files in from my computer in the IQM platform?,2,"1. Upload an image creative › Image creative overview
+2. Upload an image creative › Add an image creative › Add an image creative from the Creatives app
+3. Upload an image creative › Add an image creative › Add an image creative from the Campaigns app",,,,,,yes,,,dca758d9-391e-4927-a504-5188416ca481,
