@@ -10,6 +10,8 @@ says so instead of guessing.
 - **Follow-up questions.** Chat history is used to understand follow-ups ("what about those settings?").
 - **Tracing and evaluation.** LangSmith tracing (optional) and a 28-question evaluation plus 16 held-out questions, with saved results.
 
+Demo recording (screen recording of the chat page, tracing and the MCP server): [Loom](https://www.loom.com/share/1f39a3e2a9e14e1fab3250acfbb72b88)
+
 How it works: [docs/architecture.md](docs/architecture.md) · design summary: [docs/writeup.md](docs/writeup.md) · results:
 [docs/evaluation-report.md](docs/evaluation-report.md) · decisions: [docs/design-decisions.md](docs/design-decisions.md)
 
