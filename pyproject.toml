@@ -19,6 +19,7 @@ dependencies = [
     "streamlit>=1.66",
     "langsmith>=0.14",
     "rank-bm25>=0.2.2",
+    "mcp>=2.0",
 ]
 
 [tool.setuptools.packages.find]

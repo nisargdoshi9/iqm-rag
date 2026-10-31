@@ -555,6 +555,32 @@ def _start_report(
     }
 
 
+REMOVAL_MIN_FRACTION = 0.8  # articles missing from the site are dropped only if the crawl found at least this share of the stored ones
+
+
+def _removal_decision(existing: dict, discovered: list[str], discovery: "Discovery", sitemap_report: dict) -> tuple[list[str], Optional[str]]:
+    """The stored articles that have left the site, and the reason nothing is dropped when the crawl does not look complete.
+
+    A page that failed to load must never delete an article, so removal needs a healthy crawl: no collection or sitemap errors
+    and most of the stored articles found again.
+    """
+    gone = sorted(set(existing) - set(discovered), key=int)
+    if not gone:
+        return [], None
+    if discovery.collection_errors or not sitemap_report["fetched"]:
+        return [], "the crawl had collection or sitemap errors, so a missing article may be a failed fetch"
+    if len(discovered) < REMOVAL_MIN_FRACTION * len(existing):
+        return [], f"only {len(discovered)} of {len(existing)} stored articles were found again"
+    return gone, None
+
+
+def _delete_raw_files(paths: "CrawlPaths", existing: dict, gone: list[str]) -> None:
+    for article_id in gone:
+        raw_path = existing[article_id].get("raw_html_path")
+        if raw_path:
+            (paths.root / raw_path).unlink(missing_ok=True)
+
+
 def _record_outcome(report: dict, outcome: str, article_id: str, prior: Optional[dict], record: dict) -> None:
     if outcome == OUTCOME_SKIPPED:
         report["unchanged_skipped"] += 1
@@ -580,6 +606,7 @@ def _finish_report(report: dict, fetcher: PoliteFetcher, records: dict, discover
         if records[aid].get("scrape_status") == STATUS_SUCCESS and not records[aid].get("last_updated")
     ]
     report["total_records"] = len(records)
+    report["fetched_ok"] = list(report["succeeded"])  # kept for the update summary
     report["succeeded_count"] = len(report.pop("succeeded"))
     report["failed_count"] = len(report["failed"])
     write_atomic(paths.report, json.dumps(report, indent=JSON_INDENT, ensure_ascii=False) + "\n")
@@ -587,6 +614,21 @@ def _finish_report(report: dict, fetcher: PoliteFetcher, records: dict, discover
 
 
 # --- Entry point -------------------------------------------------------------------------------------
+
+
+def plan_crawl(fetcher: PoliteFetcher, paths: CrawlPaths, *, force: bool = False) -> dict:
+    """What a crawl would do, without fetching any article or writing anything: discovery requests only."""
+    robots = load_robots(fetcher)
+    _apply_robots_delay(fetcher, robots)
+    discovery = discover(fetcher, robots)
+    sitemap, sitemap_report = fetch_sitemap(fetcher, robots)
+    discovered = sorted(set(discovery.membership) | set(sitemap), key=int)
+    existing = _load_records(paths.articles_jsonl)
+    new = [aid for aid in discovered if aid not in existing]
+    refetch = [aid for aid in discovered if aid in existing and (force or not _unchanged(existing[aid], sitemap.get(aid, (None, None))[1], paths.root))]
+    gone, removal_skipped = _removal_decision(existing, discovered, discovery, sitemap_report)
+    return {"discovered": len(discovered), "new": new, "refetch": refetch, "unchanged": len(discovered) - len(new) - len(refetch),
+            "removed": gone, "removal_skipped_reason": removal_skipped, "requests_made": fetcher.requests_made}
 
 
 def run_crawl(fetcher: PoliteFetcher, paths: CrawlPaths, *, force: bool = False) -> dict:
@@ -603,7 +645,10 @@ def run_crawl(fetcher: PoliteFetcher, paths: CrawlPaths, *, force: bool = False)
     settings = _run_settings(started_at, fetcher, robots, force)
     report = _start_report(settings, discovery, sitemap, sitemap_report, discovered, existing)
 
-    records = dict(existing)
+    gone, removal_skipped = _removal_decision(existing, discovered, discovery, sitemap_report)
+    report.update({"removed_dropped": gone, "removal_skipped_reason": removal_skipped})
+    _delete_raw_files(paths, existing, gone)
+    records = {article_id: record for article_id, record in existing.items() if article_id not in gone}
     for index, article_id in enumerate(discovered, start=1):
         prior = existing.get(article_id)
         record, outcome = _process_article(ctx, article_id)

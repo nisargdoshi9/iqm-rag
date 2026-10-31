@@ -70,6 +70,38 @@ python scripts/ask.py "How do I schedule a report?" --evidence   # one question
 python scripts/retrieve.py "How do I schedule a report?"         # retrieval only (embeds the query, no answer)
 ```
 
+## Use it from an MCP client (Claude Desktop, Claude Code, ...)
+
+`scripts/mcp_server.py` is an MCP server (stdio) with two read-only tools: `search_help_center(query, top_k)` returns the best passages
+with article title, section and URL (the same hybrid search and rerank as the chat page), and `get_article(article, max_chars, offset)`
+returns one article as Markdown, in pages. The client's own model writes the answer and cites the URLs. It runs on your machine: it needs this
+repository, its virtualenv, the built index (`python scripts/index.py`) and the keys in `.env` (queries are embedded and reranked with your
+OpenAI key, a fraction of a cent each). It is not a hosted service; other people can use it by cloning the repository the same way.
+
+Claude Desktop (`claude_desktop_config.json`), with your own paths:
+
+```json
+{"mcpServers": {"iqm-help-center": {"command": "/path/to/repo/.venv/bin/python", "args": ["/path/to/repo/scripts/mcp_server.py"]}}}
+```
+
+Claude Code: `claude mcp add iqm-help-center -- /path/to/repo/.venv/bin/python /path/to/repo/scripts/mcp_server.py`. Restart the client after
+`scripts/update.py` so the server loads the new index. Tests run the server through an in-memory MCP client (`tests/test_mcp_server.py`).
+
+## Keep the data up to date (incremental updates)
+
+```bash
+python scripts/update.py --dry-run    # discovery only: which articles are new, changed or removed (14 requests, writes nothing)
+python scripts/update.py              # re-scrape only those, drop removed articles, then clean, chunk and index what changed
+```
+
+Only new or changed articles are fetched (by sitemap date), articles that left the site are dropped from the data, the chunks and the index,
+and only new or changed chunks are embedded. The summary says what changed at each step. If any article fails to download or clean, the update
+stops before the later steps (a failed page never removes an article), and running it again retries only those. `--skip-scrape` rebuilds from
+the data on disk and `--force` refetches everything. An article edited without a changed sitemap date is only picked up with `--force`.
+A check on a copy of the data against the live site (2026-10-31, two days after the first scrape) found 1 new and 11 changed articles and
+re-embedded 12 new, 17 changed and 1 removed chunk, about 5,600 tokens. The committed dataset was not updated, because the evaluation results
+were measured on that snapshot.
+
 ## Rebuild the data from scratch
 
 Only needed to refresh the dataset. Scraping takes about 7 minutes (2 seconds between requests).
@@ -124,7 +156,7 @@ Questions and answers are stored in LangSmith when tracing is on; set `LANGSMITH
 python -m unittest discover -s tests
 ```
 
-432 tests with saved fixtures, fake models and a throwaway index; they never call the live site or any API.
+457 tests with saved fixtures, fake models and a throwaway index; they never call the live site or any API.
 
 ## Layout
 
@@ -138,9 +170,11 @@ src/iqm_rag/
 ├── generation/      # context, prompts, citations, the answer chain, conversations
 ├── ui/              # chat page, display logic, styles, scripts
 ├── observability/   # LangSmith tracing, trace export
+├── update.py        # incremental update: scrape changes, clean, chunk, index
+├── mcp_server.py    # MCP server: search_help_center, get_article
 └── evaluation/      # dataset checks, metrics, judge, runner
 app.py               # chat page: streamlit run app.py
-scripts/             # scrape, normalize, chunk, index, retrieve, ask, chat, evaluate, compare_runs, export_trace
+scripts/             # scrape, normalize, chunk, index, update, mcp_server, retrieve, ask, chat, evaluate, compare_runs, export_trace
 tests/
 data/                # raw/ (not committed), processed/, chunks/, index/ (not committed), evaluation/
 docs/                # architecture, decisions, evaluation report, write-up

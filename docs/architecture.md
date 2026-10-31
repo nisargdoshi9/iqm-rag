@@ -67,6 +67,15 @@ flowchart TD
 7. **Presentation.** The chat page shows the answer, a status badge, de-duplicated source links and, in Developer mode, the search
    query, the retrieved passages with scores, tokens, timings and the trace ID.
 
+## Keeping the data fresh, and the MCP server
+
+- **Incremental update.** `scripts/update.py` chains the offline steps and reports what changed: the scraper fetches only articles whose
+  sitemap date changed and drops articles that left the site (only after a healthy crawl), cleaning and chunking are fast local steps, and the
+  index embeds only new or changed chunks and deletes stale ones. A failed download stops the update before it can remove anything.
+- **MCP server.** `scripts/mcp_server.py` exposes `search_help_center` (the same retrieval pipeline as the chat page) and `get_article`
+  (the cleaned article text, paged) over stdio, so any MCP client can use the Help Center. It reads the same index and data as the chat page.
+  Decisions: `docs/decisions/FR-11-update-and-mcp.md`.
+
 ## Cross-cutting parts
 
 - **Tracing.** With a LangSmith key set, every request is one `rag_answer` run with child steps `rewrite`, `retrieve` (a `retrieval_pipeline` run containing `vector_search`, `embed_query`

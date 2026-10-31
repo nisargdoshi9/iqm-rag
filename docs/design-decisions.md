@@ -14,6 +14,7 @@ One record per part of the system, each with the options considered, the choice,
 | [FR-08](decisions/FR-08-tracing.md) | Tracing | LangSmith, on only when a key is set; we generate the trace ID |
 | [FR-09](decisions/FR-09-evaluation.md) | Evaluation | Evidence-quote retrieval metrics, deterministic abstention and citation checks, a strict LLM judge; test split run once |
 | [Improvements](decisions/FR-10-improvements.md) | After the first test run | 16 held-out questions; link-only chunks dropped; tighter citations; small talk; hybrid search, LLM reranker and neighbour parts as switches, compared once each; shipped default hybrid + rerank |
+| [Updates and MCP](decisions/FR-11-update-and-mcp.md) | Bonus tasks | One `update.py` command (changed articles only, removed articles dropped, failures stop it before it removes anything); MCP server with a search tool and a get-article tool |
 
 Supporting analysis: [media and tables](analysis/media-and-tables.md). Results: [evaluation report](evaluation-report.md). Design
 summary for a reader: [write-up](writeup.md). Structure: [architecture](architecture.md).

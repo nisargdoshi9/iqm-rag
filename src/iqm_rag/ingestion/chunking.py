@@ -10,6 +10,7 @@ import math
 import re
 import statistics
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional
 
 from iqm_rag import config
@@ -377,12 +378,13 @@ def chunk_report(chunks: list[dict], articles: int, cfg: ChunkingConfig, navigat
     }
 
 
-def run_chunking(cfg: Optional[ChunkingConfig] = None) -> dict:
+def run_chunking(cfg: Optional[ChunkingConfig] = None, articles_path: Path = config.PROCESSED_ARTICLES_JSONL,
+                 chunks_path: Path = CHUNKS_JSONL, report_path: Path = CHUNK_REPORT_PATH) -> dict:
     """Chunk the cleaned articles and write data/chunks/chunks.jsonl plus a report. Needs no network access."""
     cfg = cfg or ChunkingConfig()
-    articles = read_jsonl(config.PROCESSED_ARTICLES_JSONL)
+    articles = read_jsonl(articles_path)
     chunks = chunk_corpus(articles, cfg)
-    write_atomic(CHUNKS_JSONL, "".join(json.dumps(chunk, ensure_ascii=False) + "\n" for chunk in chunks))
+    write_atomic(chunks_path, "".join(json.dumps(chunk, ensure_ascii=False) + "\n" for chunk in chunks))
     report = chunk_report(chunks, len(articles), cfg, navigation_sections(articles))
-    write_atomic(CHUNK_REPORT_PATH, json.dumps(report, indent=2, ensure_ascii=False) + "\n")
+    write_atomic(report_path, json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     return report
