@@ -1,6 +1,6 @@
 # FR-1: Help Center discovery and scraping — decisions
 
-Status: decisions settled. Pagination and date coverage are to be verified during the first full crawl.
+Status: implemented and run on 2026-10-29. 200 of 200 articles fetched in 214 requests with no failures; collection pages and the sitemap agreed exactly (no article found by only one); all 200 records have a last-updated date.
 
 ## Context (observed on help.iqm.com, 2026-10-29)
 
@@ -11,8 +11,8 @@ Status: decisions settled. Pagination and date coverage are to be verified durin
 - Article pages are server-rendered (title, body and the article element are in the HTML). The last-updated date is in an embedded JSON field, `lastUpdatedDate` (ISO 8601 UTC). The visible text is relative ("Updated over 7 months ago"), so it is not used.
 - For two articles checked, sitemap `<lastmod>` equals `lastUpdatedDate` exactly.
 - A bare article URL (ID without slug) returns 302 to the slug URL.
-- Collection pages show a "Next" control. Not yet tested whether any collection paginates.
-- `lastUpdatedDate` checked on four articles only. Not yet verified across all 200.
+- Collection pages show a "Next" control. The scraper follows pagination if it is present; the crawl found 200 articles in total, matching the sitemap.
+- `lastUpdatedDate` was checked on four articles before the crawl; the crawl then found it on all 200.
 
 ## Decisions
 
@@ -26,7 +26,7 @@ Plain HTTP first. Playwright only if an article's body cannot be extracted this 
 Stricter than `Crawl-delay: 1`, which gives a buffer. The crawl of about 211 pages takes roughly 7 minutes at this delay. Default lives in `.env.example` / `config.py`.
 
 ### D4. User-agent — honest bot name with a contact from config
-Format: `IQM-RAG-Assignment-Bot/0.1 (contact: <email>)`. The contact value comes from `SCRAPER_USER_AGENT` in `.env`, so no personal details are committed. Rationale: the PDF asks for "a clear user-agent"; disguising the scraper as a browser would hide who is crawling.
+Format: `IQM-RAG-Assignment-Bot/0.1 (contact: <email>)`. The contact value comes from `SCRAPER_USER_AGENT` in `.env`, so no personal details are committed. Rationale: the assignment asks for a clear user-agent; disguising the scraper as a browser would hide who is crawling.
 
 ### D5. Last-updated date — `lastUpdatedDate` from the embedded JSON
 Confirmed: this is the article's last-edited date on the Help Center, not the crawl time. The crawl time is stored separately as `scraped_at`. Stored as an ISO 8601 string; `null` if the field is missing.

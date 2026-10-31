@@ -1,6 +1,6 @@
 # FR-5: Grounded answer generation, citations and abstention
 
-Status: decided and implemented (2026-10-31). Answer quality is not yet measured on the evaluation set. Chat history, the follow-up
+Status: decided and implemented (2026-10-31). Answer quality was measured with the evaluation set; see `docs/evaluation-report.md`. Chat history, the follow-up
 rewrite, the interface and tracing are separate tickets; this one leaves hooks for them.
 
 ## What it does

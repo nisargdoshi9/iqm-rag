@@ -1,6 +1,6 @@
 # FR-6: Conversation history and follow-up questions
 
-Status: decided and implemented (2026-10-31). Rewrite quality is not yet measured on the evaluation set. The chat interface (FR-7) and tracing
+Status: decided and implemented (2026-10-31). The follow-up questions in the evaluation set (6 of 28) were all answered correctly in the dev and test runs; see `docs/evaluation-report.md`. The chat interface (FR-7) and tracing
 (FR-8) build on the hooks left here.
 
 ## What it does

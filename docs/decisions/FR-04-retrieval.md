@@ -1,7 +1,7 @@
 # FR-4: Retrieval decisions
 
 Status: decided and implemented (2026-10-30). `src/iqm_rag/retrieval/retriever.py`, `scripts/retrieve.py`,
-`tests/test_retrieval.py`. Retrieval quality is not yet measured on the full evaluation set (see Open items).
+`tests/test_retrieval.py`. Retrieval quality was measured with the evaluation set; see `docs/evaluation-report.md` (test split: Recall@8 15 of 19 evidence items, Recall@1 9 of 19).
 
 ## What retrieval does
 

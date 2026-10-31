@@ -18,7 +18,7 @@ prices from third-party catalogue pages) the price gap is cents, so the more cap
 embedding model out as a cause of weak retrieval. OpenAI's launch numbers put English retrieval (MTEB) at 62.3 for small
 and 64.6 for large, a modest gap of about 2.3 points, so no big gain is claimed. The corpus has near-identical sibling
 sections (Creatives app vs Campaigns app) and product jargon, where a larger vector may separate close cases better,
-but that is unmeasured. Not yet tested on our data; the evidence-hit-rate check can compare small vs large cheaply.
+but that is unmeasured. The small-versus-large comparison was not run on our data.
 
 Why a hosted model: OpenAI credits are available and the answer model is OpenAI too, so one key covers both. The
 alternative considered was a local bge-small-en-v1.5 (no key, but a 512-token input limit would force a cap of about

@@ -1,0 +1,20 @@
+{
+  "articles": 200,
+  "chunks": 2310,
+  "tokens": {
+    "min": 17,
+    "median": 194.0,
+    "p90": 406,
+    "max": 691
+  },
+  "merged_chunks": 376,
+  "split_sections": 37,
+  "under_60_tokens": 142,
+  "config": {
+    "merge_min_tokens": 150,
+    "max_tokens": 700,
+    "overlap_max_tokens": 50,
+    "chars_per_token": 4
+  },
+  "token_estimate": "characters / 4"
+}

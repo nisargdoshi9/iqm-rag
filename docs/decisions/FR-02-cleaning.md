@@ -1,6 +1,6 @@
 # FR-2: Cleaning and normalisation — decisions
 
-Status: implemented on branch `feat/fr-2-cleaning`; awaiting local test. Decisions below are settled unless marked open.
+Status: implemented and run on all 200 articles (output is deterministic). Decisions below are settled unless marked open.
 
 ## Context
 
