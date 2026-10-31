@@ -26,7 +26,7 @@ ROUGH_TOKENS = {"answer": (3000, 150), "rewrite": (480, 15), "judge": (3600, 350
 MANUAL_COLUMNS = ("manual_verdict", "manual_notes")
 REVIEW_COLUMNS = ("id", "split", "category", "question", "history", "expected_answer", "key_facts", "bot_answer", "bot_status", "outcome",
                   "cited_urls", "expected_urls", "search_query", "evidence_rank", "top_retrieved", "judge_facts", "judge_fact_notes",
-                  "judge_unsupported", "judge_comment", "auto_pass", *MANUAL_COLUMNS, "trace_id", "error")
+                  "judge_unsupported", "judge_claims", "judge_comment", "auto_pass", *MANUAL_COLUMNS, "trace_id", "error")
 
 
 # --- selection, hashing, planning --------------------------------------------------------------------
@@ -45,7 +45,11 @@ def select_questions(questions: Sequence[dict], split: str = "all", ids: Optiona
 
 
 def dataset_hash(path: Path = QUESTIONS_PATH) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    """A hash of the questions' content. The `status` field is left out, so verifying the set does not change its identity."""
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    for row in rows:
+        row.pop("status", None)
+    return hashlib.sha256(json.dumps(rows, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
 
 
 def _evidence_coverage(questions: Sequence[dict], chunks: Sequence[dict]) -> dict:
@@ -99,7 +103,7 @@ def previous_test_runs(results_dir: Path, current_hash: str) -> list[str]:
     found = []
     for config_file in sorted(results_dir.glob("*/config.json")) if results_dir.exists() else []:
         setup = json.loads(config_file.read_text())
-        if setup.get("completed") and setup.get("includes_test") and setup.get("dataset_hash") == current_hash:
+        if setup.get("completed") and setup.get("includes_test") and setup.get("dataset_hash") == current_hash and not setup.get("rejudged_from"):
             found.append(config_file.parent.name)
     return found
 
@@ -193,6 +197,7 @@ def _review_row(record: dict) -> dict:
                 "top_retrieved": "\n".join(f"{h['rank']}. {h['header']}" for h in record["retrieved"][:3]),
                 "judge_facts": "" if judge.get("facts_covered") is None else f"{judge['facts_covered']}/{judge['facts_total']}",
                 "judge_fact_notes": "\n".join(notes), "judge_unsupported": "\n".join(judge.get("unsupported_claims", [])),
+                "judge_claims": "\n".join(f"{'OK ' if c['supported'] else 'NO '} doc {c['supporting_doc']} | {c['claim']}" for c in judge.get("claims", [])),
                 "judge_comment": judge.get("error") or judge.get("comment", ""), "auto_pass": "yes" if _auto_pass(record) else "no"})
     return row
 
@@ -245,7 +250,7 @@ def summary_markdown(summary: dict, groups: dict, setup: dict, records: Sequence
              "## Citations", "", f"- Mean precision {cit['mean_precision']} · mean recall {cit['mean_recall']} · no wrong citation {_fmt(cit['no_wrong_citation'])}", "",
              "## Answer quality (LLM judge, answered answerable questions)", "",
              f"- Judged {gen['judged']} (judge errors {gen['judge_errors']}) · every key fact covered {_fmt(gen['all_facts_covered'])} · mean fact coverage {gen['mean_fact_coverage']} · "
-             f"every claim supported {_fmt(gen['faithful'])}",
+             f"every claim supported {_fmt(gen['faithful'])} · claims {gen['claims']['total']} (supported {gen['claims']['supported']}, quote found in the named document {gen['claims']['quote_found']})",
              "- The judge is a model of the same family as the answerer; treat it as a guide and use the manual columns in review.csv to check it.", "",
              "## Operational", "", f"- Wall time per question (seconds): {ops['wall_s']}",
              f"- Tokens {ops['tokens_total']} · estimated cost {ops['estimated_cost_usd']} USD ({ops['estimated_cost_per_question_usd']} per question). "
@@ -309,3 +314,56 @@ def run_evaluation(questions: Sequence[dict], chain, judge: Optional[Judge], run
     summary = write_outputs(run_dir, records, full_setup)
     (run_dir / "config.json").write_text(json.dumps({**full_setup, "completed": True}, indent=2), encoding="utf-8")
     return summary
+
+
+# --- re-judging saved answers -----------------------------------------------------------------------
+
+
+def _needs_judge(record: dict) -> bool:
+    return not record.get("error") and not record["should_abstain"] and record["status"] == "answered"
+
+
+def plan_rejudge(run_dir: Path) -> dict:
+    records = [json.loads(line) for line in (run_dir / "results.jsonl").read_text(encoding="utf-8").splitlines() if line]
+    return {"judge_calls": sum(1 for r in records if _needs_judge(r)), "records": len(records)}
+
+
+def _swap_judge(record: dict, result) -> dict:
+    """Replace the judge's result and its share of the tokens and cost; the answer's own usage is unchanged."""
+    old = record["judge"] or {}
+    old_usage = old.get("usage") or {}
+    tokens = dict(record["tokens"])
+    tokens["total"] += (result.usage.total_tokens or 0) - (old_usage.get("total_tokens") or 0) if result.usage else -(old_usage.get("total_tokens") or 0)
+    tokens["judge_in"], tokens["judge_out"] = (result.usage.input_tokens, result.usage.output_tokens) if result.usage else (None, None)
+    old_cost = metrics.cost_usd(old.get("model", ""), old_usage.get("input_tokens"), old_usage.get("output_tokens")) if old_usage else 0.0
+    new_cost = metrics.cost_usd(result.model, result.usage.input_tokens, result.usage.output_tokens) if result.usage else 0.0
+    cost = None if (record["cost_usd"] is None or old_cost is None or new_cost is None) else round(record["cost_usd"] - old_cost + new_cost, 6)
+    return {**record, "judge": result.to_dict(), "tokens": tokens, "cost_usd": cost}
+
+
+def rejudge(run_dir: Path, judge: Judge, chunks_by_id: dict, on_progress: Optional[Callable[[int, int, dict], None]] = None) -> tuple[Path, dict]:
+    """Judge the saved answers of a run again with the current judge, into a new run directory. No answer is generated again."""
+    from types import SimpleNamespace
+
+    from iqm_rag.generation.context import build_context_docs
+    from iqm_rag.retrieval.retriever import RetrievedChunk
+
+    records = [json.loads(line) for line in (run_dir / "results.jsonl").read_text(encoding="utf-8").splitlines() if line]
+    setup = json.loads((run_dir / "config.json").read_text(encoding="utf-8"))
+    updated = []
+    for index, record in enumerate(records, start=1):
+        if _needs_judge(record):
+            hits = [RetrievedChunk(h["rank"], 1 - h["similarity"], chunks_by_id[h["chunk_id"]]) for h in record["retrieved"]]
+            answer = SimpleNamespace(docs=build_context_docs(hits), text=record["answer"], status=record["status"])
+            record = _swap_judge(record, judge.evaluate(record, answer, tags=("rejudge", f"from:{setup['run_id']}")))
+        updated.append(record)
+        if on_progress:
+            on_progress(index, len(records), record)
+    new_id = f"{setup['run_id']}-rejudge-{JUDGE_PROMPT_VERSION}"
+    new_setup = {**setup, "run_id": new_id, "rejudged_from": setup["run_id"], "judge_model": judge.model, "judge_prompt_version": JUDGE_PROMPT_VERSION,
+                 "created_at": datetime.now(timezone.utc).isoformat(), "git_commit": git_commit(), "completed": False}
+    new_dir = run_dir.parent / new_id
+    new_dir.mkdir(parents=True, exist_ok=True)
+    summary = write_outputs(new_dir, updated, new_setup)
+    (new_dir / "config.json").write_text(json.dumps({**new_setup, "completed": True}, indent=2), encoding="utf-8")
+    return new_dir, summary

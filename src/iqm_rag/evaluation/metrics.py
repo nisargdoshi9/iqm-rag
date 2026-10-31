@@ -128,7 +128,9 @@ def _generation_summary(answerable: list[dict]) -> dict:
     judged = [r for r in answerable if r.get("judge") and r["judge"].get("error") is None and r["judge"].get("facts_covered") is not None]
     full = [r for r in judged if r["judge"]["facts_covered"] == r["judge"]["facts_total"]]
     correct = [r for r in answerable if r["outcome"] == "answered" and r in full]
+    claims = [c for r in judged for c in r["judge"].get("claims", [])]
     return {
+        "claims": {"total": len(claims), "supported": sum(1 for c in claims if c["supported"]), "quote_found": sum(1 for c in claims if c["quote_found"])},
         "judged": len(judged), "judge_errors": sum(1 for r in answerable if r.get("judge") and r["judge"].get("error")),
         "all_facts_covered": ratio(len(full), len(judged)),
         "mean_fact_coverage": _mean([r["judge"]["facts_covered"] / r["judge"]["facts_total"] for r in judged if r["judge"]["facts_total"]]),

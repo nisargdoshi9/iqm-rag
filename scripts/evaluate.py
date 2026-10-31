@@ -4,6 +4,7 @@
     python scripts/evaluate.py --split dev --yes         # run the 9 dev questions (model calls; costs a few cents)
     python scripts/evaluate.py --split test --yes        # the final run: needs a verified question set, once per dataset version
     python scripts/evaluate.py --rebuild data/evaluation/results/<run-id>   # rebuild summaries and review.csv; no API calls
+    python scripts/evaluate.py --rejudge data/evaluation/results/<run-id> --yes   # judge the saved answers again (judge calls only)
 
 Without --dry-run the script only calls the API when you also pass --yes. Each question is asked exactly once.
 """
@@ -46,7 +47,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser.add_argument("--allow-repeat-test", action="store_true", help="run the test split again for the same dataset version")
     parser.add_argument("--results-dir", type=Path, default=runner.RESULTS_DIR)
     parser.add_argument("--rebuild", type=Path, help="rebuild summaries and review.csv from a saved run; no API calls")
+    parser.add_argument("--rejudge", type=Path, help="judge the saved answers of a run again with the current judge (needs --yes)")
     args = parser.parse_args(argv)
+    if args.rejudge:
+        return rejudge_command(args)
     if args.rebuild:
         summary = runner.rebuild_outputs(args.rebuild)
         print(f"Rebuilt outputs in {args.rebuild} ({summary['questions']} questions).")
@@ -95,6 +99,29 @@ def execute(args, selected: list[dict], digest: str) -> int:
     flush_traces()
     print(json.dumps({"run_dir": str(args.results_dir / run_id), "questions": summary["questions"], "errors": summary["errors"],
                       "passed": summary["abstention"]["passed"], "end_to_end_correct": summary["generation"]["end_to_end_correct"]}, indent=2))
+    return 0
+
+
+
+def rejudge_command(args) -> int:
+    from iqm_rag.evaluation.judge import default_judge
+    from iqm_rag.observability.tracing import flush_traces
+
+    plan = runner.plan_rejudge(args.rejudge)
+    print(f"Re-judge plan: {plan['judge_calls']} judge call(s) for {plan['records']} saved answers; no answer is generated again. Judge: {config.judge_model()}")
+    if args.dry_run or not args.yes:
+        print("Not run." + ("" if args.dry_run else " Add --yes to make these calls."))
+        return 0
+    try:
+        judge = default_judge()
+    except RuntimeError as exc:
+        print(f"Evaluation stopped: {exc}", file=sys.stderr)
+        return 1
+    chunks = {chunk["chunk_id"]: chunk for chunk in read_jsonl(CHUNKS_JSONL)}
+    progress = lambda i, n, r: print(f"[{i}/{n}] {r['id']:9} judge: {(r.get('judge') or {}).get('facts_covered', '-')}/{(r.get('judge') or {}).get('facts_total', '-')}")  # noqa: E731
+    new_dir, summary = runner.rejudge(args.rejudge, judge, chunks, on_progress=progress)
+    flush_traces()
+    print(json.dumps({"run_dir": str(new_dir), "generation": summary["generation"]}, indent=2))
     return 0
 
 

@@ -74,6 +74,8 @@ def build_run_metadata(prompt_version: str, chat_model: str, rewrite_model: Opti
 
 def retrieval_documents(result) -> dict:
     """A retrieval result as LangSmith shows retriever output: documents with a score and the source, plus timings."""
+    if result is None:  # the search failed, so the run has no result to show
+        return {}
     documents = [
         {"page_content": hit.chunk["text"], "type": "Document",
          "metadata": {"rank": hit.rank, "similarity": round(hit.similarity, 4), "distance": round(hit.distance, 4),

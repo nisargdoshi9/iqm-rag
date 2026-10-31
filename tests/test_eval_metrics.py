@@ -160,6 +160,11 @@ class AggregateTests(unittest.TestCase):
         self.assertEqual(generation["mean_fact_coverage"], 0.75)
         self.assertEqual(generation["judge_errors"], 1)
 
+    def test_grounding_of_the_judges_claims_is_counted(self):
+        claims = [{"supported": True, "quote_found": True}, {"supported": True, "quote_found": False}, {"supported": False, "quote_found": False}]
+        generation = aggregate([record(judge={"facts_covered": 2, "facts_total": 2, "faithful": False, "error": None, "claims": claims})])["generation"]
+        self.assertEqual(generation["claims"], {"total": 3, "supported": 2, "quote_found": 1})
+
     def test_end_to_end_correctness_counts_every_answerable_question(self):
         records = [record(), record(id="q2", status="not_covered", outcome="wrongful_abstention", judge=None)]
         self.assertEqual(aggregate(records)["generation"]["end_to_end_correct"], {"count": 1, "of": 2, "percent": 50.0})

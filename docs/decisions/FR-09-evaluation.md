@@ -1,6 +1,6 @@
 # FR-9: Evaluation set — decisions
 
-Status: 28 questions drafted and checked against the cleaned corpus. **Not yet reviewed by a human; not frozen.** The metrics, judge and runner are built (see "Metrics and runner"); no evaluation has been run yet.
+Status: 28 questions, checked against the cleaned corpus by script and marked `verified` on 2026-10-31 on the project owner's instruction, **without a question-by-question human review** (drafted with AI assistance; a 11-question spot-check sheet was prepared and skipped by choice). The report must say so. The metrics, judge and runner are built (see "Metrics and runner"); the dev split has been run, the test split has not.
 
 ## Decisions
 1. **Size:** 28 questions (the assignment minimum is 15). Three follow-up questions were added after the conversation design (below).
@@ -22,7 +22,7 @@ One JSON object per line: `id`, `category`, `split`, `question`, `history`, `exp
 `python -m iqm_rag.evaluation.dataset` checks that each quote is found in its cited section, the section hash still matches the corpus, unanswerable terms are absent, follow-ups have valid history, and there are at least 15 questions. All 28 pass.
 
 ## Freeze rule
-After review, set `status` to `verified` and do not edit the file to improve scores. Changes after seeing results need a new version. The `test` split is used once, for the final report.
+After review, set `status` to `verified` and do not edit the file to improve scores. (Done on 2026-10-31 without an individual review, as noted at the top.) Changes after seeing results need a new version. The `test` split is used once, for the final report.
 
 ## Known limits
 - Drafted from the article text with AI assistance and checked by script; a human review of every question is still pending.
@@ -115,3 +115,25 @@ general. Retrieval is where the weakness shows: the right section is first for 5
 - **Recall@1 misses:** eval-007 (rank 3), eval-010 (ranks 2 and 7 for its two required sections) and eval-026 (rank 5, a follow-up
   rewritten to ask about the field in the Creatives app, where the custom-tracking sections rank above the overview). All are within
   the top 8, so the answers were still correct.
+
+### Judge fix and re-judge (2026-10-31, run `20261031-090645-dev-rejudge-j2`)
+
+The false positive above was fixed in judge prompt `j2`: the judge now lists every factual claim in the answer, names the document
+that supports each one and quotes it; a claim is unsupported only if no shown document is named. The prompt also says the key
+facts are not the list of allowed claims. The 8 saved dev answers were judged again (8 judge calls, no new answers), into a new
+run directory so the original stays as it was.
+
+| | j1 (original) | j2 (re-judged) |
+|---|---|---|
+| Every key fact covered | 8/8 | 8/8 |
+| Every claim supported | 6/8 | 7/8 |
+| eval-020 | 9 "unsupported claims" (false positive) | 13 claims, all supported, quotes found |
+| eval-026 | 1 unsupported claim | the same claim, correctly flagged |
+| Claims judged / supported / quote found verbatim | n/a | 53 / 52 / 49 |
+
+This matches the hand check (7/8). Three supported claims had a quote that was not verbatim in the named document (a loose quote,
+not a missing claim); the verdict does not depend on the quote, and the count is reported. The judge is still the same model
+family as the answerer; the manual columns in `review.csv` remain the check.
+
+The question file's content hash now ignores the `status` field, so verifying the set does not change its identity; the first dev
+run recorded a hash of the file bytes (`248fcb...`) from before this change.

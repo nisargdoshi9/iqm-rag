@@ -8,7 +8,7 @@ from pathlib import Path
 
 import hermetic  # noqa: F401  (keeps tracing off in tests)
 from iqm_rag.evaluation import runner
-from iqm_rag.evaluation.judge import FactCheck, JudgeVerdict
+from iqm_rag.evaluation.judge import Claim, FactCheck, JudgeVerdict
 from test_eval_judge import FakeJudgeLLM
 from test_generation import ChainTestCase, FakeLLM, draft
 from test_retrieval import CHUNKS
@@ -31,7 +31,8 @@ def abstain_question(qid: str = "q2") -> dict:
 
 def verdict(*covered: bool) -> JudgeVerdict:
     facts = ["Use the Reports tab", "Pick a weekly frequency"]
-    return JudgeVerdict(fact_checks=[FactCheck(fact=f, covered=c, note="n") for f, c in zip(facts, covered)], unsupported_claims=[], comment="none")
+    return JudgeVerdict(fact_checks=[FactCheck(fact=f, covered=c, note="n") for f, c in zip(facts, covered)],
+                        claims=[Claim(claim="Use the Reports tab", supporting_doc=1, quote="schedule schedule a report")], comment="none")
 
 
 class SpyChain:
@@ -66,12 +67,14 @@ class SelectionAndPlanTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "zzz"):
             runner.select_questions(self.QUESTIONS, "all", ids=["zzz"])
 
-    def test_the_dataset_hash_changes_when_the_file_changes(self):
+    def test_the_dataset_hash_changes_when_a_question_changes_but_not_when_only_its_status_does(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "q.jsonl"
-            path.write_text("a\n")
+            path.write_text(json.dumps({"id": "a", "question": "x", "status": "drafted"}) + "\n")
             first = runner.dataset_hash(path)
-            path.write_text("b\n")
+            path.write_text(json.dumps({"id": "a", "question": "x", "status": "verified"}) + "\n")
+            self.assertEqual(first, runner.dataset_hash(path))
+            path.write_text(json.dumps({"id": "a", "question": "y", "status": "verified"}) + "\n")
             self.assertNotEqual(first, runner.dataset_hash(path))
             self.assertEqual(len(first), 64)
 
@@ -107,6 +110,7 @@ class GuardTests(unittest.TestCase):
     def test_a_completed_test_run_of_the_same_dataset_is_found(self):
         with tempfile.TemporaryDirectory() as tmp:
             for name, setup in (("done", {"completed": True, "includes_test": True, "dataset_hash": "H"}),
+                                ("rejudged", {"completed": True, "includes_test": True, "dataset_hash": "H", "rejudged_from": "done"}),
                                 ("dev", {"completed": True, "includes_test": False, "dataset_hash": "H"}),
                                 ("other", {"completed": True, "includes_test": True, "dataset_hash": "X"}),
                                 ("partial", {"completed": False, "includes_test": True, "dataset_hash": "H"})):
@@ -171,6 +175,55 @@ class EvaluateQuestionTests(ChainTestCase):
         self.assertIsNone(record["cost_usd"])  # the fake models have no listed price, so no cost is guessed
 
 
+class RejudgeTests(ChainTestCase):
+    def saved_run(self, results: Path) -> Path:
+        chain = SpyChain(self.chain(FakeLLM(draft([1], answer="Use the Reports tab."))))
+        questions = [eval_question("a"), abstain_question("b")]
+        runner.run_evaluation(questions, chain, FakeJudgeLLM(verdict(True, False)).judge(), "RUN", results, {"dataset_hash": "H", "split": "dev"})
+        return results / "RUN"
+
+    def test_the_plan_counts_only_the_answers_that_would_be_judged(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(runner.plan_rejudge(self.saved_run(Path(tmp))), {"judge_calls": 1, "records": 2})
+
+    def test_rejudging_writes_a_new_run_and_leaves_the_original_alone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            original = self.saved_run(Path(tmp))
+            before = (original / "results.jsonl").read_text()
+            judge = FakeJudgeLLM(verdict(True, True))
+            new_dir, summary = runner.rejudge(original, judge.judge(), {c["chunk_id"]: c for c in CHUNKS})
+            self.assertEqual((original / "results.jsonl").read_text(), before)
+            self.assertEqual(new_dir.name, "RUN-rejudge-j2")
+            records = [json.loads(line) for line in (new_dir / "results.jsonl").read_text().splitlines()]
+            self.assertEqual(records[0]["judge"]["facts_covered"], 2)
+            self.assertIsNone(records[1]["judge"])
+            self.assertEqual(len(judge.prompts), 1)
+            setup = json.loads((new_dir / "config.json").read_text())
+            self.assertEqual((setup["rejudged_from"], setup["completed"], setup["judge_prompt_version"]), ("RUN", True, "j2"))
+            self.assertEqual(summary["generation"]["all_facts_covered"]["count"], 1)
+
+    def test_the_judge_is_shown_the_same_documents_the_answer_was_written_from(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            judge = FakeJudgeLLM(verdict(True, True))
+            runner.rejudge(self.saved_run(Path(tmp)), judge.judge(), {c["chunk_id"]: c for c in CHUNKS})
+            text = judge.prompts[0][1].content
+            self.assertIn('<doc id="1"', text)
+            self.assertIn("schedule schedule a report", text)
+
+    def test_the_judge_token_count_and_cost_are_swapped_not_added(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            original = self.saved_run(Path(tmp))
+            first = json.loads((original / "results.jsonl").read_text().splitlines()[0])
+            new_dir, _ = runner.rejudge(original, FakeJudgeLLM(verdict(True, True)).judge(), {c["chunk_id"]: c for c in CHUNKS})
+            second = json.loads((new_dir / "results.jsonl").read_text().splitlines()[0])
+            self.assertEqual(second["tokens"]["total"], first["tokens"]["total"])
+
+    def test_a_missing_chunk_is_reported_not_guessed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(KeyError, "1:s1:p1"):
+                runner.rejudge(self.saved_run(Path(tmp)), FakeJudgeLLM(verdict(True, True)).judge(), {})
+
+
 class RunTests(ChainTestCase):
     def run_eval(self, questions, chain=None, judge=None, results=None, **kwargs):
         tmp = results or Path(self.tmp.name) / "results"
@@ -199,6 +252,7 @@ class RunTests(ChainTestCase):
         self.assertEqual((row["expected_answer"], row["bot_answer"], row["judge_facts"]), ("Use the Reports tab.", "Use the Reports tab.", "1/2"))
         self.assertEqual((row["manual_verdict"], row["manual_notes"]), ("", ""))
         self.assertIn("Pick a weekly frequency", row["judge_fact_notes"])
+        self.assertIn("doc 1", row["judge_claims"])
 
     def test_a_question_that_fails_is_recorded_and_the_run_continues(self):
         chain = ExplodingChain("tiktok", self.chain(FakeLLM(draft([1], answer="Use the Reports tab."))))
