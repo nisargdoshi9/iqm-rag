@@ -17,12 +17,14 @@ block of text, because a step list or a table row is only useful with its headin
 500 to 700 token chunks would have meant gluing unrelated sections together. A chunk is one section (short siblings merged up to about
 150 tokens, long ones split at row or item boundaries with a 700 token ceiling), and the article title and heading path are put in the
 embedded text so near-identical sections ("from the Creatives app" and "from the Campaigns app") stay distinguishable. The result is
-2,310 chunks, median about 190 tokens. The first version of the chunker produced chunks of up to 905 tokens because repeated headers and
+2,310 chunks at first (2,131 after link-only navigation sections were dropped), median about 190 tokens. The first version of the chunker produced chunks of up to 905 tokens because repeated headers and
 overlap were not counted; the ceiling is now a real limit.
 
-**Plain dense retrieval as the baseline.** `text-embedding-3-large` vectors in Chroma, top 8, no reranking or keyword search, so that
-any later improvement can be measured against it. Eight rather than five because a multi-section question had its second evidence section
-at rank 7 in early tests.
+**Dense retrieval as the baseline, then measured upgrades.** `text-embedding-3-large` vectors in Chroma, top 8, no reranking or keyword
+search, so that any later improvement can be measured against it. After the first test run showed where it failed, we added hybrid search
+(BM25 plus vectors, merged by rank fusion), an LLM reranker behind a swappable interface, and neighbour expansion, each as a switch, and compared
+four configurations once each on 16 questions written before the changes. The reranker is what helped; hybrid search alone and neighbour
+expansion did not show a gain, and the app ships with hybrid plus rerank (see results).
 
 **Never let the model write a URL.** Retrieved chunks are shown to the model as numbered documents without URLs. The model returns a
 status, an answer and the numbers of the documents it used, and the application maps those numbers to the stored article URLs. Numbers
@@ -57,27 +59,42 @@ deterministically; answer correctness and faithfulness use an LLM judge told to 
 
 ## What failed or surprised us
 
-- **Navigation chunks crowd out content.** 201 of the 2,310 chunks are mostly links ("Locate additional ... resources"). In the worst
+- **Navigation chunks crowd out content.** Link-only "Locate additional ... resources" sections were embedded as chunks. In the worst
   test failure (generating a Nurse Level Data report) three of the top 8 chunks were such lists, the steps section was missing, and the
-  answer looked complete while starting mid-procedure.
+  answer looked complete while starting mid-procedure. Dropping those 182 sections fixed it.
 - **The first judge gave a false positive.** It called eight supported claims "unsupported" because it compared the answer with the key
   facts instead of the documents. The fixed judge must name a supporting document for every claim; on the same answers it matched a hand check.
 - **Citations are over-generous.** For 10 of 19 test questions the answer cited an article outside the expected list; for about half of
-  those extras no claim in the answer relied on them.
+  those extras no claim in the answer relied on them. A prompt asking for the fewest supporting documents helped (precision 0.70 to 0.77) but
+  about half of the held-out questions still cite something outside the list.
+- **A cross-reference was repeated instead of followed.** One held-out answer said "follow the steps from step 7" of another workflow although
+  the section was in its context; we left it unfixed so the held-out numbers stay clean.
 - Smaller surprises: a collapsed sidebar left a visible strip, and a script that Streamlit's sanitizer silently removed had disabled
   scrolling and focus. Both were found by testing in a real browser.
 
-## Results (baseline, with the caveats in the evaluation report)
+## Results (with the caveats in the evaluation report)
 
-On the 19 test questions: 19 right responses (16 answered, 3 correctly declined); 13 of 16 answers covered every key fact; every one of
+**Baseline, 19 test questions:** 19 right responses (16 answered, 3 correctly declined); 13 of 16 answers covered every key fact; every one of
 108 checked claims was supported by the retrieved documents; Recall@8 was 15 of 19 evidence items (Recall@1: 9 of 19); median 2.5 seconds
-per question. The set is small, the questions were not reviewed one by one, and the judge is a model, so these numbers show where the
-system stands, not how it would score on a new set.
+per question.
+
+**After the improvements, 16 held-out questions (19 evidence items), one run per configuration:**
+
+| Configuration | Recall@1 | Recall@8 | MRR | Every key fact (of 14) | Median s | Cost per question |
+|---|---|---|---|---|---|---|
+| dense | 6/19 | 16/19 | 0.63 | 13 | 2.2 | $0.0031 |
+| hybrid | 7/19 | 16/19 | 0.69 | 12 | 2.3 | $0.0031 |
+| hybrid + LLM rerank (shipped) | 11/19 | 19/19 | 0.83 | 13 | 3.3 | $0.0059 |
+| hybrid + rerank + neighbours | 11/19 | 19/19 | 0.83 | 13 | 3.3 | $0.0061 |
+
+The reranker fixed the retrieval misses at the price of about double the cost and a second of latency; answer quality was already high on
+this small set, so the table shows better retrieval, not proven better answers. The sets are small, the first was not reviewed question by
+question, and the judge is a model, so these numbers show where the system stands, not how it would score on a new set.
 
 ## With more time
 
-1. Filter or down-weight navigation chunks; add reranking or keyword search for multi-section questions; compare against this baseline.
-2. Cite only the documents behind the answer's claims, and flag a procedure that appears to start mid-way.
-3. A stronger or different-provider judge, a hand check of its verdicts, and a larger, human-reviewed question set.
-4. Show the images and videos tied to a section, stream answers, save past chats, and re-scrape only changed articles (the hashes for
-   this already exist).
+1. Follow cross-references inside procedures, and cite only the documents behind an answer's claims.
+2. A cheaper, repeatable reranker (cross-encoder or hosted) behind the existing interface; a stronger or different-provider judge, a hand check of
+   its verdicts, and larger, human-reviewed question sets.
+3. Show the images and videos tied to a section, stream answers, log user feedback against the trace ID, save past chats, and re-scrape only
+   changed articles (the hashes for this already exist).

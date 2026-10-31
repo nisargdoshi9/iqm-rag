@@ -8,7 +8,7 @@ says so instead of guessing.
 - **Grounded answers with sources.** Every answer links the Help Center articles it used; links come from stored metadata, never from the model.
 - **Says when it cannot answer.** Three outcomes are shown distinctly: answered, not in the Help Center, and a clarifying question for vague questions.
 - **Follow-up questions.** Chat history is used to understand follow-ups ("what about those settings?").
-- **Tracing and evaluation.** LangSmith tracing (optional) and a 28-question evaluation with saved results.
+- **Tracing and evaluation.** LangSmith tracing (optional) and a 28-question evaluation plus 16 held-out questions, with saved results.
 
 How it works: [docs/architecture.md](docs/architecture.md) · design summary: [docs/writeup.md](docs/writeup.md) · results:
 [docs/evaluation-report.md](docs/evaluation-report.md) · decisions: [docs/design-decisions.md](docs/design-decisions.md)
@@ -17,8 +17,8 @@ How it works: [docs/architecture.md](docs/architecture.md) · design summary: [d
 
 ```
 Offline   Help Center -> scrape -> clean (sections, tables, media) -> chunk (one per section) -> embed -> Chroma index
-Online    question (+ history) -> rewrite follow-ups -> embed -> top 8 chunks -> numbered context
-          -> gpt-4.1-mini (status + answer + source numbers) -> checks -> answer with links -> chat page
+Online    question (+ history) -> rewrite follow-ups -> vector + keyword search -> fuse -> LLM rerank -> top 8 chunks
+          -> numbered context -> gpt-4.1-mini (status + answer + source numbers) -> checks -> answer with links -> chat page
 ```
 
 Diagrams and details are in [docs/architecture.md](docs/architecture.md).
@@ -43,6 +43,7 @@ cp .env.example .env                # then set OPENAI_API_KEY (and optionally th
 | `EMBEDDING_MODEL` | indexing and querying; changing it needs `scripts/index.py --rebuild` | `text-embedding-3-large` |
 | `CHAT_MODEL`, `REWRITE_MODEL`, `JUDGE_MODEL` | answering, follow-up rewrite, evaluation judge | `gpt-4.1-mini` (rewrite defaults to the chat model) |
 | `RETRIEVAL_TOP_K` | chunks retrieved per question (1 to 50) | `8` |
+| `RETRIEVAL_MODE`, `RERANK`, `NEIGHBOURS`, `RETRIEVAL_CANDIDATES`, `RERANK_MODEL` | retrieval switches: `dense` or `hybrid`, rerank `off` or `llm`, neighbour parts, candidates per search, reranker model | `hybrid`, `llm`, `0`, `30`, the chat model |
 | `LANGSMITH_API_KEY` | tracing; tracing is on only when this is set | unset (tracing off) |
 | `LANGSMITH_PROJECT`, `LANGSMITH_TRACING`, `LANGSMITH_HIDE_INPUTS`, `LANGSMITH_HIDE_OUTPUTS`, `LANGSMITH_ENDPOINT` | tracing options | see `.env.example` |
 | `SCRAPER_USER_AGENT`, `SCRAPER_DELAY_SECONDS` | scraping only | none (required to scrape) / `2.0` |
@@ -54,7 +55,7 @@ Never commit `.env`; it is git-ignored.
 The cleaned dataset and the chunks are in the repository, so you only need to build the index (this is the one step that calls the embeddings API):
 
 ```bash
-python scripts/index.py        # embeds the 2,310 chunks: about a minute and roughly $0.06
+python scripts/index.py        # embeds the 2,131 chunks: about a minute and roughly $0.06
 streamlit run app.py           # opens the chat page
 ```
 
@@ -89,8 +90,9 @@ retries timeouts, 5xx and 429 responses up to 3 times. Raw HTML (`data/raw/html/
 | Path | What |
 |---|---|
 | `data/processed/articles.jsonl`, `media.jsonl` | The cleaned dataset: 200 articles as sections, plus their images and videos (scraped 2026-10-29) |
-| `data/chunks/chunks.jsonl` | The 2,310 chunks that are embedded |
+| `data/chunks/chunks.jsonl` | The 2,131 chunks that are embedded (link-only navigation sections are dropped) |
 | `data/evaluation/questions.jsonl` | The evaluation set (28 questions with key facts, evidence quotes and expected sources) |
+| `data/evaluation/holdout.jsonl` | 16 further questions written before the improvements, used to compare retrieval configurations on unseen questions |
 | `data/evaluation/results/` | Saved evaluation runs, each with `review.csv` for side-by-side manual review |
 | `docs/traces/example-trace.json` | One exported LangSmith trace |
 
@@ -101,11 +103,14 @@ The articles are the property of IQM and are used here only to build the assista
 ```bash
 python scripts/evaluate.py --split dev --dry-run     # plan only: call counts, rough cost, checks; no API calls
 python scripts/evaluate.py --split dev --yes         # run (model calls); nothing is called without --yes
+python scripts/evaluate.py --split holdout --yes --retrieval-mode hybrid --rerank llm   # one retrieval configuration on the held-out questions
+python scripts/compare_runs.py --split holdout       # table comparing the saved runs of a split; no API calls
 python scripts/evaluate.py --rebuild data/evaluation/results/<run>   # rebuild summaries from saved results, no API calls
 ```
 
-Results and their limits are in [docs/evaluation-report.md](docs/evaluation-report.md). The test split was run once; the runner refuses a
-second test run for the same dataset version.
+Results and their limits are in [docs/evaluation-report.md](docs/evaluation-report.md). The test and holdout splits are run once per dataset
+version and retrieval configuration; the runner refuses a repeat. The shipped default (hybrid search with an LLM rerank) was chosen from the
+holdout comparison.
 
 ## Tracing
 
@@ -119,7 +124,7 @@ Questions and answers are stored in LangSmith when tracing is on; set `LANGSMITH
 python -m unittest discover -s tests
 ```
 
-386 tests with saved fixtures, fake models and a throwaway index; they never call the live site or any API.
+432 tests with saved fixtures, fake models and a throwaway index; they never call the live site or any API.
 
 ## Layout
 
@@ -128,14 +133,14 @@ src/iqm_rag/
 ├── config.py        # data paths and env-based settings
 ├── scraping/        # discovery, scraper, cleaning
 ├── ingestion/       # chunking, embeddings, indexing
-├── retrieval/       # retriever, follow-up rewriting
+├── retrieval/       # vector search, BM25, fusion, reranker, pipeline, follow-up rewriting
 ├── history.py       # chat messages and the history window
 ├── generation/      # context, prompts, citations, the answer chain, conversations
 ├── ui/              # chat page, display logic, styles, scripts
 ├── observability/   # LangSmith tracing, trace export
 └── evaluation/      # dataset checks, metrics, judge, runner
 app.py               # chat page: streamlit run app.py
-scripts/             # scrape, normalize, chunk, index, retrieve, ask, chat, evaluate, export_trace
+scripts/             # scrape, normalize, chunk, index, retrieve, ask, chat, evaluate, compare_runs, export_trace
 tests/
 data/                # raw/ (not committed), processed/, chunks/, index/ (not committed), evaluation/
 docs/                # architecture, decisions, evaluation report, write-up
@@ -143,7 +148,9 @@ docs/                # architecture, decisions, evaluation report, write-up
 
 ## Known limits
 
-- Retrieval is plain dense search: some link-only navigation chunks and multi-section questions retrieve poorly (see the evaluation report).
-- Answers cite more articles than they need in about half the test questions.
-- The evaluation set is small, was not reviewed question by question, and its judge is the same model family as the answerer.
-- Images and videos are not shown; chat history is kept only for the open browser session.
+- The LLM rerank improves retrieval (see the held-out comparison) but adds about a second and doubles the cost per question; it is a language
+  model, so its ordering can vary slightly between runs. `RERANK=off` and `RETRIEVAL_MODE=dense` give the faster baseline.
+- Answers still cite an article outside the curated list for about half of the questions (mostly related articles), and a step that says
+  "follow steps 7 to 10 of another workflow" is sometimes repeated instead of written out (hold-011 in the report).
+- The evaluation sets are small (28 and 16 questions), were not reviewed question by question for the first set, and the judge is the same model family as the answerer.
+- Answers are not streamed, and images and videos are not shown; chat history is kept only for the open browser session.

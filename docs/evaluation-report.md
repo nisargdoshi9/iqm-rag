@@ -1,7 +1,8 @@
 # Evaluation report
 
-Baseline system, measured on 2026-10-31. Everything below comes from the saved runs in `data/evaluation/results/`; none of it is
-illustrative. **Read the limitations section before quoting any number**: the set is small (28 questions), it was not reviewed
+Baseline system and the improvements made after it, measured on 2026-10-31. Everything below comes from the saved runs in
+`data/evaluation/results/`; none of it is illustrative. The first sections describe the **baseline** (dense search, prompt v4); the
+section "Improvements and the held-out ablation" describes what changed and how it was measured on new questions. **Read the limitations section before quoting any number**: the set is small (28 questions), it was not reviewed
 question by question by a person, and the judge is a model of the same family as the answerer.
 
 ## Summary
@@ -15,12 +16,15 @@ question by question by a person, and the judge is a model of the same family as
   about half of the extra citations the judge attributed no claim to them.
 - **Cost and speed:** median 2.5 s per question (p90 3.7 s), about $0.003 per question (an estimate), 103k tokens for the whole split.
 - **Dev split (9 questions):** 9 of 9 right responses, 8 of 8 fully correct answers, Recall@8 9 of 9.
+- **After the improvements (held-out set, 16 new questions):** an LLM rerank over hybrid search raised Recall@8 from 16 to 19 of 19 evidence
+  items and Recall@1 from 6 to 11 (MRR 0.63 to 0.83); answer quality was already 13 of 14 and stayed there; cost per question doubled to
+  about $0.006 and median latency rose from 2.2 to 3.3 s. Neighbour expansion showed no gain.
 
 ## What was evaluated
 
 | Component | Setting |
 |---|---|
-| Corpus | 200 Help Center articles scraped 2026-10-29, 2,310 chunks |
+| Corpus | 200 Help Center articles scraped 2026-10-29, 2,310 chunks (baseline; 2,131 after link-only sections were dropped) |
 | Retrieval | Dense only: `text-embedding-3-large`, Chroma (cosine), top 8, no reranking, no hybrid search |
 | Follow-ups | LLM rewrite from the second turn (`gpt-4.1-mini`), last 3 exchanges |
 | Answering | `gpt-4.1-mini`, temperature 0, structured output, prompt `v4`, citations mapped from context numbers to stored URLs |
@@ -113,6 +117,53 @@ test split (more direct questions; the harder multi-section and similar-but-wron
 | eval-027 | follow_up | answered | 2 | 3/3 | 8/8 | yes (2) |
 | eval-028 | follow_up | answered | 2 | 3/3 | 10/10 | no |
 
+## Improvements and the held-out ablation
+
+After the baseline test run the test split was "seen", so fixes were built against the dev and test questions and compared on **16 new
+questions** (`data/evaluation/holdout.jsonl`, hold-001 to hold-016, same categories, drafted from articles the first 28 do not use and
+verified by the project owner). The four configurations below were chosen in advance and run once each (the runner refuses a repeat
+for the same dataset and configuration); no setting was changed after seeing holdout results. Decisions and reasons:
+`docs/decisions/FR-10-improvements.md`.
+
+**What changed**
+
+| Change | Measured where | Effect |
+|---|---|---|
+| Drop 182 link-only navigation sections (2,310 to 2,131 chunks) | seen test split | eval-021 fixed (its steps now retrieved); Recall@8 15 to 16 of 19 |
+| Citation prompt v5 (cite the fewest supporting documents) | dev, seen test (judge off) | citation precision 0.80 to 0.94 (dev), 0.70 to 0.77 (test); no wrong citation 6 to 8 of 9 (dev), 10 to 12 of 19 (test) |
+| Small-talk replies without a model call | unit tests only (no small talk in the question sets) | "hi" and "thanks" no longer get "not in the Help Center" |
+| Hybrid search, LLM reranker, neighbour expansion, as switches | held-out ablation below | see below |
+
+**Held-out ablation (16 questions, 19 required evidence items)**
+
+| Configuration | Recall@1 | Recall@3 | Recall@8 | MRR | Evidence in context | Right response | End-to-end correct | Every claim supported | No wrong citation | Citation precision | Median s | Cost per question |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| dense | 6/19 | 13/19 | 16/19 | 0.629 | 16/19 | 16/16 | 13/14 | 14/14 | 8/16 | 0.714 | 2.24 | $0.0031 |
+| hybrid | 7/19 | 12/19 | 16/19 | 0.689 | 16/19 | 16/16 | 12/14 | 14/14 | 8/16 | 0.714 | 2.30 | $0.0031 |
+| hybrid + LLM rerank | 11/19 | 17/19 | 19/19 | 0.833 | 19/19 | 16/16 | 13/14 | 14/14 | 8/16 | 0.714 | 3.27 | $0.0059 |
+| hybrid + LLM rerank + neighbours | 11/19 | 18/19 | 19/19 | 0.833 | 19/19 | 16/16 | 13/14 | 14/14 | 9/16 | 0.750 | 3.33 | $0.0061 |
+
+Run folders: `20261031-112516-holdout` (dense), `-112651-holdout-hybrid`, `-112821-holdout-hybrid-llm`, `-113005-holdout-hybrid-llm-neighbours`.
+Regenerate the table with `python scripts/compare_runs.py --split holdout`. Cost includes the judge call. "End-to-end" counts the 14 of 16
+answerable questions that the judge assessed.
+
+Reading it:
+
+- **The reranker is the gain.** Recall@8 16 to 19 of 19, Recall@1 6 to 11, MRR 0.63 to 0.83, and the two questions whose evidence dense search
+  missed (hold-008, hold-012) are fixed. It nearly doubles the cost per question and adds about one second.
+- **Hybrid search alone did not help in this sample:** Recall@8 is unchanged, MRR is up 0.06, Recall@3 is one item lower and one more answer
+  missed its key facts. It stays because the reranker works on the larger candidate pool it produces.
+- **Neighbour expansion showed no measurable gain** (evidence in context 19 of 19 without it), so it is off by default.
+- **Answer quality barely moved** (13 of 14 in three of four runs, 12 of 14 for hybrid alone). The baseline already answered most of these
+  questions; 16 questions cannot show a small quality difference.
+- **Repeatability:** the two reranked runs differ only by neighbours, which cannot change the ranking, yet Recall@3 is 17 and 18: the
+  language-model reranker varies by about one item in 19 even at temperature 0.
+- **Remaining failures (all four configurations):** hold-011, a follow-up whose answer says "follow steps from step 7" instead of writing the
+  referenced steps out (2 of 3 key facts missing, although both sections were in the context). Not fixed, so that the held-out numbers stay clean.
+  Citations outside the curated list remain for 7 to 8 of 16 questions, mostly related articles such as troubleshooting pages.
+- **Development check on the seen test split** (full configuration, judge on): Recall@8 19/19, MRR 0.86, end-to-end 14/16, cost $0.006 per
+  question, median 3.2 s, against 15/19, 0.74, 13/16, $0.003 and 2.5 s for the baseline. This split shaped the fixes, so quote the held-out table, not this.
+
 ## Failures and what caused them
 
 1. **eval-021, "How do I generate a Nurse Level Data Insights report?" (similar-but-wrong; 0 of 3 key facts).** The right article was
@@ -152,17 +203,18 @@ worked.
 - **Quote-based recall is strict in both directions.** It undercounts when the same information sits in a different article (eval-012) and
   needs the exact chunk holding the quote.
 - **The citation metric measures agreement with a curated list**, not truth; extra sources can be valid.
-- **The test split has now been seen.** Any improvement chosen from these failures cannot be validated on it without bias; a further
-  comparison would need new questions.
+- **The test split has now been seen.** Improvements were built on it, so its later numbers are development figures; the 16 held-out
+  questions are the unbiased comparison, and they are few (differences of one or two items are noise).
 - Cost figures are estimates from stated prices, not billed amounts. Latency was measured from one machine over the internet.
 
 ## What would improve it (not done)
 
-- Filter or down-weight link-only and collection-overview chunks, the likely cause of the worst failure (eval-021).
-- Retrieve more candidates and rerank, or add hybrid (keyword plus vector) search, for multi-section questions.
-- Tighten citations: cite only the documents behind the answer's claims, which the judge's claim-to-document mapping suggests is feasible.
-- Say so when a procedure appears to start mid-way (a completeness check), and a stronger or different-provider judge.
-- More questions, reviewed by a person, and a hand check of a sample of the judge's verdicts.
+- **Done since the baseline:** link-only chunks removed, hybrid search, an LLM reranker, neighbour expansion (no gain), tighter citations (partly).
+- Expand cross-references in a procedure ("follow steps 7 to 10 of the other workflow") when the referenced section is in the context (hold-011).
+- Cite only the documents behind the answer's claims, using the judge's claim-to-document mapping; over-citation is still common.
+- A cross-encoder or hosted reranker instead of the LLM one (cheaper and repeatable), behind the existing `Reranker` interface.
+- A stronger or different-provider judge, a hand check of a sample of its verdicts, and larger, human-reviewed question sets.
+- Streaming answers, feedback thumbs (logged against the trace ID), media display and saved chats.
 
 ## Reproduce
 
@@ -173,6 +225,7 @@ python scripts/evaluate.py --rejudge data/evaluation/results/<run> --yes   # jud
 python scripts/evaluate.py --rebuild data/evaluation/results/<run>         # rebuild summaries and review.csv, no API calls
 ```
 
-The test split is run once per dataset version (`python scripts/evaluate.py --split test --yes`); the runner refuses a second run.
+The test and holdout splits are run once per dataset version and retrieval configuration (`python scripts/evaluate.py --split holdout --yes --retrieval-mode hybrid --rerank llm`);
+the runner refuses a repeat.
 Each run folder holds `config.json` (models, prompts, top-k, index size, dataset hash, git commit), `results.jsonl`, `review.csv` for
 manual review, `summary.json` and `summary.md`. Traces for every question are in LangSmith under the tag `eval`; see `docs/decisions/FR-08-tracing.md`.

@@ -1,6 +1,6 @@
 # FR-4: Retrieval decisions
 
-Status: decided and implemented (2026-10-30). `src/iqm_rag/retrieval/retriever.py`, `scripts/retrieve.py`,
+Status: decided and implemented (2026-10-30). **Update 2026-10-31:** the dense retriever below is still the first stage, but hybrid search, an LLM reranker and neighbour expansion were added as switches in `src/iqm_rag/retrieval/pipeline.py` and the link-list chunks were dropped; see `docs/decisions/FR-10-improvements.md`. The decisions and open items below describe the original baseline. `src/iqm_rag/retrieval/retriever.py`, `scripts/retrieve.py`,
 `tests/test_retrieval.py`. Retrieval quality was measured with the evaluation set; see `docs/evaluation-report.md` (test split: Recall@8 15 of 19 evidence items, Recall@1 9 of 19).
 
 ## What retrieval does
