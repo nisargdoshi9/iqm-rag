@@ -119,7 +119,7 @@ Questions and answers are stored in LangSmith when tracing is on; set `LANGSMITH
 python -m unittest discover -s tests
 ```
 
-About 390 tests with saved fixtures, fake models and a throwaway index; they never call the live site or any API.
+386 tests with saved fixtures, fake models and a throwaway index; they never call the live site or any API.
 
 ## Layout
 
