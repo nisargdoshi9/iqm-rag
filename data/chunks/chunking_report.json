@@ -1,15 +1,16 @@
 {
   "articles": 200,
-  "chunks": 2310,
+  "chunks": 2131,
+  "navigation_sections_dropped": 182,
   "tokens": {
     "min": 17,
-    "median": 194.0,
-    "p90": 406,
+    "median": 203,
+    "p90": 417,
     "max": 691
   },
-  "merged_chunks": 376,
+  "merged_chunks": 373,
   "split_sections": 37,
-  "under_60_tokens": 142,
+  "under_60_tokens": 102,
   "config": {
     "merge_min_tokens": 150,
     "max_tokens": 700,

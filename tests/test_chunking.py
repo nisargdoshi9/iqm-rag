@@ -4,7 +4,7 @@ import re
 import unittest
 
 from iqm_rag import config
-from iqm_rag.ingestion.chunking import ChunkingConfig, chunk_article, chunk_corpus, embedding_text
+from iqm_rag.ingestion.chunking import ChunkingConfig, NAVIGATION_ITEM, chunk_article, chunk_corpus, embedding_text, is_navigation_section
 from iqm_rag.scraping.markdown import render_blocks
 from iqm_rag.scraping.normalization import read_jsonl
 
@@ -195,6 +195,28 @@ class IdentityTests(unittest.TestCase):
         self.assertEqual(embedding_text(chunk), "Title › A\n\n" + chunk["text"])
 
 
+class NavigationSectionTests(unittest.TestCase):
+    LINKS = ["[Create a thing](https://help.iqm.com/en/articles/2-create)", "[Fix a thing](https://help.iqm.com/en/articles/3-fix)"]
+
+    def test_a_section_of_only_link_items_is_navigation(self):
+        self.assertTrue(is_navigation_section(section(2, ["Locate additional resources"], [lst(self.LINKS)])))
+
+    def test_a_sentence_that_points_to_another_article_is_real_content(self):
+        pointer = para("Refer to [Create a thing](https://help.iqm.com/en/articles/2-create) for step-by-step instructions.")
+        self.assertFalse(is_navigation_section(section(2, ["Assign it"], [pointer])))
+        self.assertFalse(is_navigation_section(section(2, ["Mixed"], [para("Useful text."), lst(self.LINKS)])))
+        self.assertFalse(is_navigation_section(section(2, ["Plain list"], [lst(["Open the app", "Click Save"])])))
+
+    def test_an_empty_section_is_not_navigation(self):
+        self.assertFalse(is_navigation_section(section(2, ["Video tutorial"], [])))
+
+    def test_navigation_sections_never_become_chunks_or_get_merged_into_neighbours(self):
+        art = article([section(1, ["Steps"], [para("Do the thing. " * 3)]), section(2, ["Locate additional resources"], [lst(self.LINKS)])])
+        chunks = chunk_article(art, CFG)
+        self.assertEqual([c["section_ids"] for c in chunks], [["1:s1"]])
+        self.assertNotIn("help.iqm.com/en/articles/2-create", texts_of(chunks))
+
+
 @unittest.skipUnless(config.PROCESSED_ARTICLES_JSONL.exists(), "cleaned corpus not generated; run scripts/normalize.py")
 class RealCorpusTests(unittest.TestCase):
     @classmethod
@@ -210,8 +232,13 @@ class RealCorpusTests(unittest.TestCase):
         covered = {sid for c in self.chunks for sid in c["section_ids"]}
         for art in self.articles:
             for sec in art["sections"]:
-                if render_blocks(sec["blocks"]).strip():
+                if render_blocks(sec["blocks"]).strip() and not is_navigation_section(sec):
                     self.assertIn(sec["section_id"], covered)
+
+    def test_no_chunk_is_only_a_list_of_links(self):
+        for chunk in self.chunks:
+            lines = [line for line in chunk["text"].splitlines() if line.strip() and not line.startswith("#")]
+            self.assertFalse(lines and all(NAVIGATION_ITEM.match(line) for line in lines), chunk["chunk_id"])
 
     def test_no_chunk_is_empty_or_far_over_the_maximum(self):
         limit = ChunkingConfig().max_tokens * 1.3

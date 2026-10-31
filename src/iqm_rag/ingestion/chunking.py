@@ -15,7 +15,7 @@ from typing import Optional
 from iqm_rag import config
 from iqm_rag.scraping.blocks import Block
 from iqm_rag.scraping.markdown import list_item_markdown, render_block, row_markdown, table_header_lines
-from iqm_rag.scraping.normalization import MEDIA_TYPES, read_jsonl, sha256_text
+from iqm_rag.scraping.normalization import MEDIA_TYPES, read_jsonl, section_markdown, sha256_text
 from iqm_rag.scraping.scraper import write_atomic
 from iqm_rag.scraping.tables import DATA
 
@@ -28,6 +28,8 @@ QUESTION_PREFIX = "**Q"  # FAQ questions are bold paragraphs starting "**Q:"
 LEAD_IN_MAX_CHARS = 400  # a paragraph right before a list or table is repeated as its intro when it is this short
 SENTENCE_BREAK = re.compile(r"(?<=[.!?])\s+")
 SMALL_CHUNK_TOKENS = 60  # reporting threshold only
+
+NAVIGATION_ITEM = re.compile(r"^\s*[-*]\s*\[[^\]]+\]\([^)]+\)\s*$")  # a list item that is nothing but one link
 
 KIND_BLOCK, KIND_ITEM, KIND_ROW, KIND_FAQ = "block", "item", "row", "faq"
 OVERLAP_KINDS = (KIND_BLOCK, KIND_ITEM)  # never repeat table rows or FAQ pairs
@@ -330,10 +332,25 @@ def _finalize(article: dict, draft: Draft, index: int) -> dict:
     return chunk
 
 
+def is_navigation_section(section: dict) -> bool:
+    """A section that only lists links to other articles (the "Locate additional ... resources" lists at the end of most articles).
+
+    It says nothing about the topic, but its link titles match topic queries closely and crowd real content out of the results.
+    Only a section made entirely of one-link list items qualifies; a sentence such as "Refer to [X] for steps" is real content.
+    """
+    lines = [line for line in section_markdown(section).splitlines() if line.strip() and not line.startswith("#")]
+    return bool(lines) and all(NAVIGATION_ITEM.match(line) for line in lines)
+
+
+def navigation_sections(articles: list[dict]) -> int:
+    return sum(is_navigation_section(section) for article in articles for section in article["sections"])
+
+
 def chunk_article(article: dict, cfg: Optional[ChunkingConfig] = None) -> list[dict]:
     drafter = _Drafter(cfg or ChunkingConfig())
     for section in article["sections"]:
-        drafter.add_section(section)
+        if not is_navigation_section(section):
+            drafter.add_section(section)
     return [_finalize(article, draft, index) for index, draft in enumerate(drafter.finish())]
 
 
@@ -344,12 +361,13 @@ def chunk_corpus(articles: list[dict], cfg: Optional[ChunkingConfig] = None) -> 
 # --- Running over the corpus -------------------------------------------------------------------------
 
 
-def chunk_report(chunks: list[dict], articles: int, cfg: ChunkingConfig) -> dict:
+def chunk_report(chunks: list[dict], articles: int, cfg: ChunkingConfig, navigation_dropped: int = 0) -> dict:
     sizes = sorted(chunk["token_estimate"] for chunk in chunks)
     split_sections = {chunk["section_ids"][0] for chunk in chunks if chunk["parts"] > 1}
     return {
         "articles": articles,
         "chunks": len(chunks),
+        "navigation_sections_dropped": navigation_dropped,
         "tokens": {"min": sizes[0], "median": statistics.median(sizes), "p90": sizes[int(len(sizes) * 0.9)], "max": sizes[-1]},
         "merged_chunks": sum(1 for chunk in chunks if len(chunk["section_ids"]) > 1),
         "split_sections": len(split_sections),
@@ -365,6 +383,6 @@ def run_chunking(cfg: Optional[ChunkingConfig] = None) -> dict:
     articles = read_jsonl(config.PROCESSED_ARTICLES_JSONL)
     chunks = chunk_corpus(articles, cfg)
     write_atomic(CHUNKS_JSONL, "".join(json.dumps(chunk, ensure_ascii=False) + "\n" for chunk in chunks))
-    report = chunk_report(chunks, len(articles), cfg)
+    report = chunk_report(chunks, len(articles), cfg, navigation_sections(articles))
     write_atomic(CHUNK_REPORT_PATH, json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     return report
