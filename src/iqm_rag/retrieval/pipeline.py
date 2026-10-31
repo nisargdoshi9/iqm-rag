@@ -120,13 +120,18 @@ class RetrievalPipeline:
             extras = self._neighbours(ranked, dense.vector, steps)
         return replace(dense, top_k=k, hits=ranked, extra_hits=extras, steps=steps)
 
+    @traceable(run_type="retriever", name="keyword_search", process_inputs=lambda inputs: {"query": inputs.get("query"), "limit": inputs.get("limit")},
+               process_outputs=lambda hits: {"hits": [{"chunk_id": hit.chunk_id, "score": round(hit.score, 3)} for hit in hits or []]})
+    def _keyword_search(self, query: str, limit: int) -> list:
+        return self._keyword_index().search(query, limit)
+
     def _candidates(self, dense: RetrievalResult, steps: dict) -> list[RetrievedChunk]:
         """The candidate chunks in order: the dense ranking, or the dense and BM25 rankings fused."""
         if self.settings.mode == "dense":
             steps["candidates"] = len(dense.hits)
             return [replace(hit, scores={"dense_rank": hit.rank}) for hit in dense.hits]
         started = time.perf_counter()
-        keyword_hits = self._keyword_index().search(dense.query, self.settings.candidates)
+        keyword_hits = self._keyword_search(dense.query, self.settings.candidates)
         steps["keyword_ms"] = round((time.perf_counter() - started) * MS_PER_SECOND, 1)
         dense_ids = [hit.chunk["chunk_id"] for hit in dense.hits[:self.settings.candidates]]
         keyword_ids = [hit.chunk_id for hit in keyword_hits]

@@ -92,7 +92,7 @@ class LLMReranker:
 
     def __init__(self, llm: Runnable, model: str) -> None:
         self.model = model
-        self._chain = ChatPromptTemplate.from_messages([("system", SYSTEM_PROMPT), ("human", HUMAN_PROMPT)]) | llm
+        self._chain = (ChatPromptTemplate.from_messages([("system", SYSTEM_PROMPT), ("human", HUMAN_PROMPT)]) | llm).with_config(run_name="rerank")  # one named step in a trace
 
     def rerank(self, query: str, candidates: Sequence[dict], top_k: int) -> RerankOutcome:
         original = list(range(min(top_k, len(candidates))))

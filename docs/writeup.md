@@ -2,83 +2,71 @@
 
 ## What it is
 
-A chat assistant that answers questions about the IQM platform using only the 200 articles of the IQM Help Center, with a link to
-the source of every answer and a clear "not in the Help Center" reply when the articles do not cover a question. It scrapes and
-cleans the articles, indexes them, retrieves the most relevant sections for a question, and has an LLM write an answer that is
-checked before it is shown. Architecture: `docs/architecture.md`. Each choice below has a longer record in `docs/decisions/`.
+A chat assistant that answers questions about the IQM platform using only the 200 articles of the IQM Help Center, with a link to the
+source of every answer and a clear "not in the Help Center" reply when the articles do not cover a question. It scrapes and cleans the
+articles, indexes them, retrieves the most relevant sections for a question, and has an LLM write an answer that is checked before it is
+shown. Architecture: `docs/architecture.md`. Each choice below has a longer record in `docs/decisions/`.
 
 ## The design choices that mattered
 
-**Keep the structure of the articles.** The pages are short how-to guides with numbered steps, tables, FAQs and screenshots. The
-cleaner parses them into a tree of sections (paragraphs, list items, table rows, question and answer pairs, media) instead of one
-block of text, because a step list or a table row is only useful with its heading and its neighbours.
+**Keep the structure of the articles.** The pages are short how-to guides with numbered steps, tables, FAQs and screenshots. The cleaner
+parses them into sections (paragraphs, list items, table rows, question and answer pairs, media) instead of one block of text, because a
+step or a table row is only useful with its heading.
 
-**Chunk by section, not by token count.** The median section is about 140 tokens and only 3 percent exceed 500, so the usual
-500 to 700 token chunks would have meant gluing unrelated sections together. A chunk is one section (short siblings merged up to about
-150 tokens, long ones split at row or item boundaries with a 700 token ceiling), and the article title and heading path are put in the
-embedded text so near-identical sections ("from the Creatives app" and "from the Campaigns app") stay distinguishable. The result is
-2,310 chunks at first (2,131 after link-only navigation sections were dropped), median about 190 tokens. The first version of the chunker produced chunks of up to 905 tokens because repeated headers and
-overlap were not counted; the ceiling is now a real limit.
+**Chunk by section, not by token count.** The median section is about 140 tokens and only 3 percent exceed 500, so 500 to 700 token chunks
+would glue unrelated sections together. A chunk is one section (short siblings merged to about 150 tokens, long ones split at row or item
+boundaries, 700 token ceiling), with the article title and heading path in the embedded text so near-identical sections ("from the
+Creatives app" and "from the Campaigns app") stay distinguishable. Result: 2,131 chunks, median about 200 tokens.
 
-**Dense retrieval as the baseline, then measured upgrades.** `text-embedding-3-large` vectors in Chroma, top 8, no reranking or keyword
-search, so that any later improvement can be measured against it. After the first test run showed where it failed, we added hybrid search
-(BM25 plus vectors, merged by rank fusion), an LLM reranker behind a swappable interface, and neighbour expansion, each as a switch, and compared
-four configurations once each on 16 questions written before the changes. The reranker is what helped; hybrid search alone and neighbour
-expansion did not show a gain, and the app ships with hybrid plus rerank (see results).
+**Dense baseline first, then measured upgrades.** `text-embedding-3-large` in Chroma, top 8, so later changes could be measured against it.
+After the first test run showed where it failed, we added hybrid search (BM25 plus vectors, merged by rank fusion), an LLM reranker behind a
+swappable interface and neighbour expansion, each as a switch, and compared four configurations once each on 16 questions written before the
+changes. The reranker helped; the other two did not show a gain. The app ships with hybrid plus rerank.
 
-**Never let the model write a URL.** Retrieved chunks are shown to the model as numbered documents without URLs. The model returns a
-status, an answer and the numbers of the documents it used, and the application maps those numbers to the stored article URLs. Numbers
-the model was never given are dropped, and an answer without a valid source is shown as "not covered" rather than uncited.
+**Never let the model write a URL.** The model sees numbered documents without URLs and returns a status, an answer and the numbers of the
+documents it used; the application maps the numbers to stored article URLs. Unknown numbers are dropped, and an answer without a valid
+source is shown as "not covered".
 
-**Decide whether to answer from the evidence, not the similarity score.** In a small early check (8 questions) the best match for an unanswerable
-question (distance 0.50) fell inside the range of answerable ones (0.20 to 0.55), so a threshold could not separate them. The model returns
-`answered`, `not_covered` or `clarification` (for a question too vague to answer, such as "what are the settings?"), and the prompt tells
-it to treat the documents as evidence and not as instructions.
+**Decide whether to answer from the evidence, not the similarity score.** In an early check the best match for an unanswerable question
+(distance 0.50) fell inside the range of answerable ones (0.20 to 0.55), so no threshold separated them. The model returns `answered`,
+`not_covered` or `clarification` (a vague question such as "what are the settings?"), and treats documents as evidence, not instructions.
 
 **Follow-ups by rewriting.** From the second turn a small model turns the latest message into a standalone search query using the last
-three exchanges, and falls back to the raw question if that fails. We chose this over concatenating earlier questions, which drags the old
-topic into a new question. The answer model sees the user's own message and the history, labelled as context and not as evidence.
+three exchanges, falling back to the raw question on failure. This beat concatenating earlier questions, which drags the old topic into
+a new question. Greetings and thanks get a fixed reply without a search or a model call.
 
-**An interface that shows where answers come from.** A Streamlit chat page with source links on every answer, a distinct look for the
-three outcomes, a loading state, and a Developer mode with the search query, retrieved passages and scores, tokens, timings and the trace
-ID. **Tracing** is LangSmith (only when a key is set) with one run per request and a step per stage.
-
-**Evaluation that can fail.** 28 questions in 8 categories (including 6 follow-ups and 4 that should be declined), split into 9 dev and
-19 test questions. Retrieval is scored by whether a retrieved chunk contains the evidence quote; abstention and citations are checked
-deterministically; answer correctness and faithfulness use an LLM judge told to be strict. The test split was run once.
+**Evaluation that can fail.** 28 questions in 8 categories (6 follow-ups, 4 that should be declined) split into dev and test, plus 16
+held-out questions. Retrieval is scored by whether a retrieved chunk contains the evidence quote; abstention and citations are checked
+deterministically; correctness and faithfulness use a strict LLM judge. Test and held-out splits run once per configuration.
+The interface is Streamlit with a distinct look for the three outcomes and a Developer mode; tracing is LangSmith (one run per request,
+a step per stage).
 
 ## Trade-offs
 
-- **Small, structured chunks vs context.** Section-sized chunks match how the articles are written and keep answers precise, but a
-  question that spans sections needs several of them in the top 8, and sometimes they do not all make it (see below).
-- **One model call vs a verifier.** Deciding "answered, not covered or clarify" in the same call as the answer is cheap (about
-  $0.003 per question) and simple; a separate evidence check would be more careful and cost more.
-- **Same model family as judge.** The judge is `gpt-4.1-mini`, like the answerer, which keeps cost low but can share its blind spots.
-- **Embeddings sent to a hosted API.** Questions go to OpenAI for embedding and answering (and to LangSmith if tracing is on); the
-  corpus is public but questions are the user's.
+- **Small chunks vs context.** Section-sized chunks keep answers precise, but a question spanning sections needs several of them in the top 8.
+- **One call vs a verifier.** Deciding "answered, not covered or clarify" in the answer call is cheap and simple; a separate evidence check would be more careful and cost more.
+- **Reranker cost.** The LLM rerank doubled cost per question (to about $0.006) and added about a second; it is also not perfectly repeatable.
+- **Same model family as judge.** Cheap, but can share the answerer's blind spots.
+- **Hosted APIs.** Questions go to OpenAI (and LangSmith if tracing is on); the corpus is public, the questions are the user's.
 
 ## What failed or surprised us
 
-- **Navigation chunks crowd out content.** Link-only "Locate additional ... resources" sections were embedded as chunks. In the worst
-  test failure (generating a Nurse Level Data report) three of the top 8 chunks were such lists, the steps section was missing, and the
-  answer looked complete while starting mid-procedure. Dropping those 182 sections fixed it.
-- **The first judge gave a false positive.** It called eight supported claims "unsupported" because it compared the answer with the key
-  facts instead of the documents. The fixed judge must name a supporting document for every claim; on the same answers it matched a hand check.
-- **Citations are over-generous.** For 10 of 19 test questions the answer cited an article outside the expected list; for about half of
-  those extras no claim in the answer relied on them. A prompt asking for the fewest supporting documents helped (precision 0.70 to 0.77) but
-  about half of the held-out questions still cite something outside the list.
-- **A cross-reference was repeated instead of followed.** One held-out answer said "follow the steps from step 7" of another workflow although
-  the section was in its context; we left it unfixed so the held-out numbers stay clean.
-- Smaller surprises: a collapsed sidebar left a visible strip, and a script that Streamlit's sanitizer silently removed had disabled
-  scrolling and focus. Both were found by testing in a real browser.
+- **Navigation chunks crowd out content.** In the worst test failure (a Nurse Level Data report) three of the top 8 chunks were "Locate
+  additional resources" link lists, the steps were missing, and the answer looked complete. Dropping 182 such sections fixed it.
+- **The first judge gave a false positive.** It called eight supported claims "unsupported" by comparing with key facts instead of documents.
+  The fixed judge names a supporting document for every claim and matched a hand check.
+- **Citations are still generous.** A prompt asking for the fewest supporting documents raised precision (0.70 to 0.77 on test) but about
+  half of the held-out questions still cite an article outside the expected list.
+- **A cross-reference was repeated, not followed.** One held-out answer said "follow the steps from step 7" of another workflow although the
+  section was in its context. Left unfixed so the held-out numbers stay clean.
+- A script that Streamlit's sanitizer silently removed had disabled scrolling and focus; testing in a real browser found it.
 
-## Results (with the caveats in the evaluation report)
+## Results (caveats in the evaluation report)
 
-**Baseline, 19 test questions:** 19 right responses (16 answered, 3 correctly declined); 13 of 16 answers covered every key fact; every one of
-108 checked claims was supported by the retrieved documents; Recall@8 was 15 of 19 evidence items (Recall@1: 9 of 19); median 2.5 seconds
-per question.
+Baseline, 19 test questions: 19 right responses (16 answered, 3 correctly declined); 13 of 16 answers covered every key fact; all 108
+checked claims supported; Recall@8 15 of 19 evidence items; median 2.5 s per question.
 
-**After the improvements, 16 held-out questions (19 evidence items), one run per configuration:**
+Held-out, 16 questions (19 evidence items), one run per configuration:
 
 | Configuration | Recall@1 | Recall@8 | MRR | Every key fact (of 14) | Median s | Cost per question |
 |---|---|---|---|---|---|---|
@@ -87,14 +75,12 @@ per question.
 | hybrid + LLM rerank (shipped) | 11/19 | 19/19 | 0.83 | 13 | 3.3 | $0.0059 |
 | hybrid + rerank + neighbours | 11/19 | 19/19 | 0.83 | 13 | 3.3 | $0.0061 |
 
-The reranker fixed the retrieval misses at the price of about double the cost and a second of latency; answer quality was already high on
-this small set, so the table shows better retrieval, not proven better answers. The sets are small, the first was not reviewed question by
-question, and the judge is a model, so these numbers show where the system stands, not how it would score on a new set.
+This shows better retrieval, not proven better answers: the baseline already answered most of these questions. The sets are small, the first
+was not reviewed question by question, and the judge is a model.
 
 ## With more time
 
-1. Follow cross-references inside procedures, and cite only the documents behind an answer's claims.
-2. A cheaper, repeatable reranker (cross-encoder or hosted) behind the existing interface; a stronger or different-provider judge, a hand check of
-   its verdicts, and larger, human-reviewed question sets.
-3. Show the images and videos tied to a section, stream answers, log user feedback against the trace ID, save past chats, and re-scrape only
-   changed articles (the hashes for this already exist).
+1. Follow cross-references inside procedures; cite only the documents behind an answer's claims.
+2. A cheaper, repeatable reranker (cross-encoder or hosted) behind the existing interface; a different-provider judge, a hand check of its
+   verdicts, and larger human-reviewed question sets.
+3. Show the images and videos tied to a section, stream answers, log user feedback against the trace ID, save past chats.
