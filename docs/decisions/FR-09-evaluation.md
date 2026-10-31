@@ -1,6 +1,6 @@
 # FR-9: Evaluation set — decisions
 
-Status: 28 questions, checked against the cleaned corpus by script and marked `verified` on 2026-10-31 on the project owner's instruction, **without a question-by-question human review** (drafted with AI assistance; a 11-question spot-check sheet was prepared and skipped by choice). The report must say so. The metrics, judge and runner are built (see "Metrics and runner"); the dev split has been run, the test split has not.
+Status: 28 questions, checked against the cleaned corpus by script and marked `verified` on 2026-10-31 on the project owner's instruction, **without a question-by-question human review** (drafted with AI assistance; a 11-question spot-check sheet was prepared and skipped by choice). The report must say so. The metrics, judge and runner are built (see "Metrics and runner"); the dev split and the test split have each been run (the test split once).
 
 ## Decisions
 1. **Size:** 28 questions (the assignment minimum is 15). Three follow-up questions were added after the conversation design (below).
@@ -137,3 +137,16 @@ family as the answerer; the manual columns in `review.csv` remain the check.
 
 The question file's content hash now ignores the `status` field, so verifying the set does not change its identity; the first dev
 run recorded a hash of the file bytes (`248fcb...`) from before this change.
+
+## Test run (2026-10-31, run `20261031-100611-test`)
+
+Run once on the verified set, after the judge fix, with no change afterwards. Results and analysis are in `docs/evaluation-report.md`;
+the saved run is `data/evaluation/results/20261031-100611-test/` (`review.csv` for manual checking).
+
+Headline: 19/19 right responses; 13/16 answers with every key fact; Recall@8 15/19 (Recall@1 9/19, MRR 0.74); every judged claim
+supported (108/108); 10/19 questions cite only listed sources; median 2.5 s per question; about $0.054 estimated.
+
+Main findings: retrieval ranking and navigation chunks (eval-021 failed because three of the top eight chunks were link lists and the
+steps section was not retrieved), multi-section questions (2 of 5 evidence items), and over-citation (13 citations outside the
+expected or related lists, 6 of which no judged claim relied on). The test split has now been seen, so a further retrieval
+improvement would need new questions to be evaluated without bias.
