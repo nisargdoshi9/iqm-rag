@@ -139,14 +139,20 @@ def _choice(name: str, allowed: tuple[str, ...], default: str) -> str:
     return value
 
 
+# The shipped defaults follow the held-out ablation (docs/evaluation-report.md): hybrid search with an LLM rerank. Neighbour expansion
+# measured no gain, so it stays off. Set RETRIEVAL_MODE=dense and RERANK=off for the plain baseline.
+DEFAULT_RETRIEVAL_MODE = "hybrid"
+DEFAULT_RERANK = "llm"
+
+
 def retrieval_mode() -> str:
     """dense or hybrid (RETRIEVAL_MODE)."""
-    return _choice("RETRIEVAL_MODE", RETRIEVAL_MODES, "dense")
+    return _choice("RETRIEVAL_MODE", RETRIEVAL_MODES, DEFAULT_RETRIEVAL_MODE)
 
 
 def rerank_mode() -> str:
     """off or llm (RERANK)."""
-    return _choice("RERANK", RERANKERS, "off")
+    return _choice("RERANK", RERANKERS, DEFAULT_RERANK)
 
 
 def neighbour_expansion() -> bool:

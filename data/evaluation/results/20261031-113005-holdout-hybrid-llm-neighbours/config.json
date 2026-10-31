@@ -1,0 +1,51 @@
+{
+  "split": "holdout",
+  "dataset_hash": "5fd7d74123bb8a54a854db8434f54b3506cc719e8d633b4dd9966d1a426d6bea",
+  "dataset_path": [
+    "/Users/nisarg/Projects/new/rag/data/evaluation/holdout.jsonl"
+  ],
+  "allow_unverified": false,
+  "chat_model": "gpt-4.1-mini",
+  "rewrite_model": "gpt-4.1-mini",
+  "embedding_model": "text-embedding-3-large",
+  "top_k": 8,
+  "retrieval": {
+    "mode": "hybrid",
+    "rerank": "llm",
+    "neighbours": true,
+    "candidates": 30,
+    "label": "hybrid+llm+neighbours",
+    "reranker": "gpt-4.1-mini"
+  },
+  "index_chunks": 2131,
+  "prompt_version": "v5",
+  "tracing": true,
+  "run_id": "20261031-113005-holdout-hybrid-llm-neighbours",
+  "created_at": "2026-10-31T11:30:05.726876+00:00",
+  "git_commit": "938b3b4",
+  "judge_model": "gpt-4.1-mini",
+  "judge_prompt_version": "j2",
+  "dataset_statuses": {
+    "verified": 16
+  },
+  "includes_test": true,
+  "question_ids": [
+    "hold-001",
+    "hold-002",
+    "hold-003",
+    "hold-004",
+    "hold-005",
+    "hold-006",
+    "hold-007",
+    "hold-008",
+    "hold-009",
+    "hold-010",
+    "hold-011",
+    "hold-012",
+    "hold-013",
+    "hold-014",
+    "hold-015",
+    "hold-016"
+  ],
+  "completed": true
+}

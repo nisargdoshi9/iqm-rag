@@ -96,7 +96,9 @@ class SettingsTests(unittest.TestCase):
         with mock.patch.dict(os.environ, env):
             self.assertEqual(RetrievalSettings.from_env(), RetrievalSettings("hybrid", "llm", True, 20))
         with mock.patch.dict(os.environ, {"RETRIEVAL_MODE": "", "RERANK": "", "NEIGHBOURS": "0", "RETRIEVAL_CANDIDATES": ""}):
-            self.assertEqual(RetrievalSettings.from_env(), RetrievalSettings())
+            self.assertEqual(RetrievalSettings.from_env(), RetrievalSettings("hybrid", "llm", False, config.DEFAULT_CANDIDATES))  # the shipped defaults
+        with mock.patch.dict(os.environ, {"RETRIEVAL_MODE": "dense", "RERANK": "off"}):
+            self.assertEqual(RetrievalSettings.from_env().label, "dense")
 
     def test_a_misspelt_environment_value_is_reported_by_name(self):
         for name, value in (("RETRIEVAL_MODE", "sparse"), ("RERANK", "yes"), ("RETRIEVAL_CANDIDATES", "lots")):

@@ -1,0 +1,267 @@
+﻿id,split,category,question,history,expected_answer,key_facts,bot_answer,bot_status,outcome,cited_urls,expected_urls,search_query,evidence_rank,top_retrieved,judge_facts,judge_fact_notes,judge_unsupported,judge_claims,judge_comment,auto_pass,manual_verdict,manual_notes,trace_id,error
+hold-001,holdout,direct_factual,What share of bid request traffic is capped at the IQM ID or Ramp ID level for frequency capping?,,"Approximately 45-50% of bid request traffic is capped at the IQM ID or Ramp ID level. The remaining traffic is capped at the Device ID, Cookie ID, or IP address level.","- About 45-50% of bid request traffic is capped at the IQM ID or Ramp ID level
+- The rest is capped at the Device ID, Cookie ID or IP address level","Approximately 45-50% of bid request traffic is capped at the IQM ID or Ramp ID level for frequency capping. The remaining traffic is capped at the Device ID, Cookie ID, or IP Address level.",answered,answered,"https://help.iqm.com/en/articles/12759402-optimization-delivery-frequently-asked-questions-faq
+https://help.iqm.com/en/articles/8480958-frequency-capping-overview",https://help.iqm.com/en/articles/8480958-frequency-capping-overview,What share of bid request traffic is capped at the IQM ID or Ramp ID level for frequency capping?,2,"1. Optimization & Delivery frequently asked questions (FAQ) › Frequency Capping FAQ
+2. Frequency capping overview › Frequency capping frequently asked questions (FAQ)
+3. Frequency capping overview › Frequency capping method › Frequency capping example",2/2,"YES | About 45-50% of bid request traffic is capped at the IQM ID or Ramp ID level | The answer states the percentage capped at IQM ID or Ramp ID level as 45-50%, matching the documents.
+YES | The rest is capped at the Device ID, Cookie ID or IP address level | The answer correctly states the remaining traffic is capped at Device ID, Cookie ID, or IP Address level.",,"OK  doc 1 | Approximately 45-50% of bid request traffic is capped at the IQM ID or Ramp ID level for frequency capping.
+OK  doc 1 | The remaining traffic is capped at the Device ID, Cookie ID, or IP Address level.","The answer is concise and fully supported by the documents, with no missing or incorrect information.",no,,,439111fd-39df-421e-8a11-5b26e7149959,
+hold-002,holdout,direct_factual,How many inventory groups can I assign to a campaign?,,You can assign up to 250 custom or curated inventory groups to a campaign.,- Up to 250 custom or curated inventory groups per campaign,You can assign up to 250 custom or curated inventory groups to a campaign.,answered,answered,"https://help.iqm.com/en/articles/9615727-assign-private-marketplace-pmp-deals-or-inventory-groups-to-a-campaign
+https://help.iqm.com/en/articles/9616211-create-or-manage-an-inventory-group",https://help.iqm.com/en/articles/9615727-assign-private-marketplace-pmp-deals-or-inventory-groups-to-a-campaign,How many inventory groups can I assign to a campaign?,1,"1. Assign Private Marketplace (PMP) deals or inventory groups to a campaign › Assign an inventory group to a campaign
+2. Create or manage an inventory group › Assign an inventory group to a campaign
+3. Assign Private Marketplace (PMP) deals or inventory groups to a campaign › Assign an inventory group to a campaign › Inventory app - Existing campaign",1/1,YES | Up to 250 custom or curated inventory groups per campaign | The answer explicitly states the limit of 250 custom or curated inventory groups per campaign.,,OK  doc 1 | You can assign up to 250 custom or curated inventory groups to a campaign.,The answer is concise and fully supported by the documents provided.,no,,,1ed0f25f-c3e0-4129-86c6-a27bd2fa38d3,
+hold-003,holdout,procedural,How do I upload an audio file from the Creatives app?,,"Open the Creatives app, select Audio and click + Add New. Add the file by uploading it from your computer, dragging and dropping it, or pulling it from Google Drive or Dropbox, then play the clip to check it renders. Enter a name and the Click URL, optionally complete 3rd Party ID, Custom Tracking and Pixel URL, and select Add Creative.","- Open the Creatives app, select Audio and click + Add New
+- Add the file by upload, drag and drop, or Google Drive or Dropbox
+- Enter a name and the Click URL
+- Select Add Creative to save","To upload an audio file from the Creatives app, follow these steps:
+
+1. Open the Creatives app.
+2. Select **Audio**.
+3. Click **+ Add New** to open the **Audio Creative** pop-up window.
+4. Choose your method to add the audio creatives:
+   - Upload from your computer’s local files.
+   - Drag-and-drop from your computer’s local files.
+   - Upload from an external Google Drive or Dropbox account.
+5. If uploading from your computer, select **Upload Audio**, choose one or more audio files, and click **Open**.
+6. If drag-and-dropping, open your local files, select audio files, and drag them to the **or Drag & Drop** section.
+7. If uploading from Google Drive or Dropbox, select the respective icon, log in, accept privacy settings, and select files.
+8. Play the audio clip to confirm it renders as expected.
+9. Optionally, expand the **Audio Thumbnail** menu to add a companion image using the same upload methods.
+10. Enter a name for the creative (auto-populates from the file name).
+11. Enter the full URL in the **Click URL** field where users will be directed upon clicking.
+12. Optionally, complete the **3rd Party ID**, **Custom Tracking**, and/or **Pixel URL** fields.
+13. Select **Add Creative** to save the audio ad(s) to the Creatives app.",answered,answered,https://help.iqm.com/en/articles/5651462-upload-an-audio-creative,https://help.iqm.com/en/articles/5651462-upload-an-audio-creative,How do I upload an audio file from the Creatives app?,1,"1. Upload an audio creative › Upload an audio file › Upload an audio file from the Creatives app
+2. Upload an audio creative › Upload an audio file › Upload an audio file from the Campaigns app
+3. Upload an audio creative › Audio creative overview",4/4,"YES | Open the Creatives app, select Audio and click + Add New | The answer states these steps explicitly.
+YES | Add the file by upload, drag and drop, or Google Drive or Dropbox | The answer details these three methods clearly.
+YES | Enter a name and the Click URL | The answer includes entering a name and the Click URL field.
+YES | Select Add Creative to save | The answer states to select Add Creative to save.",,"OK  doc 1 | Open the Creatives app.
+OK  doc 1 | Select Audio.
+OK  doc 1 | Click + Add New to open the Audio Creative pop-up window.
+OK  doc 1 | Choose your method to add the audio creatives: Upload from your computer’s local files, Drag-and-drop from your computer’s local files, Upload from an external Google Drive or Dropbox account.
+OK  doc 1 | If uploading from your computer, select Upload Audio, choose one or more audio files, and click Open.
+OK  doc 1 | If drag-and-dropping, open your local files, select audio files, and drag them to the or Drag & Drop section.
+OK  doc 1 | If uploading from Google Drive or Dropbox, select the respective icon, log in, accept privacy settings, and select files.
+OK  doc 1 | Play the audio clip to confirm it renders as expected.
+OK  doc 1 | Optionally, expand the Audio Thumbnail menu to add a companion image using the same upload methods.
+OK  doc 1 | Enter a name for the creative (auto-populates from the file name).
+OK  doc 1 | Enter the full URL in the Click URL field where users will be directed upon clicking.
+OK  doc 1 | Optionally, complete the 3rd Party ID, Custom Tracking, and/or Pixel URL fields.
+OK  doc 1 | Select Add Creative to save the audio ad(s) to the Creatives app.","The answer is comprehensive and closely follows the detailed steps in the documentation, including optional fields and the audio thumbnail addition, which were not in the key facts but are supported by the documents.",yes,,,0a2aa848-7fc3-49e3-af76-b4aa0d0ac136,
+hold-004,holdout,procedural,How do I create a Lookalike audience?,,"Open the Audiences app, select Lookalike Audience and click + Create New. Name the audience, choose the existing Matched audience(s) to use as source data and click Next. Set the Audience Similarity & Size toggle, apply the Geo Expansion Settings (at least one State is required) and select Create.","- Audiences app, Lookalike Audience, + Create New
+- Choose one or more existing Matched audiences as the source
+- Set the Audience Similarity & Size toggle
+- At least one State is required in Geo Expansion Settings
+- Select Create; the audience starts processing","To create a Lookalike audience, follow these steps:
+
+1. Open the Audiences app.
+2. Select Lookalike Audience.
+3. Click + Create New to open the Create Lookalike Audience pop-up window.
+4. Enter a name for the audience.
+5. Open the Matched Audience menu and select the existing audience(s) to use as source data.
+   - Review the selected audiences’ Match Rate and Reach details.
+   - Choose audiences with similar objectives and performance.
+6. Click Next.
+7. Adjust the Audience Similarity & Size toggle to define how the audience should prioritize similarity versus size.
+8. Apply the audience’s Geo Expansion Settings (at least one State is required; Cities and Countries are optional).
+9. If you are a Political advertiser, target specific Senates, Congressional Districts, and/or State Houses if desired.
+10. Select Create.
+
+The Lookalike audience will begin processing immediately, and you can monitor its status afterward.",answered,answered,https://help.iqm.com/en/articles/7019248-create-or-manage-a-lookalike-audience,https://help.iqm.com/en/articles/7019248-create-or-manage-a-lookalike-audience,How do I create a Lookalike audience?,1,"1. Create or manage a Lookalike audience › Create a Lookalike audience
+2. Lookalike audience overview › Key terms and concepts › Audience Size and Similarity
+3. ""Audience targeting and data management"" collection overview › Audiences › All articles › Lookalike audience",5/5,"YES | Audiences app, Lookalike Audience, + Create New | The answer states these steps explicitly.
+YES | Choose one or more existing Matched audiences as the source | The answer mentions selecting existing Matched audiences as source data.
+YES | Set the Audience Similarity & Size toggle | The answer describes adjusting the Audience Similarity & Size toggle.
+YES | At least one State is required in Geo Expansion Settings | The answer states that at least one State is required in Geo Expansion Settings.
+YES | Select Create; the audience starts processing | The answer says to select Create and that the audience will begin processing immediately.",,"OK  doc 1 | Open the Audiences app.
+OK  doc 1 | Select Lookalike Audience.
+OK  doc 1 | Click + Create New to open the Create Lookalike Audience pop-up window.
+OK  doc 1 | Enter a name for the audience.
+OK  doc 1 | Open the Matched Audience menu and select the existing audience(s) to use as source data.
+OK  doc 1 | Review the selected audiences’ Match Rate and Reach details.
+OK  doc 1 | Choose audiences with similar objectives and performance.
+OK  doc 1 | Click Next.
+OK  doc 1 | Adjust the Audience Similarity & Size toggle to define how the audience should prioritize similarity versus size.
+OK  doc 1 | Apply the audience’s Geo Expansion Settings (at least one State is required; Cities and Countries are optional).
+OK  doc 1 | If you are a Political advertiser, target specific Senates, Congressional Districts, and/or State Houses if desired.
+OK  doc 1 | Select Create.
+OK  doc 1 | The Lookalike audience will begin processing immediately, and you can monitor its status afterward.","The answer is very detailed and closely follows the source document, including optional political targeting which was not requested but is supported. It does not omit any key steps and correctly states all required conditions.",yes,,,c14599c1-40d5-47d1-8063-1f0ba36b4901,
+hold-005,holdout,list_multi_condition,What kinds of inventory can I add to a campaign's inventory Allowlist or Blocklist?,,"You can add Android package names, iOS Apple IDs and/or site domains to an inventory Allowlist or Blocklist.","- Android package names
+- iOS Apple IDs
+- Site domains","You can add three different types of inventory to a campaign's Inventory Allowlist or Blocklist:
+
+- Android package names: Unique identifiers for Google Play Store apps and the Android operating system, typically formatted as reversed domain names (e.g., ""com.example.myapp"").
+- iOS Apple IDs: Unique identifiers for Apple iOS platform apps.
+- Site domains: Unique web addresses or URLs where digital ads are displayed, representing specific sites or online platforms (e.g., example.com).
+
+These inventory types can be uploaded or pasted into the respective fields when setting up the Allowlist or Blocklist for your campaign.",answered,answered,"https://help.iqm.com/en/articles/11497708-campaign-targeting-guide
+https://help.iqm.com/en/articles/10472023-manage-campaign-allowlists-and-blocklists",https://help.iqm.com/en/articles/10472023-manage-campaign-allowlists-and-blocklists,What kinds of inventory can I add to a campaign's inventory Allowlist or Blocklist?,2,"1. Campaign targeting guide › Inventory (Optional) › Inventory key terms and concepts › Inventory Allowlist/Blocklist options
+2. Manage campaign Allowlists and Blocklists › Add Allowlists and Blocklists from the Campaigns app › Inventory Allowlist/Blocklist
+3. Assign Private Marketplace (PMP) deals or inventory groups to a campaign › Set up an inventory Allowlist or Blocklist",3/3,"YES | Android package names | The answer explicitly mentions Android package names as inventory types.
+YES | iOS Apple IDs | The answer explicitly mentions iOS Apple IDs as inventory types.
+YES | Site domains | The answer explicitly mentions site domains as inventory types.",,"OK  doc 1 | You can add three different types of inventory to a campaign's Inventory Allowlist or Blocklist
+OK  doc 1 | Android package names: Unique identifiers for Google Play Store apps and the Android operating system, typically formatted as reversed domain names (e.g., ""com.example.myapp"")
+OK  doc 1 | iOS Apple IDs: Unique identifiers for Apple iOS platform apps
+OK  doc 1 | Site domains: Unique web addresses or URLs where digital ads are displayed, representing specific sites or online platforms (e.g., example.com)
+OK  doc 2 | These inventory types can be uploaded or pasted into the respective fields when setting up the Allowlist or Blocklist for your campaign","The answer is accurate and well supported by the documents, but it could mention the exact fields for uploading inventory to be more complete.",no,,,10f5dce8-0233-435d-8d77-5b00a5f768f9,
+hold-006,holdout,list_multi_condition,What has to be true before I can delete a Lookalike audience?,,"It must have a Ready, Processing or Failed status, and its Allowlist/Blocklist count must be 0.","- Status must be Ready, Processing or Failed
+- Allowlist/Blocklist count must be 0","Before you can delete a Lookalike audience, the following conditions must be met:
+
+- The audience must have a status of Ready, Processing, or Failed.
+- The Allowlist/Blocklist count for the audience must be 0.
+- The audience must be unassigned from all campaigns.
+
+You can check if an audience is assigned to any campaigns by looking at the Allowlist/Blocklist column; only audiences with a value of 0 can be deleted.
+
+Additionally, deleted audiences are unrecoverable and permanently removed from the Audiences app immediately after deletion.",answered,answered,"https://help.iqm.com/en/articles/7019248-create-or-manage-a-lookalike-audience
+https://help.iqm.com/en/articles/11749823-troubleshoot-a-lookalike-audience",https://help.iqm.com/en/articles/7019248-create-or-manage-a-lookalike-audience,What has to be true before I can delete a Lookalike audience?,1,"1. Create or manage a Lookalike audience › Manage a Lookalike audience › Delete a Lookalike audience
+2. Troubleshoot a Lookalike audience › Troubleshoot Lookalike audience creation or management issues
+3. Lookalike audience overview › Lookalike audience eligibility requirements",2/2,"YES | Status must be Ready, Processing or Failed | The answer correctly states the required statuses.
+YES | Allowlist/Blocklist count must be 0 | The answer correctly states the Allowlist/Blocklist count must be 0.",,"OK  doc 1 | The audience must have a status of Ready, Processing, or Failed.
+OK  doc 1 | The Allowlist/Blocklist count for the audience must be 0.
+OK  doc 2 | The audience must be unassigned from all campaigns.
+OK  doc 2 | You can check if an audience is assigned to any campaigns by looking at the Allowlist/Blocklist column; only audiences with a value of 0 can be deleted.
+OK  doc 1 | Deleted audiences are unrecoverable and permanently removed from the Audiences app immediately after deletion.","The answer adds the requirement that the audience must be unassigned from all campaigns, which is supported by the documents but not listed as a key fact; otherwise, it correctly covers the key facts.",no,,,eebdfc73-8ae9-47c1-939f-03ae441e4848,
+hold-007,holdout,multi_section,"What does Campaign Estimations forecast, and how can I find out the budget I would need to reach more users than forecast?",,"It projects a campaign's Reach, Impressions and Audience Size from the targeting parameters you add. To reach more users, slide the Unique Reach and/or Total Impression sliders to the values you want, then review the Required Total Budget and Required Total Max Bid fields; select Update to apply them to the campaign.","- Forecasts Reach, Impressions and Audience Size
+- Slide the Unique Reach and/or Total Impression sliders to the desired values
+- Review Required Total Budget and Required Total Max Bid
+- Update applies the required values to the campaign","Campaign Estimations forecast the campaign's Reach, Impressions, and Audience Size based on the targeting parameters added to the campaign. Specifically, it estimates the unique reach (the number of individuals exposed to an ad at least once) and total impressions (the total number of times the ad will be served).
+
+To find out the budget needed to reach more users than forecasted, you can:
+1. Slide the Unique Reach and/or Total Impression sliders to your desired values.
+2. Review the Required Total Budget and Required Total Max Bid fields that are generated.
+3. Optionally, select Update to apply these required values to the campaign.
+
+This process helps you understand the budget and bid adjustments needed to achieve higher reach or impressions than initially forecasted.",answered,answered,"https://help.iqm.com/en/articles/11997149-campaign-estimations-overview
+https://help.iqm.com/en/articles/7883438-run-campaign-estimations","https://help.iqm.com/en/articles/7883438-run-campaign-estimations
+https://help.iqm.com/en/articles/7883438-run-campaign-estimations","What does Campaign Estimations forecast, and how can I find out the budget I would need to reach more users than forecast?","6, 3","1. Troubleshoot a campaign that's pacing behind › Proactive pacing tips › Forecast in the Campaigns app
+2. Campaign Estimations overview › Forecasts › Reach & Impressions
+3. Run Campaign Estimations › Generate Required Total Budget and Required Total Max Bid",4/4,"YES | Forecasts Reach, Impressions and Audience Size | The answer states that Campaign Estimations forecast Reach, Impressions, and Audience Size based on targeting parameters.
+YES | Slide the Unique Reach and/or Total Impression sliders to the desired values | The answer explains sliding the Unique Reach and/or Total Impression sliders to desired values.
+YES | Review Required Total Budget and Required Total Max Bid | The answer mentions reviewing the Required Total Budget and Required Total Max Bid fields.
+YES | Update applies the required values to the campaign | The answer states selecting Update applies the required values to the campaign.",,"OK  doc 1 | Campaign Estimations forecast the campaign's Reach, Impressions, and Audience Size based on the targeting parameters added to the campaign.
+OK  doc 2 | Specifically, it estimates the unique reach (the number of individuals exposed to an ad at least once) and total impressions (the total number of times the ad will be served).
+OK  doc 3 | To find out the budget needed to reach more users than forecasted, you can: Slide the Unique Reach and/or Total Impression sliders to your desired values.
+OK  doc 3 | Review the Required Total Budget and Required Total Max Bid fields that are generated.
+OK  doc 3 | Optionally, select Update to apply these required values to the campaign.
+OK  doc 3 | This process helps you understand the budget and bid adjustments needed to achieve higher reach or impressions than initially forecasted.","The answer is accurate and complete, covering all key facts clearly and supported by the documents.",no,,,bc8b14c6-1f2e-442b-8e4d-15cbb6c2bbdf,
+hold-008,holdout,multi_section,Why might a campaign serve a user more impressions than the frequency cap I set?,,"Frequency capping uses a waterfall of identifiers: IQM ID first, then Ramp ID, then device, cookie or IP. If an IQM ID or Ramp ID is not associated with the user during bidding, additional impressions can be served to a device identifier. For example, a later bid for the same user may fall back to the cookie ID, which is counted as a separate unique user.","- Caps are applied through an identifier waterfall: IQM ID, Ramp ID, then device, cookie or IP
+- Without an IQM ID or Ramp ID during bidding, the user can receive additional impressions
+- Example: the same user falls back to the cookie ID and is counted as a unique user","A campaign might serve a user more impressions than the frequency cap set due to the way unique identifiers are used for frequency capping. If a unique identifier like IQM ID or Ramp ID is not available for a user, the system may fall back to other identifiers such as Device ID, Cookie ID, or IP Address. This can cause the same user to be counted as different unique users under different identifiers, leading to additional impressions beyond the set frequency cap. For example, if the first impression is counted at the Ramp ID level but later the campaign bids on a request for the same user without a Ramp ID, the cookie ID might be used as the primary identifier, resulting in the user receiving more impressions than the cap intended. This is due to the ""waterfall"" method of frequency capping that prioritizes identifiers but may allow additional impressions if higher-level identifiers are not associated during bidding.",answered,answered,https://help.iqm.com/en/articles/8480958-frequency-capping-overview,"https://help.iqm.com/en/articles/8480958-frequency-capping-overview
+https://help.iqm.com/en/articles/8480958-frequency-capping-overview",Why might a campaign serve a user more impressions than the frequency cap I set?,"3, 1","1. Frequency capping overview › Frequency capping frequently asked questions (FAQ)
+2. Optimization & Delivery frequently asked questions (FAQ) › Frequency Capping FAQ
+3. Frequency capping overview › Frequency capping method › Identifiers",3/3,"YES | Caps are applied through an identifier waterfall: IQM ID, Ramp ID, then device, cookie or IP | The answer explains the waterfall method prioritizing IQM ID, Ramp ID, then device, cookie, or IP.
+YES | Without an IQM ID or Ramp ID during bidding, the user can receive additional impressions | The answer states that if IQM ID or Ramp ID is not available, additional impressions can be served.
+YES | Example: the same user falls back to the cookie ID and is counted as a unique user | The answer gives the example of fallback to cookie ID causing additional impressions.",,"OK  doc 1 | A campaign might serve a user more impressions than the frequency cap set due to the way unique identifiers are used for frequency capping.
+OK  doc 3 | If a unique identifier like IQM ID or Ramp ID is not available for a user, the system may fall back to other identifiers such as Device ID, Cookie ID, or IP Address.
+OK  doc 1 | This can cause the same user to be counted as different unique users under different identifiers, leading to additional impressions beyond the set frequency cap.
+OK  doc 1 | If the first impression is counted at the Ramp ID level but later the campaign bids on a request for the same user without a Ramp ID, the cookie ID might be used as the primary identifier, resulting in the user receiving more impressions than the cap intended.
+OK  doc 3 | This is due to the ""waterfall"" method of frequency capping that prioritizes identifiers but may allow additional impressions if higher-level identifiers are not associated during bidding.","The answer is accurate and well supported by the documents, covering all key facts clearly and correctly.",yes,,,b716ad20-e4e0-42c1-b025-2ced0b946267,
+hold-009,holdout,multi_section,"How do I add a PMP deal while creating a new campaign, and what status does the deal need for the campaign to use it?",,"In the Campaigns app, open the insertion order, select + Create Campaign, expand Inventory, select PMP Deals and click + Add Deal. Fill in the deal as in the Inventory app steps (Deal ID from the SSP or publisher, name, exchange and status), then Save as Draft or Run. Campaigns can target or block only Active PMP deals.","- Campaigns app: open the IO, + Create Campaign, expand Inventory, PMP Deals, + Add Deal
+- Fill in the deal following the Inventory app steps (Deal ID, name, exchange, status)
+- Campaigns can target or block only Active deals
+- Save as Draft or Run to finish","To add a PMP deal while creating a new campaign:
+
+1. Open the Campaigns app.
+2. Click on the name of the desired insertion order (IO).
+3. Select **+ Create Campaign** to go to the campaign landing page.
+4. Expand the **Inventory** section.
+5. Select **PMP Deals**.
+6. Click **+ Add Deal** to open the Add Deal pop-up window.
+7. Follow the steps to enter the deal details (Deal ID, Deal Name, Exchange, Deal Status, etc.) as you would in the Inventory app.
+8. The deal(s) will appear in a **PMP Deals** subsection of the campaign.
+9. Select **Save as Draft** or **Run** to save or activate the campaign.
+
+Regarding the status of the deal: The PMP deal must be set to **Active** for campaigns to target or use it. Only Active PMP inventory deals can be targeted or blocked by campaigns.",answered,answered,https://help.iqm.com/en/articles/9613510-create-or-manage-a-private-marketplace-pmp-inventory-deal,"https://help.iqm.com/en/articles/9613510-create-or-manage-a-private-marketplace-pmp-inventory-deal
+https://help.iqm.com/en/articles/9613510-create-or-manage-a-private-marketplace-pmp-inventory-deal","How do I add a PMP deal while creating a new campaign, and what status does the deal need for the campaign to use it?","1, 3","1. Create or manage a Private Marketplace (PMP) inventory deal › Create a PMP inventory deal › Campaigns app - New campaign
+2. Assign Private Marketplace (PMP) deals or inventory groups to a campaign › Assign a PMP deal to a campaign › Campaigns app - New campaign
+3. Create or manage a Private Marketplace (PMP) inventory deal › Create a PMP inventory deal › Inventory app",4/4,"YES | Campaigns app: open the IO, + Create Campaign, expand Inventory, PMP Deals, + Add Deal | The answer correctly describes these steps.
+YES | Fill in the deal following the Inventory app steps (Deal ID, name, exchange, status) | The answer states to follow Inventory app steps including Deal ID, name, exchange, and status.
+YES | Campaigns can target or block only Active deals | The answer correctly states only Active deals can be targeted or blocked.
+YES | Save as Draft or Run to finish | The answer mentions selecting Save as Draft or Run to finish.",,"OK  doc 1 | Open the Campaigns app.
+OK  doc 1 | Click on the name of the desired insertion order (IO).
+OK  doc 1 | Select + Create Campaign to go to the campaign landing page.
+OK  doc 1 | Expand the Inventory section.
+OK  doc 1 | Select PMP Deals.
+OK  doc 1 | Click + Add Deal to open the Add Deal pop-up window.
+OK  doc 1 | Follow the steps to enter the deal details (Deal ID, Deal Name, Exchange, Deal Status, etc.) as you would in the Inventory app.
+OK  doc 1 | The deal(s) will appear in a PMP Deals subsection of the campaign.
+OK  doc 1 | Select Save as Draft or Run to save or activate the campaign.
+OK  doc 3 | The PMP deal must be set to Active for campaigns to target or use it.
+OK  doc 3 | Only Active PMP inventory deals can be targeted or blocked by campaigns.","The answer is complete and accurate, covering all key facts with clear steps and correct conditions for deal status.",yes,,,286b03e6-9149-4f76-93f6-bc2b4c19075e,
+hold-010,holdout,follow_up,Can I change its name later?,"user: What is a Lookalike audience?
+assistant: A Lookalike audience is made up of users with similar characteristics to an existing Matched audience. You pick a high-value source audience, choose how similar the new audience should be, and set its ideal size.","Yes. Only a Lookalike audience's name can be edited: select the name in the Audience Name column, type the new name in the cell and click the checkmark. To change other settings, duplicate the audience or create a new one.","- Only the name can be edited
+- Select the name in the Audience Name column, type the new name and click the checkmark
+- For other changes, duplicate the audience or create a new one","Yes, you can change the name of an existing Lookalike audience. To do this, select the audience name in the table's Audience Name column, type the new name directly in the cell, and then click the checkmark icon to confirm the change. However, other settings of the Lookalike audience cannot be edited; if you want to change those, you should duplicate the audience and create a new one with the desired settings.",answered,answered,"https://help.iqm.com/en/articles/7019248-create-or-manage-a-lookalike-audience
+https://help.iqm.com/en/articles/11749823-troubleshoot-a-lookalike-audience",https://help.iqm.com/en/articles/7019248-create-or-manage-a-lookalike-audience,Can I change the name of a Lookalike audience later?,1,"1. Create or manage a Lookalike audience › Manage a Lookalike audience
+2. Troubleshoot a Lookalike audience › Troubleshoot Lookalike audience creation or management issues
+3. Create or manage a Lookalike audience › Create a Lookalike audience",3/3,"YES | Only the name can be edited | The answer states that only the name can be changed and other settings cannot be edited.
+YES | Select the name in the Audience Name column, type the new name and click the checkmark | The answer describes selecting the name, typing the new name, and clicking the checkmark.
+YES | For other changes, duplicate the audience or create a new one | The answer advises duplicating the audience or creating a new one for other changes.",,"OK  doc 1 | You can change the name of an existing Lookalike audience.
+OK  doc 1 | To do this, select the audience name in the table's Audience Name column, type the new name directly in the cell, and then click the checkmark icon to confirm the change.
+OK  doc 1 | Other settings of the Lookalike audience cannot be edited; if you want to change those, you should duplicate the audience and create a new one with the desired settings.","The answer is accurate and complete, covering all key facts clearly and correctly.",no,,,6eb9b06e-d4d7-4b35-be14-89d998f787fc,
+hold-011,holdout,follow_up,How do I run it for a campaign that already exists?,"user: What does Campaign Estimations do?
+assistant: It generates projections for a campaign's Reach, Impressions and Audience Size based on the targeting parameters you add to it.","Open the Campaigns app, find the insertion order and open it, then select the campaign's name to open its details. Complete the minimum required fields for the estimate you want, then select Run Campaign Estimations in the left-side panel.","- Open the Campaigns app, open the insertion order, then select the campaign's name
+- Complete the minimum required fields for the metric you want
+- Select Run Campaign Estimations in the left-side panel","To run Campaign Estimations for an existing campaign, follow these steps:
+
+1. Open the Campaigns app.
+2. Search or filter the table to locate the desired insertion order (IO).
+3. Click the name of the IO to open the Insertion Order Info page.
+4. Select the campaign’s name to open its details page.
+5. Follow the steps for running Campaign Estimations from a new campaign starting from step 7, which involves specifying campaign settings and targeting rules, then running the estimations.
+
+This process allows you to generate updated forecasts for the campaign based on its current targeting parameters before applying any changes.",answered,answered,https://help.iqm.com/en/articles/7883438-run-campaign-estimations,"https://help.iqm.com/en/articles/7883438-run-campaign-estimations
+https://help.iqm.com/en/articles/7883438-run-campaign-estimations",How do I run Campaign Estimations for a campaign that already exists?,"1, 2","1. Run Campaign Estimations › Run Campaign Estimations › Run Campaign Estimations from an existing campaign
+2. Run Campaign Estimations › Run Campaign Estimations › Run Campaign Estimations from a new campaign
+3. Run Campaign Estimations › Run Campaign Estimations",1/3,"YES | Open the Campaigns app, open the insertion order, then select the campaign's name | The answer describes opening the Campaigns app, locating the insertion order, and selecting the campaign's name.
+NO  | Complete the minimum required fields for the metric you want | The answer does not mention completing the minimum required fields for the metric you want.
+NO  | Select Run Campaign Estimations in the left-side panel | The answer does not explicitly mention selecting Run Campaign Estimations in the left-side panel.",,"OK  doc 1 | Open the Campaigns app.
+OK  doc 1 | Search or filter the table to locate the desired insertion order (IO).
+OK  doc 1 | Click the name of the IO to open the Insertion Order Info page.
+OK  doc 1 | Select the campaign’s name to open its details page.
+OK  doc 1 | Follow the steps for running Campaign Estimations from a new campaign starting from step 7, which involves specifying campaign settings and targeting rules, then running the estimations.
+OK  doc 4 | This process allows you to generate updated forecasts for the campaign based on its current targeting parameters before applying any changes.","The answer omits the key step of completing the minimum required fields for the metric you want and does not explicitly mention selecting Run Campaign Estimations in the left-side panel, which are important steps according to the documentation.",no,,,c168c9a2-11a8-4ff7-b2f1-c3fc5fba85b1,
+hold-012,holdout,table_lookup,What is the difference between a Workspace and a Workspace User in IQM?,,A Workspace is an agency account that defines permissions and credentials for Customers. A Workspace User is an individual who uses the IQM platform in a Workspace and has Advertisers assigned as their Customers.,"- A Workspace is an agency account that defines permissions and credentials for Customers
+- A Workspace User is an individual who uses the platform in a Workspace and has Advertisers assigned as Customers","A Workspace in IQM is an agency account that defines permissions and credentials for Customers (Organizations/Advertisers). It allows management of multiple accounts within an agency, including permissions, credentials, financial operations, and access to real-time data across assigned Customers.
+
+A Workspace User is an individual who uses the IQM platform within a Workspace. This user has Advertisers assigned as their Customers and their access and permissions depend on how the Workspace is configured.
+
+In summary, the Workspace is the organizational entity managing accounts and permissions, while the Workspace User is the individual operating within that Workspace with assigned Customers.",answered,answered,https://help.iqm.com/en/articles/12002878-account-types-and-entities-overview,"https://help.iqm.com/en/articles/12002878-account-types-and-entities-overview
+https://help.iqm.com/en/articles/12002878-account-types-and-entities-overview",What is the difference between a Workspace and a Workspace User in IQM?,"1, 1","1. Account types and entities overview › Entity descriptions and relationships › Entity definitions
+2. Account types and entities overview › Workspaces
+3. Account types and entities overview › Account types and entities overview",2/2,"YES | A Workspace is an agency account that defines permissions and credentials for Customers | The answer states this clearly and matches the documents.
+YES | A Workspace User is an individual who uses the platform in a Workspace and has Advertisers assigned as Customers | The answer states this clearly and matches the documents.",,"OK  doc 1 | A Workspace in IQM is an agency account that defines permissions and credentials for Customers (Organizations/Advertisers)
+OK  doc 2 | It allows management of multiple accounts within an agency, including permissions, credentials, financial operations, and access to real-time data across assigned Customers
+OK  doc 1 | A Workspace User is an individual who uses the IQM platform within a Workspace
+OK  doc 1 | This user has Advertisers assigned as their Customers
+OK  doc 6 | Their access and permissions depend on how the Workspace is configured
+OK  doc 2 | The Workspace is the organizational entity managing accounts and permissions
+OK  doc 1 | The Workspace User is the individual operating within that Workspace with assigned Customers","The answer is accurate and well supported by the documents, but it adds some details about financial operations and real-time data access that are supported by the documents but not explicitly requested by the question or key facts.",yes,,,6fd2321f-53a9-4b00-b8c0-c906dae7645a,
+hold-013,holdout,similar_but_wrong,Can I add a Click URL when I add a video creative as VAST XML?,,"No. VAST XML/URL creatives do not include a Click URL or Custom Tracking field, because those tracking events can be embedded directly in the XML code.","- VAST XML/URL creatives have no Click URL or Custom Tracking field
+- Tracking events are embedded directly in the XML code","No, you cannot add a Click URL when you add a video creative as VAST XML. VAST XML/URL creatives do not include the option to add URLs to a Click URL or Custom Tracking field because those tracking events can be embedded directly into the XML code.",answered,answered,"https://help.iqm.com/en/articles/5651461-upload-a-video-creative
+https://help.iqm.com/en/articles/10344323-creative-formats-overview",https://help.iqm.com/en/articles/5651461-upload-a-video-creative,Can I add a Click URL when I add a video creative as VAST XML?,3,"1. Manage creatives and creative groups › Edit Click URLs, Pixel URLs, or 3rd Party IDs
+2. Product release notes › Q1 2026 product release notes › Support for editing the tracking URLs of existing creatives › February 19, 2026
+3. Upload a video creative › Add a VAST XML/URL › Add VAST XML/URLs from the Creatives app",2/2,"YES | VAST XML/URL creatives have no Click URL or Custom Tracking field | The answer clearly states that VAST XML/URL creatives do not include Click URL or Custom Tracking fields.
+YES | Tracking events are embedded directly in the XML code | The answer explains that tracking events can be embedded directly into the XML code.",,"OK  doc 3 | You cannot add a Click URL when you add a video creative as VAST XML
+OK  doc 3 | VAST XML/URL creatives do not include the option to add URLs to a Click URL or Custom Tracking field
+OK  doc 3 | Those tracking events can be embedded directly into the XML code","The answer is accurate and directly supported by the documents, with no missing or incorrect information.",no,,,37219b0f-1b1a-4a81-b160-3a4ba0762d6e,
+hold-014,holdout,similar_but_wrong,Can I remove the Global Blocklist from just one campaign?,,"No. The Global Blocklist applies automatically to every campaign, so it cannot be removed from an individual campaign. You can remove inventory from the Global Blocklist instead, but every other campaign is affected by that change.","- The Global Blocklist cannot be removed from an individual campaign
+- It applies automatically to all campaigns
+- Removing inventory from it affects all other campaigns too","No, you cannot remove the Global Blocklist from just one campaign. The Global Blocklist applies automatically to all your campaigns, and the platform will immediately stop serving ads across any of the inventory you blocked in every campaign. If you want to unblock inventory, you can remove inventory from the Global Blocklist itself, but this change will affect all campaigns, not just one.",answered,answered,https://help.iqm.com/en/articles/6955342-create-or-manage-a-global-blocklist,https://help.iqm.com/en/articles/6955342-create-or-manage-a-global-blocklist,Can I remove the Global Blocklist from just one campaign?,1,"1. Create or manage a Global Blocklist › Manage a Global Blocklist › Remove a Global Blocklist from a campaign
+2. Create or manage a Global Blocklist › Manage a Global Blocklist
+3. Create or manage a Global Blocklist › Global Blocklist overview",3/3,"YES | The Global Blocklist cannot be removed from an individual campaign | The answer clearly states this and matches doc 1.
+YES | It applies automatically to all campaigns | The answer states this and it is supported by doc 1 and doc 2.
+YES | Removing inventory from it affects all other campaigns too | The answer states this and it is supported by doc 1.",,"OK  doc 1 | You cannot remove the Global Blocklist from just one campaign
+OK  doc 1 | The Global Blocklist applies automatically to all your campaigns
+OK  doc 1 | The platform will immediately stop serving ads across any of the inventory you blocked in every campaign
+OK  doc 1 | If you want to unblock inventory, you can remove inventory from the Global Blocklist itself
+OK  doc 1 | This change will affect all campaigns, not just one","The answer is accurate and fully supported by the documents, with no missing or incorrect information.",yes,,,c2ccacd8-9b55-424b-b585-acc8a8053f13,
+hold-015,holdout,unanswerable,Does IQM offer a refund if my campaign underdelivers?,,"The Help Center does not cover refunds, so the bot should say it cannot answer from the documentation.","- States that the Help Center does not provide this information
+- Does not invent a refund policy",The provided documentation does not mention whether IQM offers a refund if a campaign underdelivers.,not_covered,correct_abstention,,,Does IQM offer a refund if my campaign underdelivers?,n/a,"1. Campaigns frequently asked questions (FAQ) › Campaign creation and management FAQ
+2. Campaign Estimations overview › Other forecasting and reporting tools
+3. Campaigns frequently asked questions (FAQ) › Campaign function FAQ › Q: Are campaigns in the IQM platform the same as campaigns in other demand-side platforms (DSPs)?",,,,,,yes,,,89d50d7a-e430-4a65-bdf2-1a589b93d380,
+hold-016,holdout,unanswerable,Can I send my IQM report data to Tableau or Salesforce automatically?,,"The Help Center does not mention Tableau or Salesforce integrations, so the bot should say it cannot answer from the documentation.","- States that the Help Center does not provide this information
+- Does not invent a Tableau or Salesforce integration","The documentation does not specify whether IQM report data can be sent automatically to Tableau or Salesforce. It mentions integrations with Google Looker Studio, TapClicks, Microsoft Power BI, and other supported external reporting platforms, but does not mention Tableau or Salesforce specifically.",not_covered,correct_abstention,,,Can I send my IQM report data to Tableau or Salesforce automatically?,n/a,"1. ""Reporting and analytics"" collection overview › Data visualization
+2. Import IQM campaign data into Google Looker Studio › Import data › Set up the IQM Reports connector
+3. Import IQM campaign data into Google Looker Studio › Data import overview",,,,,,yes,,,82b3b10f-c23e-4734-80d5-2f5a9aab06ce,
