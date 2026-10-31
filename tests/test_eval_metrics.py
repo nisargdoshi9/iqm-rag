@@ -3,7 +3,7 @@
 import unittest
 
 from iqm_rag.evaluation.metrics import (OUTCOME_PASSES, aggregate, article_rank, citation_scores, cost_usd, describe,
-                                        evidence_ranks, percentile, ratio, recall_at, reciprocal_rank, status_outcome)
+                                        evidence_in_context, evidence_ranks, percentile, ratio, recall_at, reciprocal_rank, status_outcome)
 
 URL1, URL2, URL3 = (f"https://help.iqm.com/en/articles/{n}-x" for n in (1, 2, 3))
 
@@ -44,6 +44,15 @@ class EvidenceRankTests(unittest.TestCase):
 
     def test_a_question_that_should_abstain_has_no_evidence_to_rank(self):
         self.assertEqual(evidence_ranks(question(evidence=[], should_abstain=True), [chunk("1", "x")]), [])
+
+
+class EvidenceInContextTests(unittest.TestCase):
+    def test_evidence_counts_if_any_chunk_shown_to_the_model_holds_the_quote_whatever_its_rank(self):
+        q = question(evidence=[{"article_id": "1", "url": URL1, "quote": "alpha", "required": True},
+                               {"article_id": "1", "url": URL1, "quote": "beta", "required": True},
+                               {"article_id": "1", "url": URL1, "quote": "gamma", "required": False}])
+        self.assertEqual(evidence_in_context(q, [chunk("1", "alpha"), chunk("2", "beta"), chunk("1", "gamma")]), [True, False])
+        self.assertEqual(evidence_in_context(question(evidence=[], should_abstain=True), [chunk("1", "x")]), [])
 
 
 class RankMetricTests(unittest.TestCase):

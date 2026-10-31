@@ -20,20 +20,29 @@ from iqm_rag import config
 from iqm_rag.evaluation import runner
 from iqm_rag.evaluation.dataset import load_questions, validate_dataset
 from iqm_rag.ingestion.chunking import CHUNKS_JSONL
+from iqm_rag.retrieval.pipeline import RetrievalSettings
 from iqm_rag.scraping.normalization import read_jsonl
 
 
-def print_plan(plan: dict, problems: list[str], previous: list[str]) -> None:
+def settings_from(args) -> RetrievalSettings:
+    """The retrieval settings: environment values, overridden by any flag that was given."""
+    env = RetrievalSettings.from_env()
+    return RetrievalSettings(args.retrieval_mode or env.mode, args.rerank or env.rerank,
+                             env.neighbours if args.neighbours is None else args.neighbours, args.candidates or env.candidates)
+
+
+def print_plan(plan: dict, problems: list[str], previous: list[str], settings: RetrievalSettings) -> None:
     calls, estimate, coverage = plan["calls"], plan["rough_estimate"], plan["evidence_in_chunks"]
     cost = "unknown (a model has no listed price)" if estimate["cost_usd"] is None else f"about ${estimate['cost_usd']}"
     print("Evaluation plan (no API calls were made while planning)")
     print(f"  Questions: {plan['questions']} {plan['by_split']}  statuses: {plan['statuses']}")
     print(f"  Calls if you run it:  answers {calls['answer']} ({plan['models']['chat']}) · rewrites {calls['rewrite']} · "
-          f"query embeddings {calls['embedding']} · judge up to {calls['judge_at_most']} ({plan['models']['judge']})")
+          f"query embeddings {calls['embedding']} · rerank {calls['rerank']} · judge up to {calls['judge_at_most']} ({plan['models']['judge']})")
     print(f"  Rough estimate: about {estimate['tokens']:,} tokens, {cost} (planning figures; the run reports actuals)")
     print(f"  Evidence quotes found in the chunks: {coverage['found']}/{coverage['of']}" + (f"  MISSING for {coverage['missing']}" if coverage["missing"] else ""))
+    print(f"  Retrieval configuration: {settings.label} {settings.to_dict()}")
     print(f"  Freeze check: {'ok' if not problems else problems[0]}")
-    print(f"  Completed test run for this dataset: {previous or 'none'}")
+    print(f"  Completed frozen-split runs for this dataset and configuration: {previous or 'none'}")
 
 
 def main(argv: Optional[list[str]] = None) -> int:
@@ -44,6 +53,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     parser.add_argument("--dry-run", action="store_true", help="plan only; no API calls")
     parser.add_argument("--yes", action="store_true", help="confirm that the model calls may be made")
     parser.add_argument("--no-judge", action="store_true", help="skip the LLM judge (retrieval, abstention and citation metrics only)")
+    parser.add_argument("--retrieval-mode", choices=config.RETRIEVAL_MODES, help="dense or hybrid search (default: RETRIEVAL_MODE or dense)")
+    parser.add_argument("--rerank", choices=config.RERANKERS, help="reorder the candidates with a language model (default: RERANK or off)")
+    parser.add_argument("--neighbours", action=argparse.BooleanOptionalAction, default=None, help="add adjacent parts of split sections to the context (default: NEIGHBOURS or off)")
+    parser.add_argument("--candidates", type=int, help=f"candidates per search before fusion and reranking (default {config.DEFAULT_CANDIDATES})")
     parser.add_argument("--allow-unverified", action="store_true", help="run the test or holdout split on a question set that is not verified")
     parser.add_argument("--allow-repeat-test", action="store_true", help="run a frozen split (test or holdout) again for the same dataset version")
     parser.add_argument("--results-dir", type=Path, default=runner.RESULTS_DIR)
@@ -68,11 +81,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     except ValueError as exc:
         print(f"Evaluation stopped: {exc}", file=sys.stderr)
         return 1
+    try:
+        settings = settings_from(args)
+    except (RuntimeError, ValueError) as exc:
+        print(f"Evaluation stopped: {exc}", file=sys.stderr)
+        return 1
     digest = runner.dataset_hash(files)
-    plan = runner.plan_run(selected, read_jsonl(CHUNKS_JSONL), not args.no_judge, config.chat_model(), config.judge_model())
+    plan = runner.plan_run(selected, read_jsonl(CHUNKS_JSONL), not args.no_judge, config.chat_model(), config.judge_model(),
+                          config.rerank_model() if settings.rerank != "off" else None)
     problems = runner.check_freeze(selected, args.allow_unverified)
-    previous = runner.previous_test_runs(args.results_dir, digest) if any(q["split"] in runner.FROZEN_SPLITS for q in selected) else []
-    print_plan(plan, problems, previous)
+    previous = runner.previous_test_runs(args.results_dir, digest, settings.label) if any(q["split"] in runner.FROZEN_SPLITS for q in selected) else []
+    print_plan(plan, problems, previous, settings)
     if args.dry_run:
         return 0
     if problems or (previous and not args.allow_repeat_test):
@@ -81,21 +100,21 @@ def main(argv: Optional[list[str]] = None) -> int:
     if not args.yes:
         print("\nNot run. Add --yes to make these calls.")
         return 0
-    return execute(args, selected, digest)
+    return execute(args, selected, digest, settings)
 
 
-def execute(args, selected: list[dict], digest: str) -> int:
+def execute(args, selected: list[dict], digest: str, settings: RetrievalSettings) -> int:
     from iqm_rag.evaluation.judge import default_judge
     from iqm_rag.generation.chain import default_chain
     from iqm_rag.observability.tracing import flush_traces
 
     try:
-        chain = default_chain()
+        chain = default_chain(settings)
         judge = None if args.no_judge else default_judge()
     except RuntimeError as exc:
         print(f"Evaluation stopped: {exc}", file=sys.stderr)
         return 1
-    run_id = runner.make_run_id(args.split)
+    run_id = runner.make_run_id(args.split, label=settings.label)
     setup = {"split": args.split, "dataset_hash": digest, "dataset_path": [str(path) for path in runner.question_files(args.split)], "allow_unverified": args.allow_unverified}
     progress = lambda i, n, r: print(f"[{i}/{n}] {r['id']:9} {r.get('status', 'ERROR'):13} {r.get('outcome', r.get('error', ''))}")  # noqa: E731
     summary = runner.run_evaluation(selected, chain, judge, run_id, args.results_dir, setup, on_progress=progress)

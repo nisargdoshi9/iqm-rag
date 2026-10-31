@@ -42,6 +42,12 @@ def evidence_ranks(question: dict, chunks: Sequence[dict]) -> list[Optional[int]
     return ranks
 
 
+def evidence_in_context(question: dict, chunks: Sequence[dict]) -> list[bool]:
+    """For each required evidence item, whether any chunk shown to the answer model (ranked hits and added neighbours) contains its quote."""
+    return [any(chunk["article_id"] == item["article_id"] and normalize_text(item["quote"]) in normalize_text(chunk["text"]) for chunk in chunks)
+            for item in question["evidence"] if item.get("required")]
+
+
 def recall_at(ranks: Sequence[Optional[int]], k: int) -> Optional[float]:
     if not ranks:
         return None
@@ -118,6 +124,8 @@ def _retrieval_summary(answerable: list[dict]) -> dict:
     summary = {f"recall@{k}": ratio(sum(1 for r in answerable for rank in r["evidence_ranks"] if rank is not None and rank <= k), total)
                for k in RETRIEVAL_KS}
     summary["evidence_items"] = total
+    with_context = [r for r in answerable if "in_context" in r]
+    summary["in_context"] = ratio(sum(1 for r in with_context for found in r["in_context"] if found), sum(len(r["in_context"]) for r in with_context))
     summary["mrr"] = _mean([r["rr"] for r in answerable if r.get("rr") is not None])
     with_sources = [r for r in answerable if "article_rank" in r]
     summary["article_hit"] = ratio(sum(1 for r in with_sources if r["article_rank"] is not None), len(with_sources))

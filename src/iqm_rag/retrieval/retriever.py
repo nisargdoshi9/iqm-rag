@@ -6,11 +6,12 @@ makes that call from the evidence. Turning a follow-up into a standalone query h
 """
 
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
 import chromadb
+import numpy as np
 from chromadb.errors import ChromaError
 from langsmith import traceable
 from langsmith.run_helpers import get_current_run_tree
@@ -33,13 +34,14 @@ class RetrievedChunk:
     rank: int  # 1 is the closest
     distance: float  # cosine distance as stored by Chroma: 0 is identical
     chunk: dict  # the stored chunk: text, article title and URL, section path, media section IDs, and so on
+    scores: dict = field(default_factory=dict, compare=False)  # what each pipeline stage said about it: dense and BM25 rank, fused score, rerank position
 
     @property
     def similarity(self) -> float:
         return 1.0 - self.distance
 
     def to_dict(self) -> dict:
-        return {"rank": self.rank, "distance": self.distance, "similarity": self.similarity, **self.chunk}
+        return {"rank": self.rank, "distance": self.distance, "similarity": self.similarity, "scores": self.scores, **self.chunk}
 
 
 @dataclass(frozen=True)
@@ -50,19 +52,23 @@ class RetrievalResult:
     embedding_tokens: int
     embed_ms: float
     search_ms: float
-    hits: list[RetrievedChunk]
+    hits: list[RetrievedChunk]  # the ranked chunks: what retrieval is scored on
+    extra_hits: list[RetrievedChunk] = field(default_factory=list)  # neighbouring parts added to the context after ranking; not ranked
+    steps: dict = field(default_factory=dict)  # what each stage of the pipeline did (candidates, reranking, neighbours); empty for plain dense search
+    vector: Optional[list[float]] = field(default=None, repr=False, compare=False)  # the query embedding, kept so later stages can score more chunks
 
     def dict(self) -> dict:
         """The hook LangSmith uses (pydantic-v1 style) to log this object compactly; the `vector_search` step holds the chunk text."""
         return {"query": self.query, "top_k": self.top_k, "embedding_model": self.embedding_model, "embedding_tokens": self.embedding_tokens,
                 "embed_ms": round(self.embed_ms, 1), "search_ms": round(self.search_ms, 1),
-                "chunk_ids": [hit.chunk["chunk_id"] for hit in self.hits], "similarities": [round(hit.similarity, 3) for hit in self.hits]}
+                "chunk_ids": [hit.chunk["chunk_id"] for hit in self.hits], "similarities": [round(hit.similarity, 3) for hit in self.hits],
+                "extra_chunk_ids": [hit.chunk["chunk_id"] for hit in self.extra_hits], "steps": self.steps}
 
     def to_dict(self) -> dict:
         return {
             "query": self.query, "top_k": self.top_k, "embedding_model": self.embedding_model,
             "embedding_tokens": self.embedding_tokens, "embed_ms": self.embed_ms, "search_ms": self.search_ms,
-            "hits": [hit.to_dict() for hit in self.hits],
+            "hits": [hit.to_dict() for hit in self.hits], "extra_hits": [hit.to_dict() for hit in self.extra_hits], "steps": self.steps,
         }
 
 
@@ -104,7 +110,31 @@ class Retriever:
         k = _check_top_k(self.top_k if top_k is None else top_k)
         vector, tokens, embed_ms = self._embed(text)
         hits, search_ms = self._search(text, vector, k)
-        return RetrievalResult(text, k, self._embedder.model, tokens, embed_ms, search_ms, hits)
+        return RetrievalResult(text, k, self._embedder.model, tokens, embed_ms, search_ms, hits, vector=vector)
+
+    def all_chunks(self) -> list[dict]:
+        """Every stored chunk, in stored order: what the keyword index is built from."""
+        found = self._collection.get(include=["documents", "metadatas"])
+        return [record_to_chunk(chunk_id, document, metadata) for chunk_id, document, metadata in zip(found["ids"], found["documents"], found["metadatas"])]
+
+    def chunks_by_id(self, chunk_ids: list[str]) -> dict[str, dict]:
+        """The stored chunks with these IDs; an ID that is not stored is left out."""
+        if not chunk_ids:
+            return {}
+        found = self._collection.get(ids=list(chunk_ids), include=["documents", "metadatas"])
+        return {i: record_to_chunk(i, d, m) for i, d, m in zip(found["ids"], found["documents"], found["metadatas"])}
+
+    def distances(self, vector: list[float], chunk_ids: list[str]) -> dict[str, float]:
+        """Cosine distance from the query vector to each stored chunk, for chunks that vector search did not return."""
+        if not chunk_ids:
+            return {}
+        found = self._collection.get(ids=list(chunk_ids), include=["embeddings"])
+        query = np.asarray(vector, dtype=float)
+        out = {}
+        for chunk_id, stored in zip(found["ids"], found["embeddings"]):
+            stored = np.asarray(stored, dtype=float)
+            out[chunk_id] = float(1.0 - stored @ query / (np.linalg.norm(stored) * np.linalg.norm(query)))
+        return out
 
     @traceable(run_type="embedding", name="embed_query", process_inputs=lambda inputs: {"text": inputs.get("text")},
                process_outputs=lambda out: {"dimension": len(out[0]), "tokens": out[1], "ms": round(out[2], 1)})

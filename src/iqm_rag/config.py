@@ -122,3 +122,53 @@ def langsmith_project() -> str:
 def judge_model() -> str:
     """Name of the model that judges answers in the evaluation (JUDGE_MODEL)."""
     return os.environ.get("JUDGE_MODEL", "").strip() or DEFAULT_JUDGE_MODEL
+
+
+# --- retrieval pipeline switches (each can be changed without touching code, so configurations can be compared) ---
+
+RETRIEVAL_MODES = ("dense", "hybrid")  # dense: vector search only; hybrid: vector search and BM25 keyword search fused
+RERANKERS = ("off", "llm")  # llm: a language model reorders the candidates
+DEFAULT_CANDIDATES = 30  # candidates taken from each search before fusion and reranking
+MAX_CANDIDATES = 100
+
+
+def _choice(name: str, allowed: tuple[str, ...], default: str) -> str:
+    value = os.environ.get(name, "").strip().lower() or default
+    if value not in allowed:
+        raise RuntimeError(f"{name} must be one of {', '.join(allowed)}, got {value!r}.")
+    return value
+
+
+def retrieval_mode() -> str:
+    """dense or hybrid (RETRIEVAL_MODE)."""
+    return _choice("RETRIEVAL_MODE", RETRIEVAL_MODES, "dense")
+
+
+def rerank_mode() -> str:
+    """off or llm (RERANK)."""
+    return _choice("RERANK", RERANKERS, "off")
+
+
+def neighbour_expansion() -> bool:
+    """Add the adjacent parts of split sections to the context (NEIGHBOURS=1)."""
+    value = os.environ.get("NEIGHBOURS", "").strip().lower()
+    return bool(value) and value not in FALSE_VALUES
+
+
+def retrieval_candidates() -> int:
+    """How many candidates each search contributes before fusion and reranking (RETRIEVAL_CANDIDATES)."""
+    raw = os.environ.get("RETRIEVAL_CANDIDATES", "").strip()
+    if not raw:
+        return DEFAULT_CANDIDATES
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise RuntimeError(f"RETRIEVAL_CANDIDATES must be a whole number, got {raw!r}.") from exc
+    if not 1 <= value <= MAX_CANDIDATES:
+        raise RuntimeError(f"RETRIEVAL_CANDIDATES must be between 1 and {MAX_CANDIDATES}, got {value}.")
+    return value
+
+
+def rerank_model() -> str:
+    """Name of the model that reranks candidates (RERANK_MODEL); defaults to the answer model."""
+    return os.environ.get("RERANK_MODEL", "").strip() or chat_model()

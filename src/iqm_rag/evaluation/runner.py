@@ -23,7 +23,7 @@ from iqm_rag.history import messages_from_dicts
 RESULTS_DIR = config.EVALUATION_DIR / "results"
 SPLITS = ("dev", "test", "holdout", "all")
 FROZEN_SPLITS = ("test", "holdout")  # need verified questions and are run once per dataset version
-ROUGH_TOKENS = {"answer": (3000, 150), "rewrite": (480, 15), "judge": (3600, 350), "embedding": 15}  # planning figures from a measured trace
+ROUGH_TOKENS = {"answer": (3000, 150), "rewrite": (480, 15), "rerank": (7000, 60), "judge": (3600, 350), "embedding": 15}  # planning figures from a measured trace
 MANUAL_COLUMNS = ("manual_verdict", "manual_notes")
 REVIEW_COLUMNS = ("id", "split", "category", "question", "history", "expected_answer", "key_facts", "bot_answer", "bot_status", "outcome",
                   "cited_urls", "expected_urls", "search_query", "evidence_rank", "top_retrieved", "judge_facts", "judge_fact_notes",
@@ -72,7 +72,7 @@ def _evidence_coverage(questions: Sequence[dict], chunks: Sequence[dict]) -> dic
 
 
 def plan_run(questions: Sequence[dict], chunks: Sequence[dict], judge_enabled: bool = True, chat_model: str = config.DEFAULT_CHAT_MODEL,
-             judge_model: str = config.DEFAULT_JUDGE_MODEL) -> dict:
+             judge_model: str = config.DEFAULT_JUDGE_MODEL, rerank_model: Optional[str] = None) -> dict:
     """What a run would do and roughly cost, worked out locally. This makes no API call."""
     n = len(questions)
     rewrites = sum(1 for q in questions if q["history"])
@@ -82,9 +82,12 @@ def plan_run(questions: Sequence[dict], chunks: Sequence[dict], judge_enabled: b
     parts = [metrics.cost_usd(chat_model, in_chat, out_chat), metrics.cost_usd("text-embedding-3-large", n * ROUGH_TOKENS["embedding"], 0)]
     if judges:
         parts.append(metrics.cost_usd(judge_model, judges * ROUGH_TOKENS["judge"][0], judges * ROUGH_TOKENS["judge"][1]))
-    tokens = in_chat + out_chat + n * ROUGH_TOKENS["embedding"] + judges * sum(ROUGH_TOKENS["judge"][:2])
+    reranks = n if rerank_model else 0
+    if reranks:
+        parts.append(metrics.cost_usd(rerank_model, reranks * ROUGH_TOKENS["rerank"][0], reranks * ROUGH_TOKENS["rerank"][1]))
+    tokens = in_chat + out_chat + n * ROUGH_TOKENS["embedding"] + judges * sum(ROUGH_TOKENS["judge"][:2]) + reranks * sum(ROUGH_TOKENS["rerank"])
     return {"api_calls_made": 0, "questions": n, "by_split": {s: sum(1 for q in questions if q["split"] == s) for s in ("dev", "test", "holdout") if any(q["split"] == s for q in questions)},
-            "calls": {"answer": n, "rewrite": rewrites, "embedding": n, "judge_at_most": judges},
+            "calls": {"answer": n, "rewrite": rewrites, "embedding": n, "judge_at_most": judges, "rerank": reranks},
             "rough_estimate": {"tokens": tokens, "cost_usd": None if None in parts else round(sum(parts), 4)},
             "evidence_in_chunks": _evidence_coverage(questions, chunks), "statuses": _count(q["status"] for q in questions),
             "models": {"chat": chat_model, "judge": judge_model if judge_enabled else None}}
@@ -105,12 +108,21 @@ def check_freeze(questions: Sequence[dict], allow_unverified: bool) -> list[str]
     return []
 
 
-def previous_test_runs(results_dir: Path, current_hash: str) -> list[str]:
-    """Completed runs that included a frozen split (test or holdout) for this exact dataset: each is used once per dataset version."""
+LEGACY_RETRIEVAL_LABEL = "dense"  # runs saved before the retrieval switches existed used vector search only
+
+
+def previous_test_runs(results_dir: Path, current_hash: str, retrieval_label: str = LEGACY_RETRIEVAL_LABEL) -> list[str]:
+    """Completed runs that included a frozen split (test or holdout) for this exact dataset and retrieval configuration.
+
+    A frozen split is run once per dataset version and configuration: comparing configurations on the same questions is the
+    point of the switches, but repeating one configuration to look for a better number is not allowed.
+    """
     found = []
     for config_file in sorted(results_dir.glob("*/config.json")) if results_dir.exists() else []:
         setup = json.loads(config_file.read_text())
-        if setup.get("completed") and setup.get("includes_test") and setup.get("dataset_hash") == current_hash and not setup.get("rejudged_from"):
+        label = (setup.get("retrieval") or {}).get("label", LEGACY_RETRIEVAL_LABEL)
+        if (setup.get("completed") and setup.get("includes_test") and setup.get("dataset_hash") == current_hash
+                and label == retrieval_label and not setup.get("rejudged_from")):
             found.append(config_file.parent.name)
     return found
 
@@ -119,8 +131,9 @@ def previous_test_runs(results_dir: Path, current_hash: str) -> list[str]:
 
 
 def _retrieved(answer) -> list[dict]:
+    """The ranked hits, then any neighbouring parts added to the context (marked), so a saved run can rebuild what the model saw."""
     return [{"rank": hit.rank, "similarity": round(hit.similarity, 4), "chunk_id": hit.chunk["chunk_id"], "header": hit.chunk["context_header"],
-             "url": hit.chunk["article_url"]} for hit in answer.retrieval.hits]
+             "url": hit.chunk["article_url"], "extra": extra} for extra, hits in ((False, answer.retrieval.hits), (True, answer.retrieval.extra_hits)) for hit in hits]
 
 
 def _usage_numbers(usage) -> tuple[Optional[int], Optional[int]]:
@@ -132,15 +145,19 @@ def _tokens_and_cost(answer, judge) -> tuple[dict, Optional[float]]:
     rewrite_in, rewrite_out = _usage_numbers(answer.rewrite.usage)
     judge_in, judge_out = _usage_numbers(None if judge is None else judge.usage)
     embed = answer.retrieval.embedding_tokens
+    rerank = answer.retrieval.steps.get("rerank") or {}
+    rerank_in, rerank_out = (rerank.get("usage") or {}).get("input_tokens"), (rerank.get("usage") or {}).get("output_tokens")
     parts = [(answer.model, chat_in, chat_out), ("text-embedding-3-large", embed, 0)]
+    if rerank_in is not None:
+        parts.append((rerank.get("model"), rerank_in, rerank_out))
     if rewrite_in is not None:
         parts.append((answer.rewrite.model, rewrite_in, rewrite_out))
     if judge_in is not None:
         parts.append((judge.model, judge_in, judge_out))
     costs = [metrics.cost_usd(model, i, o) for model, i, o in parts if i is not None]
-    total = sum(v for v in (chat_in, chat_out, rewrite_in, rewrite_out, embed, judge_in, judge_out) if v is not None)
+    total = sum(v for v in (chat_in, chat_out, rewrite_in, rewrite_out, embed, rerank_in, rerank_out, judge_in, judge_out) if v is not None)
     tokens = {"chat_in": chat_in, "chat_out": chat_out, "rewrite_in": rewrite_in, "rewrite_out": rewrite_out, "embed": embed,
-              "judge_in": judge_in, "judge_out": judge_out, "total": total}
+              "rerank_in": rerank_in, "rerank_out": rerank_out, "judge_in": judge_in, "judge_out": judge_out, "total": total}
     return tokens, (None if (not costs or None in costs) else round(sum(costs), 6))
 
 
@@ -153,15 +170,17 @@ def _base_record(question: dict) -> dict:
 def _scored_record(question: dict, answer, judge, wall_s: float) -> dict:
     chunks = [hit.chunk for hit in answer.retrieval.hits]
     ranks = metrics.evidence_ranks(question, chunks)
+    in_context = metrics.evidence_in_context(question, chunks + [hit.chunk for hit in answer.retrieval.extra_hits])
     cited = [c.url for c in answer.citations]
     tokens, cost = _tokens_and_cost(answer, judge)
     return {**_base_record(question), "status": answer.status, "outcome": metrics.status_outcome(question, answer.status), "answer": answer.text,
             "cited_urls": cited, "search_query": answer.rewrite.query, "rewritten": answer.rewrite.rewritten, "retrieved": _retrieved(answer),
-            "evidence_ranks": ranks, "recall_at": {str(k): metrics.recall_at(ranks, k) for k in metrics.RETRIEVAL_KS},
+            "evidence_ranks": ranks, "in_context": in_context, "recall_at": {str(k): metrics.recall_at(ranks, k) for k in metrics.RETRIEVAL_KS},
             "rr": metrics.reciprocal_rank(ranks), "article_rank": metrics.article_rank(question, chunks),
             "citation": metrics.citation_scores(question, cited), "judge": None if judge is None else judge.to_dict(),
             "wall_s": round(wall_s, 3), "latency_ms": {"rewrite": round(answer.rewrite.ms, 1), "embed": round(answer.retrieval.embed_ms, 1),
-                                                      "search": round(answer.retrieval.search_ms, 1), "llm": round(answer.llm_ms, 1)},
+                                                      "search": round(answer.retrieval.search_ms, 1), "llm": round(answer.llm_ms, 1),
+                                                      "keyword": answer.retrieval.steps.get("keyword_ms"), "rerank": (answer.retrieval.steps.get("rerank") or {}).get("ms")},
             "tokens": tokens, "cost_usd": cost, "trace_id": answer.trace_id, "warnings": list(answer.warnings),
             "llm_attempts": answer.llm_attempts, "error": None}
 
@@ -245,13 +264,14 @@ def summary_markdown(summary: dict, groups: dict, setup: dict, records: Sequence
              f"- Split: {setup.get('split')} · questions: {summary['questions']} (errors: {summary['errors']}) · dataset {str(setup.get('dataset_hash', ''))[:12]} · statuses {setup.get('dataset_statuses')}",
              f"- Models: chat {setup.get('chat_model')}, rewrite {setup.get('rewrite_model')}, embedding {setup.get('embedding_model')}, judge {setup.get('judge_model')} "
              f"(judge prompt {setup.get('judge_prompt_version')}) · answer prompt {setup.get('prompt_version')} · top_k {setup.get('top_k')} · index chunks {setup.get('index_chunks')}",
+             f"- Retrieval configuration: {(setup.get('retrieval') or {}).get('label', LEGACY_RETRIEVAL_LABEL)} {setup.get('retrieval') or ''}",
              f"- Git commit {setup.get('git_commit')} · tracing {'on' if setup.get('tracing') else 'off'}", "",
              "## Headline", "", "| Measure | Result |", "|---|---|",
              f"| Right answer or right abstention | {_fmt(ab['passed'])} |", f"| Answerable questions answered | {_fmt(ab['answered_when_answerable'])} |",
              f"| End-to-end correct (answered with every key fact) | {_fmt(gen['end_to_end_correct'])} |", "",
              f"## Retrieval (answerable questions, {ret['evidence_items']} required evidence items)", "",
-             "| Recall@1 | Recall@3 | Recall@5 | Recall@8 | MRR | Right article retrieved |", "|---|---|---|---|---|---|",
-             f"| {_fmt(ret['recall@1'])} | {_fmt(ret['recall@3'])} | {_fmt(ret['recall@5'])} | {_fmt(ret['recall@8'])} | {ret['mrr']} | {_fmt(ret['article_hit'])} |", "",
+             "| Recall@1 | Recall@3 | Recall@5 | Recall@8 | MRR | Right article retrieved | Evidence in the model's context |", "|---|---|---|---|---|---|---|",
+             f"| {_fmt(ret['recall@1'])} | {_fmt(ret['recall@3'])} | {_fmt(ret['recall@5'])} | {_fmt(ret['recall@8'])} | {ret['mrr']} | {_fmt(ret['article_hit'])} | {_fmt(ret['in_context'])} |", "",
              "## Abstention", "", "| Measure | Result |", "|---|---|", f"| Correct abstentions (should abstain, said not covered) | {_fmt(ab['correct_abstentions'])} |",
              f"| Outcomes | {summary['outcomes']} |", "",
              "## Citations", "", f"- Mean precision {cit['mean_precision']} · mean recall {cit['mean_recall']} · no wrong citation {_fmt(cit['no_wrong_citation'])}", "",
@@ -298,8 +318,9 @@ def git_commit() -> Optional[str]:
         return None
 
 
-def make_run_id(split: str, now: Optional[datetime] = None) -> str:
-    return f"{(now or datetime.now(timezone.utc)):%Y%m%d-%H%M%S}-{split}"
+def make_run_id(split: str, now: Optional[datetime] = None, label: Optional[str] = None) -> str:
+    suffix = f"-{label.replace('+', '-')}" if label and label != LEGACY_RETRIEVAL_LABEL else ""
+    return f"{(now or datetime.now(timezone.utc)):%Y%m%d-%H%M%S}-{split}{suffix}"
 
 
 def run_evaluation(questions: Sequence[dict], chain, judge: Optional[Judge], run_id: str, results_dir: Path, setup: dict,

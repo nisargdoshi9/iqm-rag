@@ -120,6 +120,23 @@ class GuardTests(unittest.TestCase):
             self.assertEqual(runner.dataset_hash(one), runner.dataset_hash([one]))
             self.assertNotEqual(runner.dataset_hash(one), runner.dataset_hash([one, two]))
 
+    def test_a_frozen_split_is_run_once_per_retrieval_configuration(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            for name, retrieval in (("old", None), ("hybrid", {"label": "hybrid"}), ("hybrid-llm", {"label": "hybrid+llm"})):
+                setup = {"completed": True, "includes_test": True, "dataset_hash": "H", **({"retrieval": retrieval} if retrieval else {})}
+                (Path(tmp) / name).mkdir()
+                (Path(tmp) / name / "config.json").write_text(json.dumps(setup))
+            self.assertEqual(runner.previous_test_runs(Path(tmp), "H"), ["old"])  # runs saved before the switches were plain dense
+            self.assertEqual(runner.previous_test_runs(Path(tmp), "H", "hybrid"), ["hybrid"])
+            self.assertEqual(runner.previous_test_runs(Path(tmp), "H", "hybrid+llm+neighbours"), [])
+
+    def test_run_ids_name_the_configuration_unless_it_is_plain_dense(self):
+        from datetime import datetime, timezone
+        now = datetime(2026, 11, 1, 9, 30, tzinfo=timezone.utc)
+        self.assertEqual(runner.make_run_id("holdout", now), "20261101-093000-holdout")
+        self.assertEqual(runner.make_run_id("holdout", now, "dense"), "20261101-093000-holdout")
+        self.assertEqual(runner.make_run_id("holdout", now, "hybrid+llm"), "20261101-093000-holdout-hybrid-llm")
+
     def test_the_unverified_flag_overrides_the_check(self):
         self.assertEqual(runner.check_freeze([eval_question("t", split="test", status="drafted")], allow_unverified=True), [])
 

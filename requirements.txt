@@ -8,3 +8,4 @@ langchain-core==1.7.3
 langchain-openai==1.7.3
 streamlit==1.66.1
 langsmith==0.14.16
+rank-bm25==0.2.2

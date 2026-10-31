@@ -9,7 +9,7 @@ request to be concise; if that also fails the user gets a plain message, never a
 import time
 import uuid
 from dataclasses import dataclass
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Union
 
 from langchain_core.runnables import Runnable, RunnableLambda, RunnablePassthrough
 from langchain_openai import ChatOpenAI
@@ -25,7 +25,8 @@ from iqm_rag.generation.prompts import CONCISE_NOTE, PROMPT_VERSION, AnswerDraft
 from iqm_rag.history import Message, trim_history
 from iqm_rag.observability.tracing import Held, build_run_metadata, build_tags, configure_tracing
 from iqm_rag.retrieval.query_rewriting import QueryRewriter, RewriteResult, default_rewriter
-from iqm_rag.retrieval.retriever import RetrievalResult, Retriever, default_retriever
+from iqm_rag.retrieval.pipeline import RetrievalPipeline, RetrievalSettings, default_pipeline
+from iqm_rag.retrieval.retriever import RetrievalResult, Retriever
 from iqm_rag.usage import Usage, usage_from_message
 
 MAX_OUTPUT_TOKENS = 2000
@@ -139,7 +140,7 @@ def _run_chain(chain: Runnable, state: dict) -> "Answer":
 
 
 class AnswerChain:
-    def __init__(self, retriever: Retriever, llm: Runnable, model: str, rewriter: Optional[QueryRewriter] = None,
+    def __init__(self, retriever: Union[Retriever, RetrievalPipeline], llm: Runnable, model: str, rewriter: Optional[QueryRewriter] = None,
                  retry_llm: Optional[Runnable] = None, tracing: bool = False) -> None:
         self.tracing_enabled = tracing  # off by default, so tests and scripts never reach the network
         self._retriever = retriever
@@ -160,6 +161,7 @@ class AnswerChain:
         """The setup of this chain, recorded with evaluation results so a run can be reproduced."""
         return {"chat_model": self._model, "rewrite_model": getattr(self._rewriter, "model", None),
                 "embedding_model": getattr(self._retriever, "embedding_model", None), "top_k": getattr(self._retriever, "top_k", None),
+                "retrieval": getattr(self._retriever, "describe", dict)(),
                 "index_chunks": getattr(self._retriever, "chunk_count", None), "prompt_version": PROMPT_VERSION, "tracing": self.tracing_enabled}
 
     def answer(self, question: str, history: Sequence[Message] = (), session_id: Optional[str] = None,
@@ -192,7 +194,8 @@ class AnswerChain:
 
     @staticmethod
     def _context_step(state: dict) -> dict:
-        docs = build_context_docs(state["retrieval"].value.hits)
+        result = state["retrieval"].value
+        docs = build_context_docs(result.hits + result.extra_hits)
         return {**state, "docs": Held(docs, f"{len(docs)} numbered documents (the prompt holds their text)")}
 
     def _attempt(self, prompted: Runnable, variables: dict) -> Optional[dict]:
@@ -233,7 +236,8 @@ class AnswerChain:
         """The checked answer, held so this step's trace shows a one-line summary (the whole request's summary is on the root run)."""
         draft, resolved = self._resolve(state)
         output, rewrite = state["output"], state["rewrite"]
-        warnings = resolved.warnings + ((rewrite.fallback_reason,) if rewrite.fallback_reason else ())
+        rerank_fallback = state["retrieval"].value.steps.get("rerank", {}).get("fallback_reason")
+        warnings = resolved.warnings + tuple(reason for reason in (rewrite.fallback_reason, rerank_fallback) if reason)
         answer = Answer(
             question=state["question"], status=resolved.status, text=resolved.text, citations=resolved.citations,
             warnings=warnings, rewrite=rewrite, history=state["history"], retrieval=state["retrieval"].value, docs=state["docs"].value,
@@ -244,8 +248,9 @@ class AnswerChain:
         return Held(answer, f"{answer.status}; {len(answer.citations)} source(s); {len(answer.warnings)} warning(s)")
 
 
-def default_chain() -> AnswerChain:
-    """The chain configured in the environment (OPENAI_API_KEY, CHAT_MODEL, REWRITE_MODEL, EMBEDDING_MODEL, RETRIEVAL_TOP_K)."""
+def default_chain(settings: Optional[RetrievalSettings] = None) -> AnswerChain:
+    """The chain configured in the environment (OPENAI_API_KEY, CHAT_MODEL, REWRITE_MODEL, EMBEDDING_MODEL, RETRIEVAL_TOP_K, and the
+    retrieval switches RETRIEVAL_MODE, RERANK, NEIGHBOURS). `settings` overrides the retrieval switches."""
     model = config.chat_model()
-    return AnswerChain(default_retriever(), build_llm(model), model, default_rewriter(),
+    return AnswerChain(default_pipeline(settings), build_llm(model), model, default_rewriter(),
                        build_llm(model, RETRY_MAX_OUTPUT_TOKENS), tracing=configure_tracing())
