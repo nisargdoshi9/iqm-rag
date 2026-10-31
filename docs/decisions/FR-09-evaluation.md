@@ -77,3 +77,41 @@ chunks, so recall below 100 percent would be a retrieval miss, not a matching ar
   claimed to be statistically conclusive.
 - Recall is measured on the retrieval step as built (top 8, dense only); quote matching means a section split across two
   chunks counts as retrieved only if the chunk holding the quote was retrieved.
+
+## Dev run 1 (2026-10-31, run `20261031-090645-dev`)
+
+The 9 dev questions, run once on the baseline (answer prompt v4, judge prompt j1, top-k 8, dense retrieval only). Results are in
+`data/evaluation/results/20261031-090645-dev/` (`review.csv` for manual checking). The question set was still "drafted".
+
+| Measure | Result |
+|---|---|
+| Right answer or right abstention | 9/9 |
+| Answerable questions answered / correct abstentions | 8/8 and 1/1 |
+| Recall@1 / @3 / @5 / @8 (9 evidence items) | 5/9, 7/9, 8/9, 9/9 |
+| MRR / right article retrieved | 0.754 / 8/8 |
+| Every key fact covered (judge) | 8/8 |
+| Every claim supported (judge) | 6/8 (see the finding below) |
+| Citations outside the expected or related list | 3 of 9 questions |
+| Wall time per question | median 2.6 s, p90 5.9 s |
+| Tokens / estimated cost | 45,248 / about $0.021 (planned $0.029) |
+| Errors | 0 |
+
+With 9 questions, mostly direct ones, this is a smoke test of the pipeline and the runner and says little about quality in
+general. Retrieval is where the weakness shows: the right section is first for 5 of 9 and within the top 8 for all 9.
+
+### Findings from reading the results
+
+- **The judge's faithfulness check gave a false positive (eval-020).** It listed 9 "unsupported claims", but 8 of them are in the
+  retrieved context (checked by searching the retrieved text for the Primary Matching Criteria menu, System Fields, Generate
+  Audience, the file upload options and so on). Its comment shows it compared the answer with the key facts instead of with the
+  documents, which the prompt had told it not to do. So "6/8 faithful" understates the answer; by hand, 7/8 is closer, because the
+  other flag (eval-026: the answer adds that the field helps "link and verify data between IQM and other systems") is a fair catch
+  of an embellishment. The judge prompt needs a grounded form of the check before the final run.
+- **The citation metric is strict, not wrong-or-right.** "Wrong" means a cited URL is not in the question's expected or related
+  list. Three answers cited extra articles. For eval-010 (Matched vs Segmented audiences) the extras are the audience overviews and
+  the Vera article, which plausibly support a comparison; for eval-005 the extra is a Political Planner article whose text also
+  covers restoring proposals. These need a manual look; the question file is not edited after seeing results, so the score stays as
+  measured and the interpretation goes in the report.
+- **Recall@1 misses:** eval-007 (rank 3), eval-010 (ranks 2 and 7 for its two required sections) and eval-026 (rank 5, a follow-up
+  rewritten to ask about the field in the Creatives app, where the custom-tracking sections rank above the overview). All are within
+  the top 8, so the answers were still correct.
