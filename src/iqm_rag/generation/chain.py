@@ -20,7 +20,8 @@ from openai import LengthFinishReasonError, OpenAIError
 from iqm_rag import config
 from iqm_rag.generation.citations import Citation, ResolvedAnswer, resolve_answer
 from iqm_rag.generation.context import ContextDoc, build_context_docs, format_context
-from iqm_rag.generation.prompts import CONCISE_NOTE, PROMPT_VERSION, AnswerDraft, Status, build_prompt, render_history_block
+from iqm_rag.generation import smalltalk
+from iqm_rag.generation.prompts import CONCISE_NOTE, PROMPT_VERSION, AnswerDraft, ReplyStatus, build_prompt, render_history_block
 from iqm_rag.history import Message, trim_history
 from iqm_rag.observability.tracing import Held, build_run_metadata, build_tags, configure_tracing
 from iqm_rag.retrieval.query_rewriting import QueryRewriter, RewriteResult, default_rewriter
@@ -43,7 +44,7 @@ class GenerationError(RuntimeError):
 @dataclass(frozen=True)
 class Answer:
     question: str  # the user's own message
-    status: Status  # answered, not_covered (the Help Center does not cover it) or clarification (we ask the user)
+    status: ReplyStatus  # answered, not_covered (the Help Center does not cover it), clarification (we ask the user) or smalltalk (a greeting; no search)
     text: str
     citations: tuple[Citation, ...]
     warnings: tuple[str, ...]
@@ -169,7 +170,7 @@ class AnswerChain:
             raise ValueError("The question is empty.")
         trimmed = tuple(trim_history(history))
         run_id = uuid.uuid4()
-        state = {"question": text, "history": trimmed, "trace_id": str(run_id)}
+        state = {"question": text, "history": trimmed, "trace_id": str(run_id), "smalltalk": smalltalk.reply_to(text)}
         extra = {"run_id": run_id, "tags": build_tags(PROMPT_VERSION, self._model, tags),
                  "metadata": build_run_metadata(PROMPT_VERSION, self._model, getattr(self._rewriter, "model", None),
                                                 getattr(self._retriever, "embedding_model", None), getattr(self._retriever, "top_k", None),
@@ -178,11 +179,14 @@ class AnswerChain:
             return _run_chain(self.chain, state, langsmith_extra=extra)
 
     def _rewrite_step(self, state: dict) -> dict:
-        if self._rewriter is None:
+        if self._rewriter is None or state["smalltalk"]:
             return {**state, "rewrite": RewriteResult(state["question"], state["question"], False, None, None, None, 0.0)}
         return {**state, "rewrite": self._rewriter.rewrite(state["question"], state["history"])}
 
     def _retrieve_step(self, state: dict) -> dict:
+        if state["smalltalk"]:  # nothing to search for
+            empty = RetrievalResult(state["question"], getattr(self._retriever, "top_k", 0), getattr(self._retriever, "embedding_model", ""), 0, 0.0, 0.0, [])
+            return {**state, "retrieval": Held(empty, "skipped: small talk")}
         result = self._retriever.retrieve(state["rewrite"].query)
         return {**state, "retrieval": Held(result, f"{len(result.hits)} chunks retrieved (see vector_search)")}
 
@@ -204,7 +208,7 @@ class AnswerChain:
     def _generate(self, state: dict) -> dict:
         """Call the model, unless there is no evidence to give it; retry once if the reply was cut off."""
         docs = state["docs"].value
-        if not docs:
+        if not docs:  # no evidence, or small talk
             return {**state, "output": None, "truncated": False, "attempts": 0, "llm_ms": 0.0}
         variables = {"history_block": render_history_block(state["history"]), "context": format_context(docs),
                      "question": state["question"], "length_note": ""}
@@ -216,6 +220,8 @@ class AnswerChain:
         return {**state, "output": output, "truncated": output is None, "attempts": attempts, "llm_ms": elapsed}
 
     def _resolve(self, state: dict) -> tuple[Optional[AnswerDraft], ResolvedAnswer]:
+        if state["smalltalk"]:
+            return None, ResolvedAnswer("smalltalk", state["smalltalk"], (), ())
         if state["truncated"]:
             note = f"The reply was cut off at the length limit after {state['attempts']} attempt(s)."
             return None, ResolvedAnswer("clarification", TRUNCATED_MESSAGE, (), (note,))

@@ -99,6 +99,7 @@ section[data-testid="stSidebar"] .stButton > button:hover { background: var(--ac
 .badge-answered { color: var(--ok); background: var(--ok-soft); }
 .badge-not_covered { color: var(--warn); background: var(--warn-soft); }
 .badge-clarification { color: var(--info); background: var(--info-soft); }
+.badge-smalltalk { color: var(--muted); background: var(--bg); }
 .badge-error { color: var(--err); background: var(--err-soft); }
 .meta-row { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
 .meta-row .badge { margin-bottom: 0; }

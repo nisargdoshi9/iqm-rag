@@ -18,6 +18,7 @@ STATUS_LABELS = {
     "answered": "From the Help Center",
     "not_covered": "Not in the Help Center",
     "clarification": "A quick question",
+    "smalltalk": "IQM assistant",
     "error": "Something went wrong",
 }
 SNIPPET_CHARS = 240

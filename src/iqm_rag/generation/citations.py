@@ -8,7 +8,7 @@ cannot be detected here; the evaluation measures that.
 from dataclasses import dataclass
 
 from iqm_rag.generation.context import ContextDoc
-from iqm_rag.generation.prompts import AnswerDraft, Status
+from iqm_rag.generation.prompts import AnswerDraft, ReplyStatus, Status
 
 CLARIFICATION_FALLBACK = "Could you tell me a little more about what you are looking for?"
 ABSTENTION_MESSAGE = (
@@ -26,7 +26,7 @@ class Citation:
 
 @dataclass(frozen=True)
 class ResolvedAnswer:
-    status: Status
+    status: ReplyStatus
     text: str
     citations: tuple[Citation, ...]
     warnings: tuple[str, ...]

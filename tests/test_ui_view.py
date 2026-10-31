@@ -56,7 +56,7 @@ class AnswerViewTests(ChainTestCase):
             self.assertIn(label, details)
         self.assertIn("tracing off", details["Trace"])
         self.assertIn("in 100 · out 20", details["Tokens"])
-        self.assertIn("prompt v4", details["Answer model"])
+        self.assertIn("prompt v5", details["Answer model"])
 
     def test_warnings_reach_the_developer_details(self):
         view = self.view(FakeLLM(draft([1, 99])))

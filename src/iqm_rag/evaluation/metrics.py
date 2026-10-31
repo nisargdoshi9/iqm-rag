@@ -13,7 +13,7 @@ from typing import Optional, Sequence
 from iqm_rag.evaluation.dataset import normalize_text
 
 RETRIEVAL_KS = (1, 3, 5, 8)
-OUTCOMES = ("answered", "correct_abstention", "wrongful_abstention", "over_clarified", "invented_answer", "clarified_instead")
+OUTCOMES = ("answered", "correct_abstention", "wrongful_abstention", "over_clarified", "invented_answer", "clarified_instead", "small_talk")
 OUTCOME_PASSES = {"answered", "correct_abstention"}
 PRICES_AS_OF = "2026-10-31; the gpt-4.1-mini figures reproduce LangSmith's own cost estimate for the same calls"
 PRICES_PER_MILLION = {  # US dollars per million tokens; published prices, which can change
@@ -66,8 +66,8 @@ def article_rank(question: dict, chunks: Sequence[dict]) -> Optional[int]:
 def status_outcome(question: dict, status: str) -> str:
     """Name what the bot did relative to what it should have done."""
     if question["should_abstain"]:
-        return {"not_covered": "correct_abstention", "answered": "invented_answer", "clarification": "clarified_instead"}[status]
-    return {"answered": "answered", "not_covered": "wrongful_abstention", "clarification": "over_clarified"}[status]
+        return {"not_covered": "correct_abstention", "answered": "invented_answer", "clarification": "clarified_instead", "smalltalk": "small_talk"}[status]
+    return {"answered": "answered", "not_covered": "wrongful_abstention", "clarification": "over_clarified", "smalltalk": "small_talk"}[status]
 
 
 def citation_scores(question: dict, cited_urls: Sequence[str]) -> dict:

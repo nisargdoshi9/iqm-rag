@@ -46,8 +46,8 @@ def select_questions(questions: Sequence[dict], split: str = "all", ids: Optiona
 
 
 def question_files(split: str) -> list[Path]:
-    """The question files a split lives in: the frozen set (dev and test) and the held-out set are kept apart so neither changes the other's hash."""
-    return {"holdout": [HOLDOUT_PATH], "all": [QUESTIONS_PATH, HOLDOUT_PATH]}.get(split, [QUESTIONS_PATH])
+    """The question file a split lives in. The held-out set has its own file, so it never changes the frozen set's hash, and "all" means dev and test only: the holdout is never run by accident."""
+    return {"holdout": [HOLDOUT_PATH]}.get(split, [QUESTIONS_PATH])
 
 
 def dataset_hash(paths: Union[Path, Sequence[Path]] = QUESTIONS_PATH) -> str:

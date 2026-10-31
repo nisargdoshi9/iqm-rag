@@ -112,7 +112,7 @@ class GuardTests(unittest.TestCase):
     def test_the_holdout_file_is_separate_so_it_cannot_change_the_frozen_hash(self):
         self.assertEqual(runner.question_files("test"), [runner.QUESTIONS_PATH])
         self.assertEqual(runner.question_files("holdout"), [runner.HOLDOUT_PATH])
-        self.assertEqual(runner.question_files("all"), [runner.QUESTIONS_PATH, runner.HOLDOUT_PATH])
+        self.assertEqual(runner.question_files("all"), [runner.QUESTIONS_PATH])  # "all" never includes the holdout
         with tempfile.TemporaryDirectory() as tmp:
             one, two = Path(tmp) / "a.jsonl", Path(tmp) / "b.jsonl"
             one.write_text(json.dumps(eval_question("a")) + "\n", encoding="utf-8")
