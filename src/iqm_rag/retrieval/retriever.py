@@ -92,6 +92,10 @@ class Retriever:
     def embedding_model(self) -> str:
         return self._embedder.model
 
+    @property
+    def chunk_count(self) -> int:
+        return self._collection.count()
+
     @traceable(run_type="retriever", name="vector_search", process_inputs=lambda inputs: {"query": inputs.get("query"), "top_k": inputs.get("top_k")},
                process_outputs=retrieval_documents)
     def retrieve(self, query: str, top_k: Optional[int] = None) -> RetrievalResult:

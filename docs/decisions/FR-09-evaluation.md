@@ -1,6 +1,6 @@
 # FR-9: Evaluation set — decisions
 
-Status: 28 questions drafted and checked against the cleaned corpus. **Not yet reviewed by a human; not frozen.** Metrics, the runner and results come later.
+Status: 28 questions drafted and checked against the cleaned corpus. **Not yet reviewed by a human; not frozen.** The metrics, judge and runner are built (see "Metrics and runner"); no evaluation has been run yet.
 
 ## Decisions
 1. **Size:** 28 questions (the assignment minimum is 15). Three follow-up questions were added after the conversation design (below).
@@ -41,3 +41,39 @@ from a poor one. Three were added to cover the other cases, all drafted with AI 
 | eval-028 | test | Topic switch: the history is about report scheduling and the new question is about image creatives |
 
 Even so, six follow-up questions are few; results on them are indicative only.
+
+## Metrics and runner (decided 2026-10-31)
+
+| # | Decision | Value |
+|---|---|---|
+| 1 | How a question is run | Through the same chain as the chat page, once, with the question's scripted history. Traces are tagged `eval`, the run ID, the question ID, the split and the category |
+| 2 | Retrieval metrics | A retrieved chunk counts as the evidence if it is from the right article and contains the evidence quote (markdown marks and whitespace ignored). Reported: Recall@1, @3, @5, @8 (share of required evidence found), MRR (rank of the first evidence found), and whether the right article was retrieved at all. For follow-ups the query actually searched, after the rewrite, is used. Abstention questions have no evidence and are left out of retrieval metrics |
+| 3 | Abstention (deterministic) | Should abstain and said `not_covered`: correct. Answerable and said `answered`: passes. Other outcomes are named: `wrongful_abstention`, `invented_answer`, and `clarified_instead` / `over_clarified` (a clarifying question counts as neither a pass nor an invented answer) |
+| 4 | Citations (deterministic) | Precision: cited URLs that are expected, related or alternative evidence. Recall: expected URLs cited. Any citation on an abstention is wrong |
+| 5 | Answer correctness and faithfulness | An LLM judge (`gpt-4.1-mini`, setting `JUDGE_MODEL`, temperature 0, prompt `j1`) marks each key fact covered or not and lists claims the retrieved documents do not support. Only answered, answerable questions are judged. A judge failure or a wrong number of fact checks is recorded as an error, never as a score |
+| 6 | Judge prompt | Written to be strict and unbiased: judge substance only (not length, tone or confidence), do not assume plausibility means correct, partial or hedged statements are not covered, no credit for facts that appear only in the reference answer, and any claim the documents do not support is listed even if true in the real world |
+| 7 | Manual review | `review.csv` puts the question, history, expected answer, key facts, the bot's answer, status, cited and expected URLs, evidence rank, top retrieved sections, the judge's per-fact notes, unsupported claims and comment side by side, with empty `manual_verdict` and `manual_notes` columns. It opens in Excel or Sheets |
+| 8 | Run procedure | Dev run first (debugging, failures may be inspected); the test run once per dataset version on a verified set. The runner refuses the test split on unverified questions and refuses a second test run for the same dataset hash unless told otherwise (and records that) |
+| 9 | Saved per run | `data/evaluation/results/<run-id>/`: `config.json` (models, prompt versions, top-k, index size, dataset hash and statuses, git commit, tracing), `results.jsonl` (one full record per question), `review.csv`, `summary.json`, `summary.md` |
+| 10 | Cost | Tokens exactly as reported; cost computed from stated prices (gpt-4.1-mini $0.40 / $1.60 per million input/output tokens, text-embedding-3-large $0.13), which reproduce LangSmith's own estimates for the same calls; labelled an estimate. A model with no listed price gives no cost, never a guess |
+
+### Using it
+
+```
+python scripts/evaluate.py --split dev --dry-run     # plan, call counts, rough cost, checks; no API calls
+python scripts/evaluate.py --split dev --yes         # the model calls happen only with --yes
+python scripts/evaluate.py --rebuild <run-dir>       # rebuild summaries and the CSV from saved results; no API calls
+```
+
+The dry run on 2026-10-31: dev is 9 questions (9 answers, 2 rewrites, up to 8 judge calls, about 61k tokens, about $0.03); the
+whole set is 28 questions (up to 62 model calls, about 186k tokens, about $0.09). All 28 evidence quotes were found in the
+chunks, so recall below 100 percent would be a retrieval miss, not a matching artefact.
+
+### Limits of the method
+
+- The judge is a model of the same family and size as the answerer, so it can share its blind spots; the manual columns in
+  `review.csv` exist so that a sample of its verdicts can be checked, and the agreement will be reported.
+- With 9 dev and 19 test questions, every figure is a handful of cases. Counts are shown next to percentages, and no figure is
+  claimed to be statistically conclusive.
+- Recall is measured on the retrieval step as built (top 8, dense only); quote matching means a section split across two
+  chunks counts as retrieved only if the chunk holding the quote was retrieved.

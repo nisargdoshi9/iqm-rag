@@ -155,6 +155,12 @@ class AnswerChain:
             | RunnableLambda(self._finish).with_config(run_name="check_output")
         )
 
+    def describe(self) -> dict:
+        """The setup of this chain, recorded with evaluation results so a run can be reproduced."""
+        return {"chat_model": self._model, "rewrite_model": getattr(self._rewriter, "model", None),
+                "embedding_model": getattr(self._retriever, "embedding_model", None), "top_k": getattr(self._retriever, "top_k", None),
+                "index_chunks": getattr(self._retriever, "chunk_count", None), "prompt_version": PROMPT_VERSION, "tracing": self.tracing_enabled}
+
     def answer(self, question: str, history: Sequence[Message] = (), session_id: Optional[str] = None,
                tags: Sequence[str] = (), metadata: Optional[dict] = None) -> Answer:
         """Answer one question. `session_id`, `tags` and `metadata` only describe the request in the trace."""

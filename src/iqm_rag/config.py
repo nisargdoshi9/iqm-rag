@@ -31,6 +31,7 @@ USER_AGENT_PRODUCT = "IQM-RAG-Assignment-Bot"
 DEFAULT_DELAY_SECONDS = 2.0
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large"
 DEFAULT_CHAT_MODEL = "gpt-4.1-mini"
+DEFAULT_JUDGE_MODEL = "gpt-4.1-mini"
 DEFAULT_LANGSMITH_PROJECT = "iqm-help-center-rag"
 PLACEHOLDER_LANGSMITH_KEYS = ("", "ls-your-key-here")
 FALSE_VALUES = ("false", "0", "no", "off")
@@ -116,3 +117,8 @@ def tracing_enabled() -> bool:
 
 def langsmith_project() -> str:
     return os.environ.get("LANGSMITH_PROJECT", "").strip() or DEFAULT_LANGSMITH_PROJECT
+
+
+def judge_model() -> str:
+    """Name of the model that judges answers in the evaluation (JUDGE_MODEL)."""
+    return os.environ.get("JUDGE_MODEL", "").strip() or DEFAULT_JUDGE_MODEL

@@ -27,8 +27,12 @@ def load_questions(path: Path = QUESTIONS_PATH) -> list[dict]:
     return read_jsonl(path)
 
 
-def _norm(text: str) -> str:
+def normalize_text(text: str) -> str:
+    """Text as compared when matching quotes: markdown emphasis and code marks removed, whitespace collapsed."""
     return re.sub(r"\s+", " ", re.sub(r"[*`]", "", text)).strip()
+
+
+_norm = normalize_text
 
 
 def _evidence_errors(item: dict, articles: dict[str, dict]) -> list[str]:
